@@ -127,6 +127,10 @@ Funciones públicas acordadas que la app puede importar:
   `DraftResult` con `output` (ya pasado por el guard), `report`, `source` (`cache`, `llm`,
   `offline_miss` o `error`) y `latency_s`. Con `OFFLINE=1` solo lee `outputs/cache/` (J-12).
   La evidencia se arma con `src.generate.schema.evidence_from_news` / `evidence_from_indicator`.
+- `src.generate.drafts.build_package(cluster_id, news, scored, contexto=None, official=None)` →
+  `EditorialPackage` con `drafts["brief" | "guion" | "copy"].result` (cada uno un `DraftResult`),
+  `evidence`, `score`, `evidence_state` y `abstained`. `official` sale de
+  `drafts.official_index(indicadores, eventos)` (J-08).
 
 Columnas extra fuera del contrato (p. ej. `sintetico`, `recirculada`) se
 permiten si se avisan; nunca se quita ni se renombra una columna del contrato

@@ -10,7 +10,8 @@ Runs before anything reaches the UI. The model's word is never trusted:
    with no valid citation left is dropped.
 4. Claims citing a source flagged as an injection attempt are dropped, and an alert
    is added if the model did not raise one (T07).
-5. World Bank claims must state the reference year and never read as "today" (T04).
+5. World Bank claims must state year, country and unit and never read as "today" (T04);
+   USGS citations support seismic facts only, never floods, damage or losses.
 6. If any claim was dropped, the free-text draft is dropped too: it may contain the
    unsupported claim. If no claim survives, the result becomes an abstention (T06).
 7. Headline-only sources force the phrase "Basado únicamente en titular/metadatos."
@@ -56,6 +57,14 @@ SYSTEM_PROMPT_FINGERPRINTS = [
     "responde solo con el json pedido",
 ]
 TODAY_WORDS = re.compile(r"\b(hoy|actualmente|en la actualidad|este año|al día de hoy)\b", re.IGNORECASE)
+# World Bank claims must name the country (secc. 9, T04).
+COUNTRY_NAMES = {
+    "PAN": ["panamá", "panama"], "CRI": ["costa rica"], "COL": ["colombia"],
+    "DOM": ["república dominicana", "republica dominicana"], "MEX": ["méxico", "mexico"],
+    "GTM": ["guatemala"],
+}
+# USGS supports seismic facts only, never floods, damage or losses (secc. 6).
+SEISMIC_MISUSE = re.compile(r"inundaci|p[ée]rdida|daño|dano|damnificad|econ[óo]mic", re.IGNORECASE)
 
 
 def normalize(text: str) -> str:
@@ -150,6 +159,27 @@ def _citation_error(citation: Cita, by_id: dict[str, Evidence]) -> str | None:
     return None
 
 
+def _official_data_error(text: str, item: Evidence) -> str | None:
+    """World Bank: year, country and unit, never "today" (T04). USGS: seismic facts only."""
+    if item.kind == "indicador":
+        if item.year is not None and str(item.year) not in text:
+            return f"dato del Banco Mundial sin año ({item.year})"
+        if TODAY_WORDS.search(text):
+            return "dato anual del Banco Mundial presentado como actual"
+        country = item.fields.get("pais_iso3", "")
+        folded = normalize(text)
+        if not any(name in folded for name in COUNTRY_NAMES.get(country, [])) and country.lower() not in folded.split():
+            return f"dato del Banco Mundial sin país ({country})"
+        unit = item.fields.get("unidad", "")
+        if "%" in unit and "%" not in text and "por ciento" not in folded:
+            return f"dato del Banco Mundial sin unidad ({unit})"
+        if "persona" in normalize(unit) and not re.search(r"personas|habitantes", folded):
+            return f"dato del Banco Mundial sin unidad ({unit})"
+    if item.kind == "sismo" and SEISMIC_MISUSE.search(text):
+        return "sismo del USGS usado fuera de hechos sísmicos"
+    return None
+
+
 def _check_claim(
     claim: Afirmacion, by_id: dict[str, Evidence], injected: set[str], report: GuardReport
 ) -> Afirmacion | None:
@@ -168,13 +198,7 @@ def _check_claim(
     elif any(c.id_fuente in injected for c in valid):
         reason = "cita una fuente con instrucción inyectada"
     else:
-        for citation in valid:
-            item = by_id[citation.id_fuente]
-            if item.kind == "indicador":
-                if item.year is not None and str(item.year) not in claim.texto:
-                    reason = f"dato del Banco Mundial sin año ({item.year})"
-                elif TODAY_WORDS.search(claim.texto):
-                    reason = "dato anual del Banco Mundial presentado como actual"
+        reason = next((r for c in valid if (r := _official_data_error(claim.texto, by_id[c.id_fuente]))), None)
     if reason:
         report.dropped_claims.append(DroppedClaim(claim.texto, reason))
         return None

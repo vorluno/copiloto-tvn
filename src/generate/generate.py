@@ -84,6 +84,7 @@ class DraftRequest:
     evidence: list[Evidence]
     score_line: str = "sin puntaje"
     evidence_state: str = "sin estado"
+    feedback: list[str] = field(default_factory=list)  # guard findings from a rejected attempt
 
 
 @dataclass
@@ -128,6 +129,9 @@ def build_messages(request: DraftRequest) -> list[dict]:
         f"Tema: {request.topic}",
         f"Puntaje: {request.score_line} · Estado de evidencia: {request.evidence_state}",
     ])
+    if request.feedback:
+        fixes = "\n".join(f"- {item}" for item in request.feedback)
+        header += f"\n\nTu respuesta anterior fue rechazada por el validador:\n{fixes}\nCorrige solo eso."
     sources = "\n".join(render_source(item) for item in request.evidence)
     return [
         {"role": "system", "content": PROMPT_PATH.read_text(encoding="utf-8").strip()},

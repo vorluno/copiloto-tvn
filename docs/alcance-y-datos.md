@@ -38,7 +38,7 @@ Las 7 etapas que pide el reto (secc. 3), quién las construye y qué archivo pro
 | # | Etapa | Qué hace | Dueño | Archivo / módulo | Pruebas |
 | --- | --- | --- | --- | --- | --- |
 | 1 | Cargar | Lee los datos, valida IDs, URLs, fechas y nulos; emite un reporte de calidad sin detener la carga | Levi | `src/ingest/`, `src/validate.py` → `outputs/reports/calidad.md` | T01 |
-| 2 | Organizar | Clasifica en 6 temas y agrupa noticias del mismo evento; cuenta procedencias, no registros | Levi | `src/nlp/` → `noticias.parquet`, `clusters.parquet` | T02, T03 |
+| 2 | Organizar | Clasifica en los 6 temas del reto (más `otro` para lo que no encaja) y agrupa noticias del mismo evento; cuenta procedencias, no registros | Levi | `src/nlp/` → `noticias.parquet`, `clusters.parquet` | T02, T03 |
 | 3 | Contextualizar | Relaciona cada evento con un indicador del Banco Mundial o un sismo del USGS **solo si la relación se sostiene** | Levi | `contexto.parquet` (B-14) | T04 |
 | 4 | Priorizar | Puntaje P = 30R + 25I + 20U + 15N + 10E con sus componentes; estado de evidencia aparte | José | `src/score.py` ✅ | T08 |
 | 5 | Explicar | Ficha: qué se reporta, quién, qué está respaldado, qué falta y acción recomendada | José + Cristian | `src/fichas.py` → `fichas.jsonl`; `app/` | T09 |
