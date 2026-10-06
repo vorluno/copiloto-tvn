@@ -12,7 +12,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from src.ingest import tvn_rss
+from src.ingest import gdelt, tvn_rss
 from src.ingest.common import finalize
 from src.validate import ValidationResult, build_report, validate_news, write_report
 
@@ -34,7 +34,7 @@ def build_news(frames: list[pd.DataFrame]) -> tuple[ValidationResult, int]:
 
 def sources() -> list[pd.DataFrame]:
     """TVN first: on a shared URL its row wins."""
-    return [tvn_rss.load_snapshots()]
+    return [tvn_rss.load_snapshots(), gdelt.load_snapshots()]
 
 
 def main() -> None:
