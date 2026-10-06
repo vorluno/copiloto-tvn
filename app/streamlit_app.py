@@ -15,6 +15,12 @@ from pathlib import Path
 import pandas as pd
 import streamlit as st
 
+from app.bandeja import (
+    COMPONENTS, EVIDENCE_STATES, SCORE_RANGES, TOP_N, build_inbox, filter_inbox, load_cards, load_contexto,
+    records_label, urgency_basis_label,
+)
+from src.score import score_clusters
+
 ROOT = Path(__file__).resolve().parents[1]
 PROCESSED_PATH = ROOT / "data" / "processed" / "noticias.parquet"
 STUB_PATH = ROOT / "data" / "stub" / "noticias_stub.parquet"
@@ -44,6 +50,11 @@ INJECTION_PATTERN = re.compile(
 def load_news() -> tuple[pd.DataFrame, str]:
     path = PROCESSED_PATH if PROCESSED_PATH.exists() else STUB_PATH
     return pd.read_parquet(path), path.relative_to(ROOT).as_posix()
+
+
+@st.cache_data(ttl=600)  # U depends on the current time, so refresh every 10 min
+def load_scores(news: pd.DataFrame) -> pd.DataFrame:
+    return score_clusters(news, contexto=load_contexto())
 
 
 def to_panama(ts: pd.Timestamp) -> str:
@@ -91,27 +102,76 @@ else:
 inbox_tab, card_tab, draft_tab, review_tab = st.tabs(["Bandeja", "Ficha", "Borrador", "Revisión"])
 
 with inbox_tab:
-    st.subheader("Bandeja")
+    st.subheader("Bandeja priorizada")
+    scored = load_scores(news)
+    cards, cards_path = load_cards()
+    inbox = build_inbox(scored, news, cards)
     st.caption(
-        "Horas en Panamá (UTC−5); los datos se guardan en UTC. "
-        "Publicación = fecha del medio; detección = seendate de GDELT. No se mezclan."
+        f"Puntaje P = 30R + 25I + 20U + 15N + 10E (`{', '.join(scored['version_reglas'].unique())}`, "
+        "determinista, sin LLM). Prioridad alta **no** habilita publicar: el estado de evidencia va aparte."
     )
-    # Newest first by detection, falling back to publication only for ordering.
-    order_key = news["fecha_deteccion"].fillna(news["fecha_publicacion"])
-    inbox = news.assign(_order=order_key).sort_values("_order", ascending=False)
-    view = pd.DataFrame({
-        "ID": inbox["id_noticia"],
-        "Titular": inbox["titulo"],
-        "Medio": inbox["medio"],
-        "Tema": inbox["tema"],
-        "Cluster": inbox["cluster_id"],
-        "Publicación (Panamá)": inbox["fecha_publicacion"].map(to_panama),
-        "Detección (Panamá)": inbox["fecha_deteccion"].map(to_panama),
-        "Marcas": inbox.apply(flags, axis=1),
-    })
-    st.dataframe(view, hide_index=True, width="stretch")
-    st.caption(f"{len(news)} noticias · {news['cluster_id'].nunique()} clusters · "
-               f"{news['procedencia_id'].nunique()} procedencias. Puntaje P pendiente (J-05).")
+    if inbox.empty:
+        st.info("Todavía no hay clusters para priorizar.")
+    else:
+        if not inbox["contexto_disponible"].all():
+            st.warning("Sin contexto oficial todavía (`contexto.parquet`, B-14): I y E no incluyen "
+                       "indicadores del Banco Mundial ni sismos del USGS.")
+        f1, f2, f3, f4 = st.columns([2, 2, 2, 1])
+        temas = f1.multiselect("Tema", sorted(inbox["tema"].dropna().unique()))
+        estados = f2.multiselect("Estado de evidencia", EVIDENCE_STATES)
+        rangos = f3.multiselect("Rango de P", SCORE_RANGES)
+        show_all = f4.toggle("Ver todos", help=f"Por defecto se muestran los {TOP_N} de mayor P.")
+        view = filter_inbox(inbox, temas, estados, rangos, top_n=None if show_all else TOP_N)
+
+        table = pd.DataFrame({
+            "#": view["posicion"],
+            "Tema": view["tema"].fillna("— (sin dato)"),
+            "Titular": view["titular"].fillna("— (sin titular)"),
+            "P": view["P"],
+            "Rango": view["rango"],
+            **{c: view[c] for c in COMPONENTS},
+            "Evidencia": view["estado_evidencia"],
+            "Registros · procedencias": [records_label(n, m) for n, m in
+                                         zip(view["n_registros"], view["n_procedencias_independientes"])],
+            "Referencia (Panamá)": view["fecha_referencia_urgencia"].map(to_panama),
+            "Según": view["base_urgencia"].map(urgency_basis_label),
+            "Ficha": view["id_caso"].fillna("— (sin ficha)"),
+            "Revisión": view["estado_revision"].fillna("—"),
+            "Marcas": [" · ".join(m for m in (
+                "🧪 sintético" if row.sintetico else "",
+                "♻️ recirculada" if row.recirculada else "",
+                f"⚠️ {row.alertas} alerta(s)" if row.alertas else "",
+            ) if m) for row in view.itertuples()],
+        })
+        component_help = {"R": "Relación con Panamá", "I": "Impacto", "U": "Urgencia",
+                          "N": "Novedad", "E": "Evidencia"}
+        st.dataframe(
+            table, hide_index=True, width="stretch",
+            column_config={
+                "P": st.column_config.ProgressColumn("P", min_value=0, max_value=100, format="%.1f"),
+                **{c: st.column_config.NumberColumn(c, help=f"{component_help[c]} (0–1)", format="%.2f")
+                   for c in COMPONENTS},
+            },
+        )
+        st.caption(
+            f"Mostrando {len(view)} de {len(inbox)} clusters. R relación con Panamá · I impacto · "
+            "U urgencia · N novedad · E evidencia (0–1). Referencia = fecha desde la que se mide U, "
+            f"en hora de Panamá (UTC−5). Fichas: `{cards_path}`."
+        )
+
+    with st.expander(f"Noticias del corpus ({len(news)})"):
+        order_key = news["fecha_deteccion"].fillna(news["fecha_publicacion"])
+        corpus = news.assign(_order=order_key).sort_values("_order", ascending=False)
+        st.dataframe(pd.DataFrame({
+            "ID": corpus["id_noticia"],
+            "Titular": corpus["titulo"],
+            "Medio": corpus["medio"],
+            "Tema": corpus["tema"],
+            "Cluster": corpus["cluster_id"],
+            "Publicación (Panamá)": corpus["fecha_publicacion"].map(to_panama),
+            "Detección (Panamá)": corpus["fecha_deteccion"].map(to_panama),
+            "Marcas": corpus.apply(flags, axis=1),
+        }), hide_index=True, width="stretch")
 
 with card_tab:
     st.subheader("Ficha")
