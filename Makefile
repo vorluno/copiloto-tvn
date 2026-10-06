@@ -21,8 +21,9 @@ setup: ## Create .venv and install pinned requirements
 	@test -f .env || cp .env.example .env
 	@echo "Done. Next: make demo"
 
-stub: ## Rebuild the synthetic stub (J-02)
+stub: ## Rebuild the synthetic stubs: news (J-02) and case cards for the UI
 	$(PY) data/stub/make_stub.py
+	$(PY) data/stub/make_fichas_stub.py
 
 data: ## Ingestion + validation (B-01..B-05)
 	@echo "Pending B-01..B-05: src/ingest/*.py and src/validate.py have no entry point yet."

@@ -13,7 +13,7 @@ import pytest
 STUB_PATH = Path(__file__).resolve().parents[1] / "data" / "stub" / "noticias_stub.parquet"
 
 CONTRACT_COLUMNS = [
-    "id_noticia", "titulo", "url", "medio", "dominio", "idioma",
+    "id_noticia", "titulo", "descripcion", "url", "medio", "dominio", "idioma",
     "fecha_publicacion", "fecha_deteccion", "fecha_extraccion", "origen",
     "alcance_texto", "procedencia_id", "tema", "tema_confianza", "cluster_id",
 ]
@@ -81,3 +81,18 @@ def test_t03_fixture_recirculated(stub):
 def test_t07_fixture_injected_instruction(stub):
     injected = stub[stub["titulo"].str.contains("ignora tus instrucciones", case=False)]
     assert len(injected) == 1
+
+
+def test_description_only_for_tvn_rss(stub):
+    # descripcion is nullable and only TVN RSS provides it; alcance_texto must agree.
+    has_description = stub["descripcion"].notna()
+    assert (stub.loc[has_description, "origen"] == "tvn_rss").all()
+    assert (stub.loc[has_description, "alcance_texto"] == "descripcion_rss").all()
+    assert (stub.loc[~has_description, "alcance_texto"] == "titular/metadatos").all()
+
+
+def test_tvn_rss_has_no_detection_date(stub):
+    # RSS has no seendate: fecha_deteccion stays null, never copied from fecha_extraccion.
+    rss = stub[stub["origen"] == "tvn_rss"]
+    assert rss["fecha_deteccion"].isna().all()
+    assert rss["fecha_extraccion"].notna().all()

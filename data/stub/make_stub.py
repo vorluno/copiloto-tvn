@@ -2,6 +2,8 @@
 
 Follows the data/processed/noticias.parquet contract (see CLAUDE.md) and adds two
 off-contract columns: `sintetico` (always True) and `recirculada`.
+`descripcion` only exists for TVN RSS items; `fecha_deteccion` is null for them
+(RSS has no seendate; download time lives in fecha_extraccion).
 Outlets and domains are fictional (reserved .example TLD) so nobody mistakes these
 headlines for real news.
 
@@ -29,11 +31,22 @@ EXTRACTED_AT = "2026-10-06T12:00:00Z"
 
 # Contract columns first, then the off-contract ones.
 COLUMNS = [
-    "id_noticia", "titulo", "url", "medio", "dominio", "idioma",
+    "id_noticia", "titulo", "descripcion", "url", "medio", "dominio", "idioma",
     "fecha_publicacion", "fecha_deteccion", "fecha_extraccion", "origen",
     "alcance_texto", "procedencia_id", "tema", "tema_confianza", "cluster_id",
     "sintetico", "recirculada",
 ]
+# Synthetic RSS descriptions keyed by URL; GDELT items have none (null).
+DESCRIPTIONS = {
+    "https://tvn-sintetico.example/noticias/canal-limite-calado":
+        "Descripción sintética de RSS: el Canal de Panamá anuncia un límite de calado por el nivel del lago Gatún.",
+    "https://tvn-sintetico.example/noticias/cruceros-colon":
+        "Descripción sintética de RSS: llegan cruceros a Colón al inicio de la temporada.",
+    "https://tvn-sintetico.example/noticias/cortes-agua-san-miguelito":
+        "Descripción sintética de RSS: cortes de agua programados por mantenimiento.",
+    "https://tvn-sintetico.example/noticias/exportaciones-banano":
+        "Descripción sintética de RSS: reporte sobre exportaciones de banano.",
+}
 DATE_COLUMNS = ("fecha_publicacion", "fecha_deteccion", "fecha_extraccion")
 
 # (title, url, outlet, source, published_at UTC | None, detected_at UTC | None,
@@ -100,6 +113,7 @@ def build() -> pd.DataFrame:
         records.append({
             "id_noticia": news_id(url),
             "titulo": title,
+            "descripcion": DESCRIPTIONS.get(url),  # None -> null, never ""
             "url": url,
             "medio": outlet,
             "dominio": urlsplit(url).hostname,
@@ -108,7 +122,7 @@ def build() -> pd.DataFrame:
             "fecha_deteccion": detected_at,  # GDELT seendate; null for TVN RSS
             "fecha_extraccion": EXTRACTED_AT,
             "origen": source,
-            "alcance_texto": "titular/metadatos" if source == "gdelt" else "descripcion_rss",
+            "alcance_texto": "descripcion_rss" if url in DESCRIPTIONS else "titular/metadatos",
             "procedencia_id": provenance_id,
             "tema": topic,
             "tema_confianza": topic_confidence,

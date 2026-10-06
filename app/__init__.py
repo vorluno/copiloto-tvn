@@ -1,1 +1,1 @@
-"""Copiloto TVN Streamlit UI. Owner: José."""
+"""Copiloto TVN Streamlit UI. Owner: Cristian (C)."""

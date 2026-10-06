@@ -2,10 +2,22 @@
 
 Reglas que **toda** sesión de trabajo en este repo debe respetar, sea de José, B o C.
 Contexto completo en `docs/` (`plan-maestro.md`, `jose.md`, `b-datos-ia.md`,
-`c-producto-notion-qa.md`; `reto.pdf` cuando esté). Si algo aquí choca con `docs/`,
+`c-producto-notion-qa.md`, `reto.pdf`, `backlog.md`). Si algo aquí choca con `docs/`,
 gana el plan maestro y se avisa en la sincronización.
 
 Entrega: **jueves 8 de octubre de 2026, 23:59**. Congelamos código a las 20:00.
+
+## 0. Equipo
+
+| Rol | Persona | Es dueño de |
+| --- | --- | --- |
+| Líder técnico e integración | José | Repo, arquitectura, puntaje, búsqueda, generación con LLM, guard, caché offline, fichas (backend) |
+| **B** · Datos e IA | **Levi** | Ingesta, validación, contexto oficial, embeddings, temas, procedencia, clusters, baseline, métricas F1, catálogo de datos |
+| **C** · Producto, frontend, Notion y QA | **Cristian** | Interfaz Streamlit (`app/`), Notion, etiquetas humanas, benchmark, T01–T10, riesgos, pitch |
+
+Backlog vigente con dueños y fechas: `docs/backlog.md`. Cómo abrir un PR: `CONTRIBUTING.md`.
+LLM: OpenRouter con `google/gemini-2.5-flash`, temperatura 0 (ADR-005).
+Notion: espacio Business provisto por la organización.
 
 ## 1. Qué es
 
@@ -58,18 +70,23 @@ editorial (ADR-001). Python 3.11, Parquet/DuckDB, Streamlit, todo local (ADR-002
 
 Cada archivo tiene un dueño y un consumidor; **nadie cambia un esquema sin avisar
 en la sincronización** (y al dueño del archivo). Todo en UTF-8, fechas ISO 8601
-en UTC, nulos como nulos (nunca 0).
+en UTC, nulos como nulos (nunca 0). Base: "Contratos entre roles" del plan maestro
+y sección 7 del reto; cambios acordados el 6 oct marcados con *(6 oct)*.
 
 | Archivo | Lo produce | Lo consume | Campos | Primera versión |
 | --- | --- | --- | --- | --- |
-| `data/processed/noticias.parquet` | B | José | id_noticia, titulo, url, medio, dominio, idioma, fecha_publicacion, fecha_deteccion, fecha_extraccion, origen (tvn_rss / gdelt), alcance_texto ("titular/metadatos" o "descripcion_rss"), procedencia_id, tema, tema_confianza, cluster_id | Martes 20:00 (parcial vale) |
+| `data/processed/noticias.parquet` | B | José, app | id_noticia, titulo, *descripcion (nullable; solo tvn_rss) (6 oct)*, url, medio, dominio, idioma, fecha_publicacion, fecha_deteccion, fecha_extraccion, origen (tvn_rss / gdelt), alcance_texto ("titular/metadatos" o "descripcion_rss"), procedencia_id, tema, tema_confianza, cluster_id | Martes 20:00 (parcial vale) |
+| `data/processed/noticias.csv` + `data/processed/fuentes.json` *(6 oct)* | B | Jurado | Exportación con los nombres que exige el reto (secc. 6–7): las mismas columnas de `noticias.parquet`; `fuentes.json` con medio, dominio, origen y condiciones de uso | Miércoles 18:00 |
 | `data/processed/clusters.parquet` | B | José | cluster_id, ids_noticia, n_registros, n_procedencias_independientes, tema, fecha_primera, fecha_ultima | Miércoles 12:00 |
 | `data/processed/indicadores.csv` | B | José | pais_iso3, indicador_id, anio, valor (nullable), unidad, fuente_url, fecha_extraccion, licencia | Martes 20:00 |
 | `data/processed/eventos.geojson` | B | José | id, magnitude, time, updated, longitude, latitude, depth, place, status, url | Martes 20:00 |
+| `data/processed/contexto.parquet` *(6 oct)* | B | José | cluster_id, id_evidencia (`WB-<pais>-<indicador>-<anio>` o id USGS), tipo (indicador / sismo), regla, nota. Sin relación sustentada no hay fila (etapa 3 del reto) | Miércoles 18:00 |
 | `data/manifest.json` | B | C | versión, fecha_corte_UTC, consultas, cantidad por archivo, licencias, SHA-256, transformaciones | Miércoles 12:00 |
 | `data/etiquetas_humanas.csv` | C | B | id_noticia, tema_humano, cluster_humano, etiquetador | Miércoles 12:00 (60 noticias) |
 | `benchmark/benchmark_dev.jsonl` | C | José y B | id, tipo (sustentada / contradiccion / sin_respuesta / adversarial), consulta, respuesta_esperada, ids_evidencia_esperados, sintetico | Miércoles 18:00 |
 | `outputs/fichas.jsonl` | José | C | id_caso, modalidad, ids_fuente, afirmaciones, citas, puntaje, componentes, estado_evidencia, borrador, estado_revision | Miércoles 20:00 |
+| `outputs/revisiones.jsonl` *(6 oct)* | app (C) | José, C (Notion) | id_caso, estado_revision, revisor, fecha_revision (UTC), nota. Solo se agrega, nunca se reescribe | Miércoles 20:00 |
+| `data/stub/*` | José | Todos | Datos sintéticos (`sintetico=true`) con la forma de los contratos: `noticias_stub.parquet`, `fichas_stub.jsonl` (para la interfaz) | Martes |
 | `outputs/cache/` | José | Demo | Salidas del LLM guardadas por hash de entrada, para la demo sin internet | Jueves 12:00 |
 
 Definiciones que todos usan igual:
@@ -77,9 +94,13 @@ Definiciones que todos usan igual:
 - **procedencia_id**: la fuente original de la noticia. Cinco medios que
   replican a EFE comparten la misma procedencia y cuentan como una sola.
 - **fecha_publicacion vs fecha_deteccion**: la primera es la del medio; la
-  segunda es el `seendate` de GDELT. Nunca se mezclan.
-- **estado_evidencia**: insuficiente, parcial o suficiente para el borrador.
-  Es independiente del puntaje.
+  segunda es el `seendate` de GDELT. Nunca se mezclan. En `tvn_rss`
+  `fecha_deteccion` es nula (el RSS no tiene `seendate`); la hora de descarga va
+  en `fecha_extraccion` *(6 oct)*.
+- **descripcion**: solo la trae el RSS de TVN; en GDELT es nula. Si hay
+  descripción, `alcance_texto="descripcion_rss"`; si no, `"titular/metadatos"`.
+- **estado_evidencia**: `insuficiente`, `parcial` o `suficiente para el borrador`
+  (valores exactos). Es independiente del puntaje.
 - **Cita válida**: ID de evidencia + campo o pasaje que respalda la afirmación.
   Una URL suelta no cuenta.
 - **id_noticia**: estable entre corridas: `N-` + primeros 10 caracteres del
@@ -88,6 +109,12 @@ Definiciones que todos usan igual:
   `requiere evidencia`, `aprobado como borrador`, `descartado`.
 - **Temas**: economía, logística/Canal, turismo, servicios públicos, eventos
   naturales, regulación, u `otro`.
+
+**Integración app ↔ backend:** la interfaz (Cristian) solo **lee** archivos de
+contrato (`noticias.parquet`, `clusters.parquet`, `fichas.jsonl`; si no existen,
+los de `data/stub/`) y solo **escribe** `outputs/revisiones.jsonl`. No importa
+lógica de `src/` salvo funciones públicas acordadas en la sincronización. Así
+José y Cristian no tocan los mismos archivos.
 
 Columnas extra fuera del contrato (p. ej. `sintetico`, `recirculada`) se
 permiten si se avisan; nunca se quita ni se renombra una columna del contrato
