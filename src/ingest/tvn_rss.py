@@ -1,0 +1,1 @@
+"""TVN RSS ingestion (B-01): title, link, date and description; stores the raw response in data/raw/ with the extraction date in the filename. Metadata only (the RSS description grants no license over the article); alcance_texto='descripcion_rss'. Owner: B."""

@@ -1,0 +1,1 @@
+"""Validation and data-quality report (B-05, test T01): splits rows with invalid dates, broken URLs or empty required fields into outputs/reports/calidad.md, keeps nulls and never stops the load. Owner: B."""

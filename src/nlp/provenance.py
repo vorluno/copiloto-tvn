@@ -1,0 +1,1 @@
+"""Provenance (B-06, ADR-007): assigns procedencia_id by detecting wire agencies (EFE, AFP, AP, Reuters, Europa Press) and near-identical titles across domains within 48 h (TF-IDF >= 0.9). Owner: B."""

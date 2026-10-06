@@ -1,0 +1,1 @@
+"""USGS FDSN earthquake ingestion (B-04): format=geojson, 2024, lat 5-12, lon -86 to -76, M>=3; writes data/processed/eventos.geojson. The regional box is not Panama's territory: seismic facts only. Owner: B."""

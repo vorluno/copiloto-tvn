@@ -1,0 +1,1 @@
+"""Metrics (B-12, J-13): macro-F1 for AI vs baseline, pairwise cluster precision/recall, citation coverage, correct abstention, median and p95 latency. Always reported with numerator and denominator. Owners: B and José."""

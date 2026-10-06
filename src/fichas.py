@@ -1,0 +1,1 @@
+"""Case cards (J-09): builds each case with ids_fuente, afirmaciones, citas, puntaje, componentes, estado_evidencia, borrador and estado_revision, and exports it to outputs/fichas.jsonl. Owner: José."""

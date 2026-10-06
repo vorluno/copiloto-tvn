@@ -1,0 +1,1 @@
+"""Code-side validator (J-07, J-11): drops claims whose id_fuente is not in the evidence sent or whose passage does not appear in the cited field, checks word limits and exactly 3 questions, and records injection alerts. Owner: José."""

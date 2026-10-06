@@ -1,0 +1,42 @@
+# Priority score rules · version 1 (J-05, ADR-006) · Owner: José
+# Copied from docs/jose.md. Any change bumps the version (scoring_v2.yaml) and is
+# logged in Notion. Intervals are quoted because "[0, 40)" is not valid YAML
+# otherwise: "[" is inclusive, ")" is exclusive.
+version: scoring_v1
+pesos: {R: 30, I: 25, U: 20, N: 15, E: 10}
+rangos: {bajo: "[0, 40)", medio: "[40, 70)", alto: "[70, 100]"}
+desempate: [U_desc, id_asc]
+
+R_relevancia:            # relación con Panamá y con los 6 temas
+  panama_y_tema: 1.0
+  tema_sin_panama: 0.5
+  otro: 0.1
+
+I_impacto:               # alcance del tema + respaldo oficial
+  alcance_tema:
+    servicios_publicos: 0.9
+    eventos_naturales: 0.9
+    economia: 0.8
+    logistica_canal: 0.8
+    regulacion: 0.7
+    turismo: 0.5
+  formula: 0.6 * alcance_tema + 0.4 * hay_indicador_oficial_pertinente
+
+U_urgencia:              # horas desde la fecha_publicacion original más reciente
+  le_24h: 1.0
+  le_72h: 0.7
+  le_7d: 0.4
+  mayor: 0.1
+  recirculada: usar fecha original (T03)
+
+N_novedad:               # diferencia con clusters de los 7 días previos
+  formula: 1 - max_similitud_coseno
+  nota: registros duplicados del mismo cluster no suman
+
+E_evidencia:             # procedencias independientes + fuente oficial
+  formula: 0.6 * min(1, procedencias / 3) + 0.4 * hay_fuente_oficial
+
+estado_evidencia:        # independiente de P
+  insuficiente: procedencias == 1 y sin fuente oficial
+  parcial: procedencias >= 2 o fuente oficial
+  suficiente_para_borrador: procedencias >= 2 y fuente oficial

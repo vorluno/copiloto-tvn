@@ -1,0 +1,1 @@
+"""LLM call (J-08, J-12): builds system prompt + <fuente> evidence tags, temperature 0, stores/reads the output in outputs/cache/ keyed by input hash; with OFFLINE=1 it only reads the cache. Owner: José."""

@@ -1,0 +1,1 @@
+"""Topic classification (B-07): cosine similarity against 2-3 sentences per topic (economía, logística/Canal, turismo, servicios públicos, eventos naturales, regulación); below threshold -> 'otro'. Writes tema and tema_confianza. Owner: B."""

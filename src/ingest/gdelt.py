@@ -1,0 +1,1 @@
+"""GDELT DOC 2.0 ingestion (B-02): mode=ArtList, format=json, maxrecords=250, split by date windows and deduplicated by URL. seendate goes to fecha_deteccion, never to fecha_publicacion; alcance_texto='titular/metadatos'. Owner: B."""

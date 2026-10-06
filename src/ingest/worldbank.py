@@ -1,0 +1,1 @@
+"""World Bank API v2 ingestion (B-03): PAN;CRI;COL;DOM;MEX;GTM, 2010:2024, 6 indicators. Fills the country x indicator x year grid with null valor where missing (never 0) and CC BY 4.0 license on every row; writes data/processed/indicadores.csv. Owner: B."""

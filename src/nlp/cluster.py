@@ -1,0 +1,1 @@
+"""Event clustering (B-08, T02) and recirculated news (B-11, T03): agglomerative cosine clustering within 72 h; writes data/processed/clusters.parquet counting unique provenances, not records. Owner: B."""

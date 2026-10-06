@@ -1,0 +1,1 @@
+"""Priority score P = 30R + 25I + 20U + 15N + 10E (J-05, ADR-006): reads rules/scoring_v1.yaml and returns P, its 5 components and estado_evidencia per cluster. Deterministic, no LLM; ties broken by urgency, then ID. Owner: José."""
