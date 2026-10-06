@@ -5,7 +5,8 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from app.bandeja import build_inbox, filter_inbox, read_cards, records_label, urgency_basis_label
+import app.bandeja as bandeja
+from app.bandeja import build_inbox, filter_inbox, load_cards, read_cards, records_label, urgency_basis_label
 from src.score import score_clusters
 
 STUB_DIR = Path(__file__).resolve().parents[1] / "data" / "stub"
@@ -55,3 +56,18 @@ def test_labels_keep_nulls_visible():
     assert records_label(None, float("nan")) == "— registros · — procedencias"
     assert urgency_basis_label("deteccion") == "detección (GDELT)"
     assert urgency_basis_label(None) == "—"
+
+
+def test_stub_cards_only_next_to_stub_news(tmp_path, monkeypatch):
+    # Rule 12: synthetic cards never sit next to the real corpus.
+    empty = tmp_path / "fichas.jsonl"
+    empty.write_text("", encoding="utf-8")
+    monkeypatch.setattr(bandeja, "FICHAS_PATH", empty)
+    stub_cards, stub_path = load_cards(news_from_stub=True)
+    assert stub_cards and all(c["sintetico"] for c in stub_cards) and stub_path.endswith("fichas_stub.jsonl")
+    assert load_cards(news_from_stub=False) == ([], None)
+    real = tmp_path / "real.jsonl"
+    real.write_text('{"id_caso": "F-C-1", "cluster_id": "C-1"}\n', encoding="utf-8")
+    monkeypatch.setattr(bandeja, "FICHAS_PATH", real)
+    monkeypatch.setattr(bandeja, "ROOT", tmp_path)
+    assert load_cards(news_from_stub=False) == ([{"id_caso": "F-C-1", "cluster_id": "C-1"}], "real.jsonl")
