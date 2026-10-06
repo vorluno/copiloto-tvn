@@ -84,6 +84,7 @@ Los resultados de cada corrida se registran en la matriz T01–T10 de Notion (Cr
 | `make demo` | Abre la app; `OFFLINE=1` usa solo caché | Cristian (app) · José (caché) |
 | `make test` | Corre T01–T10 y pruebas de contrato | Todos |
 | `make eval` | Corre el benchmark y escribe `outputs/reports/` | José y Levi |
+| `make llm-check` | Una llamada real al LLM sobre el stub (necesita `LLM_API_KEY` en `.env`); queda en caché | José |
 
 ## Estructura del repo
 
