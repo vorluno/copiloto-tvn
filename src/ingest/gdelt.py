@@ -1,9 +1,10 @@
 """GDELT DOC 2.0 ingestion (B-02). Owner: B.
 
-mode=ArtList, format=json, maxrecords=250, one query per topic (QUERIES) and per date
-window: the period is split into STEP_DAYS windows because each request returns at
-most 250 articles; a window that hits 250 is reported as saturated. Articles are
-deduplicated by normalized URL.
+mode=ArtList, format=json, maxrecords=250, one query per topic (QUERIES) and per
+calendar month of the agreed period (2025-10-02 to 2026-09-30, common.py), because
+each request returns at most 250 articles; a month that hits 250 is reported as
+saturated. Articles are deduplicated by normalized URL and kept only when their
+seendate falls inside the period.
 
 GDELT gives no outlet date: seendate goes to fecha_deteccion and fecha_publicacion
 stays null (never copied). Only headline and metadata: alcance_texto is
@@ -28,7 +29,7 @@ from pathlib import Path
 import pandas as pd
 import requests
 
-from src.ingest.common import WINDOW_DAYS, finalize, in_window, news_id, provisional_cluster
+from src.ingest.common import WINDOW_END, WINDOW_START, finalize, in_window, news_id, provisional_cluster
 
 ROOT = Path(__file__).resolve().parents[2]
 RAW_DIR = ROOT / "data" / "raw" / "gdelt"
@@ -40,8 +41,7 @@ QUERIES = {
     "eventos_naturales": '(Panama OR Panamá) (sismo OR terremoto OR inundación OR inundaciones OR earthquake OR flood)',
 }
 MAX_RECORDS = 250
-STEP_DAYS = 6
-PAUSE_S = 10
+PAUSE_S = 20
 RETRY_WAITS_S = (30, 60, 120)
 TIMEOUT_S = 60
 STAMP = "%Y%m%dT%H%M%SZ"
@@ -63,12 +63,9 @@ def snapshot_dir(extracted_at: pd.Timestamp, raw_dir: Path = RAW_DIR) -> Path:
     return raw_dir / extracted_at.strftime(STAMP)
 
 
-def date_windows(end: pd.Timestamp, days: int = WINDOW_DAYS, step_days: int = STEP_DAYS) -> list[tuple[pd.Timestamp, pd.Timestamp]]:
-    """Contiguous [start, end) windows covering the last `days` days."""
-    start = end - pd.Timedelta(days=days)
-    edges = list(pd.date_range(start, end, freq=f"{step_days}D"))
-    if edges[-1] < end:
-        edges.append(end)
+def date_windows(start: pd.Timestamp = WINDOW_START, end: pd.Timestamp = WINDOW_END) -> list[tuple[pd.Timestamp, pd.Timestamp]]:
+    """Contiguous [start, end) windows, one per calendar month of the period."""
+    edges = [start, *(m for m in pd.date_range(start, end, freq="MS") if start < m < end), end]
     return list(zip(edges[:-1], edges[1:]))
 
 
@@ -150,7 +147,7 @@ def fetch_run(raw_dir: Path = RAW_DIR, request=None, sleep=time.sleep, resume: P
     folder.mkdir(parents=True, exist_ok=True)
     # Newest window first, every topic per window: a run cut by the rate limit still
     # covers all four topics and the most recent days.
-    todo = [(key, query, start, end) for start, end in reversed(date_windows(extracted_at)) for key, query in QUERIES.items()]
+    todo = [(key, query, start, end) for start, end in reversed(date_windows()) for key, query in QUERIES.items()]
     saturated, pending = [], []
     for key, query, start, end in todo:
         path = folder / f"{key}_{start.strftime('%Y%m%d')}.json"
@@ -184,7 +181,7 @@ def load_snapshots(raw_dir: Path = RAW_DIR) -> pd.DataFrame:
         return finalize(pd.DataFrame())
     df = pd.concat(frames, ignore_index=True).sort_values("fecha_extraccion", kind="stable")
     df = df.drop_duplicates("id_noticia", keep="first")
-    return finalize(df[in_window(df, df["fecha_extraccion"].max(), "fecha_deteccion")])
+    return finalize(df[in_window(df, "fecha_deteccion")])
 
 
 def main() -> None:

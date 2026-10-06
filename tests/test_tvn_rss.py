@@ -85,21 +85,25 @@ def test_nlp_columns_wait_for_b07_b08():
 
 def test_snapshots_accumulate_and_keep_first_extraction(tmp_path):
     first = pd.Timestamp("2026-10-05T21:00:00Z")
-    snapshot_path(first, tmp_path).write_bytes(feed(item("Ayer", "https://www.tvn-2.com/a_1_1.html", "Mon, 05 Oct 2026 12:00:00 +0000", "x")))
+    snapshot_path(first, tmp_path).write_bytes(feed(item("Ayer", "https://www.tvn-2.com/a_1_1.html", "Mon, 28 Sep 2026 12:00:00 +0000", "x")))
     snapshot_path(EXTRACTED_AT, tmp_path).write_bytes(feed(
-        item("Ayer", "https://www.tvn-2.com/a_1_1.html", "Mon, 05 Oct 2026 12:00:00 +0000", "x"),
-        item("Hoy", "https://www.tvn-2.com/b_1_2.html", "Tue, 06 Oct 2026 12:00:00 +0000", "y"),
+        item("Ayer", "https://www.tvn-2.com/a_1_1.html", "Mon, 28 Sep 2026 12:00:00 +0000", "x"),
+        item("Hoy", "https://www.tvn-2.com/b_1_2.html", "Tue, 29 Sep 2026 12:00:00 +0000", "y"),
     ))
     df = load_snapshots(tmp_path).set_index("titulo")
     assert sorted(df.index) == ["Ayer", "Hoy"]
     assert df.loc["Ayer", "fecha_extraccion"] == first
 
 
-def test_window_drops_items_older_than_30_days(tmp_path):
+def test_window_is_2025_10_02_to_2026_09_30_utc(tmp_path):
     snapshot_path(EXTRACTED_AT, tmp_path).write_bytes(feed(
-        item("Vieja", "https://www.tvn-2.com/v_1_1.html", "Fri, 04 Sep 2026 12:00:00 +0000", "x"),
-        item("Reciente", "https://www.tvn-2.com/r_1_2.html", "Tue, 06 Oct 2026 12:00:00 +0000", "y"),
-        item("Sin fecha", "https://www.tvn-2.com/s_1_3.html", None, "z"),
+        item("Excluida 1 oct 2025", "https://www.tvn-2.com/a_1_1.html", "Wed, 01 Oct 2025 23:59:59 +0000", "x"),
+        item("Primer día", "https://www.tvn-2.com/b_1_2.html", "Thu, 02 Oct 2025 00:00:00 +0000", "x"),
+        item("Último día", "https://www.tvn-2.com/c_1_3.html", "Wed, 30 Sep 2026 23:59:59 +0000", "x"),
+        item("Excluida octubre 2026", "https://www.tvn-2.com/d_1_4.html", "Thu, 01 Oct 2026 00:00:00 +0000", "x"),
+        item("Excluida 2024", "https://www.tvn-2.com/e_1_5.html", "Fri, 20 Sep 2024 12:00:00 +0000", "x"),
+        item("Sin fecha", "https://www.tvn-2.com/f_1_6.html", None, "x"),
     ))
     df = load_snapshots(tmp_path)
-    assert sorted(df["titulo"]) == ["Reciente", "Sin fecha"]  # no date: kept, cannot be judged
+    # no date: excluded, it cannot be shown to fall inside the period
+    assert sorted(df["titulo"]) == ["Primer día", "Último día"]

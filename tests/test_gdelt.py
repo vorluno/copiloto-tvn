@@ -33,12 +33,11 @@ def test_queries_cover_the_four_topics():
     assert all("Panama" in q for q in QUERIES.values())
 
 
-def test_windows_split_the_period_without_gaps_or_overlap():
-    end = pd.Timestamp("2026-10-06T21:00:00Z")
-    windows = date_windows(end, days=30, step_days=6)
-    assert len(windows) == 5
-    assert windows[0][0] == end - pd.Timedelta(days=30)
-    assert windows[-1][1] == end
+def test_windows_are_the_months_of_the_period_without_gaps():
+    windows = date_windows()
+    assert len(windows) == 12
+    assert windows[0] == (pd.Timestamp("2025-10-02T00:00:00Z"), pd.Timestamp("2025-11-01T00:00:00Z"))
+    assert windows[-1] == (pd.Timestamp("2026-09-01T00:00:00Z"), pd.Timestamp("2026-10-01T00:00:00Z"))
     assert all(a[1] == b[0] for a, b in zip(windows, windows[1:]))
 
 
@@ -95,7 +94,7 @@ def test_fetch_stops_cleanly_on_rate_limit_and_keeps_what_it_got(tmp_path):
 
     folder, saturated, pending = fetch_run(tmp_path, request=fake_request, sleep=lambda s: None)
     assert len(list(folder.glob("*.json"))) == 2  # the two answers before the block are saved
-    assert len(pending) == len(QUERIES) * 5 - 2  # everything else is listed, nothing raised
+    assert len(pending) == len(QUERIES) * 12 - 2  # everything else is listed, nothing raised
     assert saturated == []
 
 
@@ -141,10 +140,11 @@ def test_pending_never_lists_requests_already_saved(tmp_path):
 def test_snapshots_accumulate_and_respect_the_window(tmp_path):
     first = pd.Timestamp("2026-10-05T21:00:00Z")
     for extracted, articles in (
-        (first, [article("https://x.com/a", seendate="20261005T100000Z")]),
-        (EXTRACTED_AT, [article("https://x.com/a", seendate="20261005T100000Z"),
-                        article("https://x.com/b", seendate="20261006T100000Z"),
-                        article("https://x.com/vieja", seendate="20260801T100000Z")]),
+        (first, [article("https://x.com/a", seendate="20260925T100000Z")]),
+        (EXTRACTED_AT, [article("https://x.com/a", seendate="20260925T100000Z"),
+                        article("https://x.com/b", seendate="20251002T100000Z"),
+                        article("https://x.com/vieja", seendate="20250930T100000Z"),
+                        article("https://x.com/octubre", seendate="20261003T100000Z")]),
     ):
         folder = snapshot_dir(extracted, tmp_path)
         folder.mkdir(parents=True)
