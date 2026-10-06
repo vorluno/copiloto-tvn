@@ -9,7 +9,8 @@
   rewritten. `latest_reviews` keeps the last decision per case; `append_review`
   validates and appends one. The app (Cristian) writes it; this module reads it.
 
-The recommended action is a fixed rule over the evidence state, not LLM output.
+The recommended action is a fixed rule (alerts, abstention, recirculation, then evidence
+state; ADR-022), not LLM output.
 
 CLI: python -m src.fichas [--top 10]   (make fichas)
 """
@@ -35,11 +36,27 @@ REVIEWS_PATH = ROOT / "outputs" / "revisiones.jsonl"
 
 REVIEW_STATES = ("nuevo", "en revisión", "requiere evidencia", "aprobado como borrador", "descartado")
 DEFAULT_TOP_N = 10
+# Same rule and texts as the UI (ADR-022, app/ficha.py): alerts, abstention and
+# recirculation come before the evidence state. Never suggests publishing.
+ACTION_ALERT = "No usar esta fuente como hecho: contiene instrucciones. Revisar la alerta y descartar si no hay otra fuente."
+ACTION_RECIRCULATED = "No presentar como nuevo: es una nota anterior que vuelve a circular. Verificar fecha original."
 RECOMMENDED_ACTION = {
-    "insuficiente": "Investigar antes de redactar: buscar una fuente independiente u oficial.",
-    "parcial": "Verificar con una fuente oficial o independiente antes de aprobar el borrador.",
-    "suficiente para el borrador": "Revisar el borrador y las citas; aprobar no equivale a publicar.",
+    "suficiente para el borrador": "Puede pasar a borrador. Una persona revisa antes de cualquier uso.",
+    "parcial": "Puede empezar un borrador, pero resolver las verificaciones pendientes antes de aprobarlo.",
+    "insuficiente": "Buscar más evidencia (otra procedencia o fuente oficial) antes de redactar.",
 }
+
+
+def recommended_action(evidence_state: str, alerts: list[str], abstained: bool, reason: str | None,
+                       recirculated: bool) -> str:
+    """Deterministic next step for the editor (ADR-022)."""
+    if alerts:
+        return ACTION_ALERT
+    if abstained:
+        return f"No redactar todavía: {reason or 'el sistema se abstuvo.'}"
+    if recirculated:
+        return ACTION_RECIRCULATED
+    return RECOMMENDED_ACTION[evidence_state]
 
 
 def _utc_now() -> str:
@@ -70,6 +87,10 @@ def card_from_package(package: EditorialPackage, scored_row: pd.Series, syntheti
     outputs = [d.result.output for d in drafts.values() if not d.skipped]
     claims = [c.model_dump() for c in brief.afirmaciones] if brief else []
     review = review or {}
+    alerts = _unique(a for o in outputs for a in o.alertas)
+    abstained = bool(brief.abstencion) if brief else True
+    reason = brief.motivo_abstencion if brief else "Sin brief generado."
+    recirculated = bool(scored_row.get("recirculada", False))
     return {
         "id_caso": case_id(package.cluster_id),
         "modalidad": "editorial",
@@ -82,9 +103,9 @@ def card_from_package(package: EditorialPackage, scored_row: pd.Series, syntheti
                     "version_reglas": package.score["version_reglas"], "posicion": int(scored_row["posicion"])},
         "componentes": {k: float(package.score[k]) for k in ("R", "I", "U", "N", "E")},
         "estado_evidencia": package.evidence_state,
-        "accion_recomendada": RECOMMENDED_ACTION[package.evidence_state],
-        "abstencion": bool(brief.abstencion) if brief else True,
-        "motivo_abstencion": brief.motivo_abstencion if brief else "Sin brief generado.",
+        "accion_recomendada": recommended_action(package.evidence_state, alerts, abstained, reason, recirculated),
+        "abstencion": abstained,
+        "motivo_abstencion": reason,
         "titulo": brief.titulo if brief else None,
         "enfoque_interes_publico": brief.enfoque_interes_publico if brief else None,
         "afirmaciones": claims,
@@ -93,7 +114,7 @@ def card_from_package(package: EditorialPackage, scored_row: pd.Series, syntheti
         "preguntas_investigacion": brief.preguntas_investigacion if brief else [],
         "verificaciones_pendientes": _unique(v for o in outputs for v in o.verificaciones_pendientes),
         "borrador": {task: (d.result.output.borrador if not d.skipped else None) for task, d in drafts.items()},
-        "alertas": _unique(a for o in outputs for a in o.alertas),
+        "alertas": alerts,
         "evidencia_oficial_faltante": package.missing_official,
         "generacion": {task: {"origen": d.result.source, "intentos": d.attempts,
                               "afirmaciones": [d.result.report.claims_kept, d.result.report.claims_received],
@@ -103,7 +124,7 @@ def card_from_package(package: EditorialPackage, scored_row: pd.Series, syntheti
         "estado_revision": review.get("estado_revision", "nuevo"),
         "revisor": review.get("revisor"),
         "fecha_revision": review.get("fecha_revision"),
-        "recirculada": bool(scored_row.get("recirculada", False)),
+        "recirculada": recirculated,
         "sintetico": synthetic,
         "generado_en": _utc_now(),
     }

@@ -235,3 +235,18 @@ def test_brief_needs_exactly_three_questions(canal, questions):
     result = guard(raw, canal["evidence"], "brief")
     assert result.output.preguntas_investigacion == []
     assert any("preguntas" in v for v in result.report.violations)
+
+
+
+# --- accusations (secc. 8) ------------------------------------------------------------
+
+@pytest.mark.parametrize("text, expected", [
+    ("Aprehenden a un exdirector por supuesto enriquecimiento injustificado.", "declaracion"),
+    ("La fiscalía imputó a dos funcionarios por peculado.", "declaracion"),
+    ("TVN reporta un límite de calado en el Canal.", "hecho"),
+])
+def test_accusations_are_never_facts(canal, text, expected):
+    claim = {"texto": text, "tipo": "hecho",
+             "citas": [cite(canal["tvn"], "titulo", "límite de calado")]}
+    result = guard(brief_output([claim], draft=f"{ONLY_HEADLINE} x"), canal["evidence"], "brief")
+    assert result.output.afirmaciones[0].tipo == expected

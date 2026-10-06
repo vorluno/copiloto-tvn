@@ -22,6 +22,7 @@ Runs before anything reaches the UI. The model's word is never trusted:
    become a contradiction plus a pending verification, added by code if the model did
    not, and a claim taking one side as "hecho" becomes "declaracion" (T05).
 10. Injection (J-11): a draft that repeats an instruction-like text is dropped (T07).
+11. Accusations (arrests, charges, alleged crimes) are typed "declaracion", never "hecho".
 
 `GuardReport` keeps the numerator and denominator for the citation metrics, and
 `ok` tells generate.py (J-08) whether a retry is worth it.
@@ -77,6 +78,11 @@ COUNTRY_NAMES = {
     "DOM": ["república dominicana", "republica dominicana"], "MEX": ["méxico", "mexico"],
     "GTM": ["guatemala"],
 }
+# Accusations are attributed statements, never facts (secc. 8 of the challenge).
+ACCUSATION = re.compile(
+    r"\b(aprehend|arrest|detenid|captur|imputad|acusad|denunci|investigad|culpab|condenad|sentenciad|"
+    r"enriquecimiento|corrupci|peculado|soborno|fraude|blanqueo|lavado de|estafa|malversaci|"
+    r"homicid|asesin|delito|crimen|presunt|supuest)", re.IGNORECASE)
 # USGS supports seismic facts only, never floods, damage or losses (secc. 6).
 SEISMIC_MISUSE = re.compile(r"inundaci|p[ée]rdida|daño|dano|damnificad|econ[óo]mic", re.IGNORECASE)
 
@@ -311,6 +317,11 @@ def guard(raw: str | dict, evidence: list[Evidence], task: Task) -> GuardResult:
                                          for c in claim.citas for (_, raw) in conflicting):
             claims[i] = claim.model_copy(update={"tipo": "declaracion"})
             report.fixes.append(f"afirmación con cifra en disputa pasa a declaración: {claim.texto[:60]}")
+
+    for i, claim in enumerate(claims):
+        if claim.tipo == "hecho" and ACCUSATION.search(claim.texto):
+            claims[i] = claim.model_copy(update={"tipo": "declaracion"})
+            report.fixes.append(f"acusación pasa a declaración atribuida: {claim.texto[:60]}")
 
     draft = output.borrador
     if not claims:

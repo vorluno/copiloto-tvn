@@ -8,14 +8,14 @@ J-06,"Búsqueda semántica: 10 fragmentos con ID y campo, o ""sin evidencia""",J
 J-07,"Prompt, esquema Pydantic y guard.py",José,Hecha,Mié,2026-10-06,1bd7731 (#3)
 J-08,"Brief, guion y copy con citas",José,Hecha,Mié,2026-10-06,e50d75b (#8)
 J-09,Exportar fichas.jsonl y leer revisiones.jsonl (solo backend; la interfaz es C-15),José,Hecha,Mié,2026-10-06,942a75b (#13)
-J-10,"Abstención y contradicciones (T05, T06)",José,Hecha,Jue,2026-10-06,
-J-11,Defensa anti-inyección (T07),José,Hecha,Jue,2026-10-06,
+J-10,"Abstención y contradicciones (T05, T06)",José,Hecha,Jue,2026-10-06,5761938 (#17)
+J-11,Defensa anti-inyección (T07),José,Hecha,Jue,2026-10-06,5761938 (#17)
 J-12,Caché offline y modo sin internet (T10),José,En curso,Jue,,8601aad (#6)
 J-13,"Latencia mediana y p95, tokens y costo",José,Por hacer,Jue,,
 J-14,"Tag v1.0, README final, acceso del jurado",José,Por hacer,Jue,,
 J-15,fichas_stub.jsonl para que el frontend avance sin backend,José,Hecha,Mar,2026-10-06,ad52899
 J-16,"docs/alcance-y-datos.md: modalidad, recorrido y para qué sirve cada fuente",José,Hecha,Mar,2026-10-06,71f15cd (#5)
-B-01,"Ingesta TVN RSS (≥20 noticias, con descripcion)",Levi,Por hacer,Mar,,
+B-01,"Ingesta TVN RSS (≥20 noticias, con descripcion)",Levi,Hecha,Mar,2026-10-06,e2b1ef1 (#15)
 B-02,"Ingesta GDELT DOC 2.0 por fechas, dedupe por URL",Levi,Por hacer,Mar,,
 B-03,Banco Mundial: cuadrícula completa con nulos (6 países × 6 indicadores × 15 años),Levi,Hecha,Mar,2026-10-06,040afa8 (#9)
 B-04,"USGS 2024, caja regional, M≥3",Levi,Hecha,Mar,2026-10-06,a346697 (#10)
@@ -44,7 +44,7 @@ C-09,Precision@5 contra selección independiente,Cristian,Por hacer,Jue,,
 C-10,"5+ fichas en Notion, una con evidencia insuficiente",Cristian,Por hacer,Jue,,
 C-11,Pitch en Notion y 2 ensayos cronometrados,Cristian,Por hacer,Jue,,
 C-12,"Bandeja priorizada (CU-01): top 5 por P con rango, estado de evidencia, tema, ""N registros · M procedencias"", filtros; hora de Panamá. Lee fichas_stub.jsonl y luego fichas.jsonl",Cristian,Hecha,Mié,2026-10-06,c0a0fe1 (#7)
-C-13,"Ficha (etapa 5): qué se reporta, quién, qué está respaldado, qué falta y acción recomendada; 5 componentes en barras + versión de reglas; cada cita muestra ID, campo y pasaje",Cristian,Por hacer,Mié,,
+C-13,"Ficha (etapa 5): qué se reporta, quién, qué está respaldado, qué falta y acción recomendada; 5 componentes en barras + versión de reglas; cada cita muestra ID, campo y pasaje",Cristian,Hecha,Mié,2026-10-06,16f4247 (#16)
 C-14,"Borrador y consulta: brief, guion y copy con contador de palabras; afirmaciones con su tipo (hecho / declaración / inferencia / hipótesis) diferenciado; contradicciones lado a lado (T05); abstención visible (T06); alertas (T07); aviso ""basado únicamente en titular/metadatos""; caja de consulta en español (CU-04)",Cristian,Por hacer,Mié,,
 C-15,"Revisión: 5 estados + persona revisora + nota → outputs/revisiones.jsonl; botón ""copiar para Notion"" con la ficha en Markdown (ADR-008)",Cristian,Por hacer,Mié,,
 C-16,"Pantalla ""Datos y calidad"": reporte de calidad, manifest y licencias; aviso de modo sin internet (T10)",Cristian,Por hacer,Jue,,
