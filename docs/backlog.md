@@ -32,7 +32,7 @@ Parte del backlog del plan maestro (37 tareas) con los cambios de abajo. Estados
 | J-05 | `score.py`: P y 5 componentes desde `scoring_v1.yaml` | Mié | B-08 (empieza con stub) | ✅ sobre el stub; falta correr con datos de Levi y `contexto.parquet` |
 | J-06 | Búsqueda semántica: 10 fragmentos con ID y campo, o "sin evidencia" | Mié | B-07 | ⬜ |
 | J-07 | Prompt, esquema Pydantic y `guard.py` | Mié | J-04 | ✅ #3 |
-| J-08 | Brief, guion y copy con citas | Mié | J-07 | ⬜ |
+| J-08 | Brief, guion y copy con citas | Mié | J-07 | ✅ `build_package`; falta probar con Gemini y datos reales |
 | J-09 | Exportar `fichas.jsonl` y leer `revisiones.jsonl` (solo backend; la interfaz es C-15) | Mié | J-08 | ⬜ |
 | J-10 | Abstención y contradicciones (T05, T06) | Jue | J-08 | ⬜ |
 | J-11 | Defensa anti-inyección (T07) | Jue | J-07 | ⬜ |
@@ -80,7 +80,7 @@ Parte del backlog del plan maestro (37 tareas) con los cambios de abajo. Estados
 | C-09 | Precision@5 contra selección independiente | Jue | J-05 | ⬜ |
 | C-10 | 5+ fichas en Notion, una con evidencia insuficiente | Jue | J-09 | ⬜ |
 | C-11 | Pitch en Notion y 2 ensayos cronometrados | Jue 22:00 | Todo | ⬜ |
-| **C-12** | **Bandeja priorizada (CU-01):** top 5 por P con rango, estado de evidencia, tema, "N registros · M procedencias", filtros; hora de Panamá. Lee `fichas_stub.jsonl` y luego `fichas.jsonl` | Mié 12:00 | J-15 | ⬜ |
+| **C-12** | **Bandeja priorizada (CU-01):** top 5 por P con rango, estado de evidencia, tema, "N registros · M procedencias", filtros; hora de Panamá. Lee `fichas_stub.jsonl` y luego `fichas.jsonl` | Mié 12:00 | J-15 | ✅ #7 |
 | **C-13** | **Ficha (etapa 5):** qué se reporta, quién, qué está respaldado, qué falta y acción recomendada; 5 componentes en barras + versión de reglas; cada cita muestra ID, campo y pasaje | Mié 18:00 | C-12 | ⬜ |
 | **C-14** | **Borrador y consulta:** brief, guion y copy con contador de palabras; afirmaciones con su tipo (hecho / declaración / inferencia / hipótesis) diferenciado; contradicciones lado a lado (T05); abstención visible (T06); alertas (T07); aviso "basado únicamente en titular/metadatos"; caja de consulta en español (CU-04) | Mié 20:00 | C-13 | ⬜ |
 | **C-15** | **Revisión:** 5 estados + persona revisora + nota → `outputs/revisiones.jsonl`; botón "copiar para Notion" con la ficha en Markdown (ADR-008) | Mié 20:00 | C-13 | ⬜ |
