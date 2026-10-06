@@ -4,14 +4,14 @@ J-02,Stub de 10 noticias sintéticas,José,Hecha,Mar,2026-10-06,a457bcf
 J-03,Esqueleto Streamlit con 4 pestañas,José,Hecha,Mar,2026-10-06,a457bcf
 J-04,Proveedor LLM y ADR-005,José,En curso,Mar,,ba834f8
 J-05,score.py: P y 5 componentes desde scoring_v1.yaml,José,Hecha,Mié,2026-10-06,bfb788d (#4)
-J-06,"Búsqueda semántica: 10 fragmentos con ID y campo, o ""sin evidencia""",José,Hecha,Mié,2026-10-06,
+J-06,"Búsqueda semántica: 10 fragmentos con ID y campo, o ""sin evidencia""",José,Hecha,Mié,2026-10-06,9a88c11 (#19)
 J-07,"Prompt, esquema Pydantic y guard.py",José,Hecha,Mié,2026-10-06,1bd7731 (#3)
 J-08,"Brief, guion y copy con citas",José,Hecha,Mié,2026-10-06,e50d75b (#8)
 J-09,Exportar fichas.jsonl y leer revisiones.jsonl (solo backend; la interfaz es C-15),José,Hecha,Mié,2026-10-06,942a75b (#13); 9b0e0af (#18)
 J-10,"Abstención y contradicciones (T05, T06)",José,Hecha,Jue,2026-10-06,5761938 (#17)
 J-11,Defensa anti-inyección (T07),José,Hecha,Jue,2026-10-06,5761938 (#17)
 J-12,Caché offline y modo sin internet (T10),José,En curso,Jue,,8601aad (#6)
-J-13,"Latencia mediana y p95, tokens y costo",José,Por hacer,Jue,,
+J-13,"Latencia mediana y p95, tokens y costo",José,En curso,Jue,,
 J-14,"Tag v1.0, README final, acceso del jurado",José,Por hacer,Jue,,
 J-15,fichas_stub.jsonl para que el frontend avance sin backend,José,Hecha,Mar,2026-10-06,ad52899
 J-16,"docs/alcance-y-datos.md: modalidad, recorrido y para qué sirve cada fuente",José,Hecha,Mar,2026-10-06,71f15cd (#5)
