@@ -156,3 +156,15 @@ def test_missing_key_fails_clearly(monkeypatch, tmp_path):
     monkeypatch.setattr(gen, "ROOT", tmp_path)  # no .env to load
     with pytest.raises(RuntimeError, match="LLM_API_KEY"):
         gen.OpenRouterClient()
+
+
+
+def test_missing_key_online_is_an_error_result_not_a_crash(request_, tmp_path, monkeypatch):
+    # The app's query box calls generate without a client; with no key it must get an
+    # abstention with source "error", never an exception (found while reviewing C-14).
+    monkeypatch.delenv("LLM_API_KEY", raising=False)
+    monkeypatch.setattr(gen, "ROOT", tmp_path)  # no .env to load
+    result = generate_draft(request_, offline=False, cache_dir=tmp_path)
+    assert result.source == "error" and result.output.abstencion
+    assert any("RuntimeError" in v for v in result.report.violations)
+    assert list(tmp_path.glob("*.json")) == []
