@@ -50,7 +50,7 @@ def headline_only(sources: pd.DataFrame) -> bool:
 
 
 def recommended_action(estado_evidencia: str, card: dict | None, recirculada: bool) -> str:
-    """Deterministic next step for the editor (ADR-019). Never 'publish'."""
+    """Deterministic next step for the editor (ADR-021). Never 'publish'."""
     card = card or {}
     if card.get("alertas"):
         return "No usar esta fuente como hecho: contiene instrucciones. Revisar la alerta y descartar si no hay otra fuente."

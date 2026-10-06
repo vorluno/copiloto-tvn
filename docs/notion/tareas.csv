@@ -7,7 +7,7 @@ J-05,score.py: P y 5 componentes desde scoring_v1.yaml,José,Hecha,Mié,2026-10-
 J-06,"Búsqueda semántica: 10 fragmentos con ID y campo, o ""sin evidencia""",José,Por hacer,Mié,,
 J-07,"Prompt, esquema Pydantic y guard.py",José,Hecha,Mié,2026-10-06,1bd7731 (#3)
 J-08,"Brief, guion y copy con citas",José,Hecha,Mié,2026-10-06,e50d75b (#8)
-J-09,Exportar fichas.jsonl y leer revisiones.jsonl (solo backend; la interfaz es C-15),José,Por hacer,Mié,,
+J-09,Exportar fichas.jsonl y leer revisiones.jsonl (solo backend; la interfaz es C-15),José,Hecha,Mié,2026-10-06,942a75b (#13)
 J-10,"Abstención y contradicciones (T05, T06)",José,Por hacer,Jue,,
 J-11,Defensa anti-inyección (T07),José,Por hacer,Jue,,
 J-12,Caché offline y modo sin internet (T10),José,En curso,Jue,,8601aad (#6)
@@ -19,7 +19,7 @@ B-01,"Ingesta TVN RSS (≥20 noticias, con descripcion)",Levi,Por hacer,Mar,,
 B-02,"Ingesta GDELT DOC 2.0 por fechas, dedupe por URL",Levi,Por hacer,Mar,,
 B-03,Banco Mundial: cuadrícula completa con nulos (6 países × 6 indicadores × 15 años),Levi,Hecha,Mar,2026-10-06,040afa8 (#9)
 B-04,"USGS 2024, caja regional, M≥3",Levi,Hecha,Mar,2026-10-06,a346697 (#10)
-B-05,Validación y reporte de calidad (T01),Levi,Por hacer,Mar,,
+B-05,Validación y reporte de calidad (T01),Levi,Hecha,Mar,2026-10-06,5bf16e9 (#12)
 B-06,procedencia_id: agencias replicadas,Levi,Por hacer,Mié,,
 B-07,Embeddings y clasificación por tema,Levi,Por hacer,Mié,,
 B-08,Agrupación y conteo de procedencias (T02),Levi,Por hacer,Mié,,
