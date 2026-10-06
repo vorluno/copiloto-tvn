@@ -19,6 +19,9 @@ from app.bandeja import (
     COMPONENTS, EVIDENCE_STATES, SCORE_RANGES, TOP_N, build_inbox, filter_inbox, load_cards, load_contexto,
     records_label, urgency_basis_label,
 )
+from app.ficha import (
+    CLAIM_TYPES, citation_found, cluster_sources, component_points, headline_only, recommended_action,
+)
 from src.score import score_clusters
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -99,13 +102,15 @@ if has_synthetic:
 else:
     st.info(f"Datos: `{source_path}`")
 
+scored = load_scores(news)
+cards, cards_path = load_cards()
+cards_by_cluster = {c["cluster_id"]: c for c in cards if c.get("cluster_id")}
+inbox = build_inbox(scored, news, cards)
+
 inbox_tab, card_tab, draft_tab, review_tab = st.tabs(["Bandeja", "Ficha", "Borrador", "Revisión"])
 
 with inbox_tab:
     st.subheader("Bandeja priorizada")
-    scored = load_scores(news)
-    cards, cards_path = load_cards()
-    inbox = build_inbox(scored, news, cards)
     st.caption(
         f"Puntaje P = 30R + 25I + 20U + 15N + 10E (`{', '.join(scored['version_reglas'].unique())}`, "
         "determinista, sin LLM). Prioridad alta **no** habilita publicar: el estado de evidencia va aparte."
@@ -145,18 +150,21 @@ with inbox_tab:
         })
         component_help = {"R": "Relación con Panamá", "I": "Impacto", "U": "Urgencia",
                           "N": "Novedad", "E": "Evidencia"}
-        st.dataframe(
-            table, hide_index=True, width="stretch",
+        event = st.dataframe(
+            table, hide_index=True, width="stretch", on_select="rerun", selection_mode="single-row",
             column_config={
                 "P": st.column_config.ProgressColumn("P", min_value=0, max_value=100, format="%.1f"),
                 **{c: st.column_config.NumberColumn(c, help=f"{component_help[c]} (0–1)", format="%.2f")
                    for c in COMPONENTS},
             },
         )
+        if event.selection.rows:
+            # Runs before the Ficha selectbox is created, so it can set its value.
+            st.session_state.ficha_cluster = view.iloc[event.selection.rows[0]]["cluster_id"]
         st.caption(
             f"Mostrando {len(view)} de {len(inbox)} clusters. R relación con Panamá · I impacto · "
             "U urgencia · N novedad · E evidencia (0–1). Referencia = fecha desde la que se mide U, "
-            f"en hora de Panamá (UTC−5). Fichas: `{cards_path}`."
+            f"en hora de Panamá (UTC−5). Fichas: `{cards_path}`. Elige una fila para abrirla en **Ficha**."
         )
 
     with st.expander(f"Noticias del corpus ({len(news)})"):
@@ -175,37 +183,102 @@ with inbox_tab:
 
 with card_tab:
     st.subheader("Ficha")
-    selected_id = st.selectbox(
-        "Noticia",
-        news["id_noticia"],
-        format_func=lambda i: f"{i} · {news.loc[news['id_noticia'] == i, 'titulo'].iloc[0]}",
-    )
-    row = news.loc[news["id_noticia"] == selected_id].iloc[0]
-    if marks := flags(row):
-        st.markdown(marks)
-    left, right = st.columns(2)
-    with left:
-        st.markdown(f"**Titular** · `{row['id_noticia']} · titulo`")
-        st.write(row["titulo"])
-        if pd.notna(row.get("descripcion")):
-            st.markdown(f"**Descripción RSS** · `{row['id_noticia']} · descripcion`")
-            st.write(row["descripcion"])
-        st.markdown(f"**Medio:** {row['medio']} (`{row['dominio']}`)")
-        st.markdown(f"**Origen:** {row['origen']} · **Alcance:** {row['alcance_texto']}")
-        st.markdown(f"**URL:** {row['url']}")
-    with right:
-        st.markdown(f"**Publicación:** {to_panama(row['fecha_publicacion'])} · {to_utc(row['fecha_publicacion'])}")
-        st.markdown(f"**Detección:** {to_panama(row['fecha_deteccion'])} · {to_utc(row['fecha_deteccion'])}")
-        st.markdown(f"**Extracción:** {to_utc(row['fecha_extraccion'])}")
-        st.markdown(f"**Tema:** {row['tema']} (confianza {row['tema_confianza']:.2f})")
-        same_cluster = news[news["cluster_id"] == row["cluster_id"]]
-        st.markdown(
-            f"**Cluster {row['cluster_id']}:** {len(same_cluster)} registros, "
-            f"{same_cluster['procedencia_id'].nunique()} procedencias independientes"
+    if inbox.empty:
+        st.info("Todavía no hay clusters para explicar.")
+    else:
+        by_id = inbox.set_index("cluster_id")
+        if st.session_state.get("ficha_cluster") not in by_id.index:
+            st.session_state.ficha_cluster = inbox.sort_values("posicion")["cluster_id"].iloc[0]
+        cluster_id = st.selectbox(
+            "Cluster", list(inbox.sort_values("posicion")["cluster_id"]), key="ficha_cluster",
+            format_func=lambda c: f"#{by_id.loc[c, 'posicion']} · {by_id.loc[c, 'tema']} · {by_id.loc[c, 'titular']}",
         )
-    if row["alcance_texto"] == "titular/metadatos":
-        st.caption("Basado únicamente en titular/metadatos.")
-    st.caption("Puntaje P y sus 5 componentes: pendiente (J-05). Estado de evidencia: pendiente.")
+        row = by_id.loc[cluster_id]
+        card = cards_by_cluster.get(cluster_id)
+        sources = cluster_sources(news, cluster_id)
+
+        st.markdown(f"### {row['titular']}")
+        st.markdown(" · ".join(m for m in (
+            f"**{row['tema']}**", f"P **{row['P']:.1f}** ({row['rango']})",
+            f"Evidencia: **{row['estado_evidencia']}**",
+            records_label(row["n_registros"], row["n_procedencias_independientes"]),
+            f"Ficha `{card['id_caso']}`" if card else "Sin ficha generada (J-09)",
+            "🧪 sintético" if row["sintetico"] else "", "♻️ recirculada" if row["recirculada"] else "",
+        ) if m))
+        if headline_only(sources):
+            st.caption("Basado únicamente en titular/metadatos.")
+        st.info(f"**Acción recomendada:** {recommended_action(row['estado_evidencia'], card, bool(row['recirculada']))}")
+        for alerta in (card or {}).get("alertas", []):
+            st.warning(f"⚠️ {alerta}")
+
+        left, right = st.columns([3, 2])
+        with left:
+            st.markdown("#### Qué se reporta")
+            if card and card.get("enfoque_interes_publico"):
+                st.markdown(f"*Enfoque de interés público:* {card['enfoque_interes_publico']}")
+            claims = (card or {}).get("afirmaciones") or []
+            if claims:
+                for claim in claims:
+                    st.markdown(f"- **{CLAIM_TYPES.get(claim['tipo'], claim['tipo'])}** · {claim['texto']}")
+            elif card and card.get("abstencion"):
+                st.markdown(f"El sistema se abstuvo: {card.get('motivo_abstencion')}")
+            else:
+                st.caption("Sin afirmaciones generadas todavía. Titulares de las fuentes, tal cual:")
+                for item in sources.itertuples():
+                    st.markdown(f"- `{item.id_noticia} · titulo` {item.titulo}")
+
+            st.markdown("#### Qué está respaldado")
+            if claims:
+                for claim in claims:
+                    st.markdown(f"**{claim['texto']}**")
+                    for cita in claim["citas"]:
+                        mark = "✅" if citation_found(news, cita) else "❌ pasaje no encontrado en la fuente"
+                        st.markdown(f"{mark} `{cita['id_fuente']} · {cita['campo']}` · “{cita['pasaje']}”")
+            else:
+                st.caption("Nada respaldado todavía: no hay afirmaciones con cita.")
+
+            st.markdown("#### Qué falta")
+            missing = list((card or {}).get("verificaciones_pendientes") or [])
+            if not row["hay_fuente_oficial"]:
+                missing.append("Sin fuente oficial vinculada (Banco Mundial o USGS)"
+                               + ("." if row["contexto_disponible"] else "; el contexto oficial (B-14) aún no existe."))
+            if row["n_procedencias_independientes"] < 2:
+                missing.append("Una sola procedencia independiente: falta corroboración.")
+            for item in dict.fromkeys(missing):
+                st.markdown(f"- {item}")
+            for contradiccion in (card or {}).get("contradicciones") or []:
+                st.markdown(f"- Contradicción: {contradiccion}")
+            if questions := (card or {}).get("preguntas_investigacion"):
+                st.markdown("*Preguntas de investigación:*")
+                for q in questions:
+                    st.markdown(f"- {q}")
+
+        with right:
+            st.markdown("#### Puntaje")
+            for comp in component_points(row):
+                if comp["valor"] is None:
+                    st.caption(f"{comp['clave']} · {comp['nombre']}: sin dato")
+                else:
+                    st.progress(comp["valor"], text=f"{comp['clave']} · {comp['nombre']}: "
+                                f"{comp['valor']:.2f} × {comp['peso']} = {comp['puntos']:.1f} pts")
+            st.caption(
+                f"P = {row['P']:.1f} · reglas `{row['version_reglas']}` · U medida desde "
+                f"{urgency_basis_label(row['base_urgencia'])}, {to_panama(row['fecha_referencia_urgencia'])}."
+            )
+            if card and (card.get("puntaje") or {}).get("valores_de_ejemplo"):
+                st.caption(f"La ficha de ejemplo trae P = {card['puntaje']['P']:.1f}; aquí se muestra el de `score.py`.")
+
+        st.markdown("#### Quién lo reporta")
+        st.dataframe(pd.DataFrame({
+            "ID": sources["id_noticia"],
+            "Medio": sources["medio"],
+            "Procedencia": sources["procedencia_id"].fillna("— (sin dato)"),
+            "Origen": sources["origen"],
+            "Alcance": sources["alcance_texto"],
+            "Publicación (Panamá)": sources["fecha_publicacion"].map(to_panama),
+            "Detección (Panamá)": sources["fecha_deteccion"].map(to_panama),
+            "URL": sources["url"],
+        }), hide_index=True, width="stretch", column_config={"URL": st.column_config.LinkColumn("URL")})
 
 with draft_tab:
     st.subheader("Borrador")
