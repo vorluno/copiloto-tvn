@@ -15,7 +15,7 @@ import pandas as pd
 from pydantic import BaseModel, ConfigDict, Field
 
 ClaimType = Literal["hecho", "declaracion", "inferencia", "hipotesis"]
-Task = Literal["brief", "guion", "copy"]
+Task = Literal["brief", "guion", "copy", "respuesta"]
 EvidenceKind = Literal["noticia", "indicador", "sismo"]
 
 
