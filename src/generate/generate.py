@@ -33,12 +33,13 @@ from src.generate.schema import Evidence, SalidaLLM, Task
 
 ROOT = Path(__file__).resolve().parents[2]
 CACHE_DIR = ROOT / "outputs" / "cache"
-PROMPT_VERSION = "brief_v1"
+PROMPT_VERSION = "brief_v2"  # v1 kept for history; v2 adds rules 9-10 (J-10)
 PROMPT_PATH = Path(__file__).with_name("prompts") / f"{PROMPT_VERSION}.txt"
 DEFAULT_MODEL = "google/gemini-2.5-flash"
 DEFAULT_BASE_URL = "https://openrouter.ai/api/v1"
 TEMPERATURE = 0.0
-TASK_LABELS = {"brief": "brief", "guion": "guion de 45-60 segundos", "copy": "copy digital"}
+TASK_LABELS = {"brief": "brief", "guion": "guion de 45-60 segundos", "copy": "copy digital",
+               "respuesta": "respuesta a una consulta del editor"}
 
 OFFLINE_MISS = "Sin internet y sin respuesta guardada en caché para esta consulta."
 PROVIDER_ERROR = "El proveedor del LLM no respondió; no se generó borrador."
@@ -126,7 +127,7 @@ def build_messages(request: DraftRequest) -> list[dict]:
     limit = f"entre {low} y {high} palabras" if low > 1 else f"hasta {high} palabras"
     header = "\n".join([
         f"Tarea: {TASK_LABELS[request.task]} ({limit} en \"borrador\")",
-        f"Tema: {request.topic}",
+        f"Consulta: {request.topic}" if request.task == "respuesta" else f"Tema: {request.topic}",
         f"Puntaje: {request.score_line} · Estado de evidencia: {request.evidence_state}",
     ])
     if request.feedback:
