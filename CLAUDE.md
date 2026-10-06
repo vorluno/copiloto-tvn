@@ -131,6 +131,10 @@ Funciones públicas acordadas que la app puede importar:
   `EditorialPackage` con `drafts["brief" | "guion" | "copy"].result` (cada uno un `DraftResult`),
   `evidence`, `score`, `evidence_state` y `abstained`. `official` sale de
   `drafts.official_index(indicadores, eventos)` (J-08).
+- `src.fichas.append_review(id_caso, estado_revision, revisor, nota="")` agrega una decisión a
+  `outputs/revisiones.jsonl` (valida el estado; nunca reescribe). `latest_reviews()` →
+  última decisión por `id_caso`; `apply_reviews(cards, reviews)` la aplica a las fichas (J-09).
+  `make fichas` (o `OFFLINE=1 make fichas`) escribe `outputs/fichas.jsonl`.
 
 Columnas extra fuera del contrato (p. ej. `sintetico`, `recirculada`) se
 permiten si se avisan; nunca se quita ni se renombra una columna del contrato

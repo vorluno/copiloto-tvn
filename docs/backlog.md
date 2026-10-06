@@ -33,7 +33,7 @@ Parte del backlog del plan maestro (37 tareas) con los cambios de abajo. Estados
 | J-06 | Búsqueda semántica: 10 fragmentos con ID y campo, o "sin evidencia" | Mié | B-07 | ⬜ |
 | J-07 | Prompt, esquema Pydantic y `guard.py` | Mié | J-04 | ✅ #3 |
 | J-08 | Brief, guion y copy con citas | Mié | J-07 | ✅ `build_package`; falta probar con Gemini y datos reales |
-| J-09 | Exportar `fichas.jsonl` y leer `revisiones.jsonl` (solo backend; la interfaz es C-15) | Mié | J-08 | ⬜ |
+| J-09 | Exportar `fichas.jsonl` y leer `revisiones.jsonl` (solo backend; la interfaz es C-15) | Mié | J-08 | ✅ `make fichas`; falta correrlo con Gemini y noticias reales |
 | J-10 | Abstención y contradicciones (T05, T06) | Jue | J-08 | ⬜ |
 | J-11 | Defensa anti-inyección (T07) | Jue | J-07 | ⬜ |
 | J-12 | Caché offline y modo sin internet (T10) | Jue | J-08 | 🟡 caché y modo offline listos; falta llenar la caché con el recorrido del pitch (jueves 12:00) |
