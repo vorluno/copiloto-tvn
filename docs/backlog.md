@@ -48,8 +48,8 @@ Parte del backlog del plan maestro (37 tareas) con los cambios de abajo. Estados
 | --- | --- | --- | --- | --- |
 | B-01 | Ingesta TVN RSS (≥20 noticias, con `descripcion`) | Mar 20:00 | J-01 | ⬜ |
 | B-02 | Ingesta GDELT DOC 2.0 por fechas, dedupe por URL | Mar 20:00 | J-01 | ⬜ |
-| B-03 | Banco Mundial: cuadrícula completa con nulos (6 países × 6 indicadores × 15 años) | Mar 20:00 | J-01 | ⬜ |
-| B-04 | USGS 2024, caja regional, M≥3 | Mar 20:00 | J-01 | ⬜ |
+| B-03 | Banco Mundial: cuadrícula completa con nulos (6 países × 6 indicadores × 15 años) | Mar 20:00 | J-01 | ✅ #9 |
+| B-04 | USGS 2024, caja regional, M≥3 | Mar 20:00 | J-01 | ✅ #10 |
 | B-05 | Validación y reporte de calidad (T01) | Mar 20:00 | B-01..B-04 | ⬜ |
 | B-06 | `procedencia_id`: agencias replicadas | Mié | B-05 | ⬜ |
 | B-07 | Embeddings y clasificación por tema | Mié | B-05 | ⬜ |
