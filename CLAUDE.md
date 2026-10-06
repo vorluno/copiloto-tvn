@@ -123,6 +123,10 @@ Funciones públicas acordadas que la app puede importar:
 - `src.score.score_clusters(news, contexto=None, now=None)` → una fila por cluster con
   `posicion`, `P`, `rango`, `R`, `I`, `U`, `N`, `E`, `estado_evidencia`, `version_reglas`,
   `n_registros`, `n_procedencias_independientes`, `base_urgencia` y más (J-05).
+- `src.generate.generate.generate_draft(DraftRequest(task, topic, evidence, ...))` →
+  `DraftResult` con `output` (ya pasado por el guard), `report`, `source` (`cache`, `llm`,
+  `offline_miss` o `error`) y `latency_s`. Con `OFFLINE=1` solo lee `outputs/cache/` (J-12).
+  La evidencia se arma con `src.generate.schema.evidence_from_news` / `evidence_from_indicator`.
 
 Columnas extra fuera del contrato (p. ej. `sintetico`, `recirculada`) se
 permiten si se avisan; nunca se quita ni se renombra una columna del contrato

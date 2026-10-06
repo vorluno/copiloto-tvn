@@ -14,3 +14,27 @@ Reglas:
 6. Si la evidencia no alcanza, responde abstencion=true y explica qué falta.
 7. No inventes entrevistas, citas textuales, cifras, imágenes ni causas.
 8. Responde solo con el JSON pedido.
+
+Formato de salida (un solo objeto JSON, sin texto fuera de él):
+{
+  "abstencion": false,
+  "motivo_abstencion": null,
+  "titulo": "...",
+  "enfoque_interes_publico": "...",
+  "afirmaciones": [
+    {"texto": "...", "tipo": "hecho | declaracion | inferencia | hipotesis",
+     "citas": [{"id_fuente": "<id de la fuente>", "campo": "<campo de la fuente>", "pasaje": "<texto copiado literal de ese campo>"}]}
+  ],
+  "contradicciones": [
+    {"version_a": "...", "cita_a": {"id_fuente": "...", "campo": "...", "pasaje": "..."},
+     "version_b": "...", "cita_b": {"id_fuente": "...", "campo": "...", "pasaje": "..."}}
+  ],
+  "preguntas_investigacion": ["...", "...", "..."],
+  "verificaciones_pendientes": ["..."],
+  "borrador": "...",
+  "alertas": []
+}
+- "campo" es el nombre de una línea dentro de <fuente> (por ejemplo titulo o valor) y
+  "pasaje" se copia literal de esa línea.
+- Si abstencion es true, deja "afirmaciones" vacío y explica qué falta en "motivo_abstencion".
+- Respeta el límite de palabras de la tarea indicado en el mensaje.

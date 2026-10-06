@@ -12,7 +12,7 @@ ifeq ($(OFFLINE),1)
 DEMO_ENV += HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1
 endif
 
-.PHONY: setup stub data nlp demo test eval
+.PHONY: setup stub data nlp demo test eval llm-check
 
 setup: ## Create .venv and install pinned requirements
 	python3.11 -m venv $(VENV)
@@ -40,3 +40,6 @@ test: ## Run T01-T10 and contract tests
 
 eval: ## Run the benchmark and write outputs/reports/ (J-13, B-12)
 	@echo "Pending J-13/B-12: src/eval/run_benchmark.py has no entry point yet."
+
+llm-check: ## One real LLM call on the stub (needs LLM_API_KEY in .env); result is cached (J-12)
+	$(PY) -m src.generate.generate
