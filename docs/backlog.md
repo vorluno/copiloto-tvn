@@ -16,7 +16,7 @@ Parte del backlog del plan maestro (37 tareas) con los cambios de abajo. Estados
 1. **Cristian toma el frontend.** La interfaz (`app/`) pasa a ser suya: C-12 a C-16. José se queda con el backend (puntaje, búsqueda, generación, guard, caché, export de fichas). La app lee archivos del contrato y escribe `outputs/revisiones.jsonl` (ver CLAUDE.md §3), así que no pisan los mismos archivos.
 2. **Levi toma la etapa 3 del reto, "Contextualizar"** (B-14), que no tenía dueño, y el **Catálogo de datos en Notion** (B-15, antes C-04): conoce las fuentes mejor que nadie.
 3. **Entregables con el nombre del reto:** `noticias.csv` + `fuentes.json` (B-13). El reto (secc. 6–7) pide esos nombres; nuestro parquet sigue siendo el formato de trabajo.
-4. **Notion lo da la organización** (licencia Business). C-01 ya no es crear el espacio: es armar las 8 páginas dentro del espacio provisto y verificar el acceso del jurado.
+4. **Notion lo da la organización** (licencia Business) y todavía no llega. Mientras tanto el registro va en `docs/notion/tareas.csv` y `decisiones.csv`, fechado en git, y se importa al llegar (ADR-011). C-01 ya no es crear el espacio: es armar las 8 páginas dentro del espacio provisto y verificar el acceso del jurado.
 5. **LLM decidido:** OpenRouter + `google/gemini-2.5-flash`, temperatura 0 (ADR-005).
 6. **Contrato:** `descripcion` (con nulos permitidos; solo RSS de TVN); `fecha_deteccion` nula en el RSS de TVN; nuevos `contexto.parquet` y `revisiones.jsonl`.
 7. Tareas nuevas de otro tipo para Levi y Cristian: documentación, pitch, medición de valor y respaldo de la demo.
@@ -68,8 +68,8 @@ Parte del backlog del plan maestro (37 tareas) con los cambios de abajo. Estados
 
 | ID | Tarea | Día · hora | Depende de | Estado |
 | --- | --- | --- | --- | --- |
-| C-01 | Armar las 8 páginas en el espacio Notion Business provisto; José y Levi como editores; acceso del jurado verificado | Mar 12:00 | — | ⬜ |
-| C-02 | Cargar los 8 ADRs y este backlog en "Plan y decisiones" | Mar 18:00 | C-01 | ⬜ |
+| C-01 | Armar las 8 páginas en el espacio Notion Business provisto; José y Levi como editores; acceso del jurado verificado | Al recibirlo | Organización | ⬜ bloqueada: la organización aún no entrega el espacio |
+| C-02 | Llevar Tareas y Decisiones en `docs/notion/*.csv` desde hoy e importarlas a "Plan y decisiones" cuando llegue Notion | Mar 18:00 | — | 🟡 CSV iniciales listos |
 | C-03 | Post diario en LinkedIn (3 marcas + hashtags) | Mar, Mié, Jue | — | ⬜ |
 | C-04 | Catálogo de datos | — | — | ↪ B-15 (Levi) |
 | C-05 | Etiquetar 60 noticias: tema y evento | Mié 12:00 | B-05 | ⬜ |
@@ -92,5 +92,5 @@ Parte del backlog del plan maestro (37 tareas) con los cambios de abajo. Estados
 ## Primer PR de cada uno (hoy)
 
 - **Levi:** `feat/B-03-worldbank`. Es la API más estable y desbloquea T04 y B-14. Después siguen B-01, B-02, B-04 y B-05, cada una en su rama.
-- **Cristian:** `feat/C-12-bandeja` sobre `data/stub/fichas_stub.jsonl`. En paralelo, C-01 y C-02 en Notion.
+- **Cristian:** `feat/C-12-bandeja` sobre `data/stub/fichas_stub.jsonl`. En paralelo, mantener `docs/notion/*.csv` al día (C-02) y preparar el texto de las páginas 1 y 7 para pegarlo cuando llegue Notion.
 - **José:** `feat/J-07-guard`, y luego `feat/J-05-puntaje` sobre el stub.
