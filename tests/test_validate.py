@@ -77,6 +77,16 @@ def test_value_outside_the_contract_list():
     assert ("alcance_texto", "valor fuera de lista") in problems(alcance_texto="texto completo")
 
 
+def test_tvn_web_is_an_allowed_source():
+    assert problems(origen="tvn_web", alcance_texto="descripcion_web", fecha_deteccion=None,
+                    fecha_publicacion="2025-10-31T23:55:16Z") == set()
+
+
+def test_tvn_web_never_has_a_detection_date():
+    found = problems(origen="tvn_web", alcance_texto="descripcion_web", fecha_deteccion="2026-10-05T15:00:00Z")
+    assert ("fecha_deteccion", "fecha_deteccion en tvn_web") in found
+
+
 def test_rss_never_has_a_detection_date():
     found = problems(origen="tvn_rss", alcance_texto="descripcion_rss", fecha_deteccion="2026-10-05T15:00:00Z")
     assert ("fecha_deteccion", "fecha_deteccion en tvn_rss") in found
