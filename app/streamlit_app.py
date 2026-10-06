@@ -30,6 +30,8 @@ from src.generate.drafts import official_index
 from src.generate.query import answer_question
 from src.search import load_index
 from src.ingest.worldbank import read_indicators
+from app.revision import card_markdown, case_history, panama_time
+from src.fichas import append_review, apply_reviews, latest_reviews, read_reviews
 from src.score import score_clusters
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -182,6 +184,7 @@ else:
 
 scored = load_scores(news)
 cards, cards_path = load_cards()
+cards = apply_reviews(cards, latest_reviews())  # the review log wins over the state in the file
 cards_by_cluster = {c["cluster_id"]: c for c in cards if c.get("cluster_id")}
 official = load_official()
 inbox = build_inbox(scored, news, cards)
@@ -428,12 +431,60 @@ with draft_tab:
 
 with review_tab:
     st.subheader("Revisión")
-    st.caption("Estado de revisión por ficha. Por ahora solo vive en esta sesión; "
-               "persistencia en fichas.jsonl con quién y cuándo en J-09.")
-    if "review" not in st.session_state:
-        st.session_state.review = {}
-    review_id = st.selectbox("Ficha", news["id_noticia"], key="review_id")
-    current = st.session_state.review.get(review_id, REVIEW_STATES[0])
-    new_state = st.radio("Estado", REVIEW_STATES, index=REVIEW_STATES.index(current), horizontal=True)
-    st.session_state.review[review_id] = new_state
-    st.markdown(f"`{review_id}` → **{new_state}**")
+    st.caption("Una persona decide el estado de cada ficha. Cada decisión se agrega a "
+               "`outputs/revisiones.jsonl` y nunca se reescribe. Aprobar como borrador **no** es publicar.")
+    if flash := st.session_state.pop("review_saved", None):
+        st.success(flash)
+    if not cards:
+        st.info("Todavía no hay fichas para revisar (se generan con `make fichas`, J-09).")
+    else:
+        rank = dict(zip(inbox["cluster_id"], inbox["posicion"]))
+        by_case = {c["id_caso"]: c for c in sorted(
+            cards, key=lambda c: (rank.get(c.get("cluster_id"), float("inf")), c["id_caso"]))}
+        if st.session_state.get("review_case") not in by_case:
+            linked = cards_by_cluster.get(st.session_state.get("ficha_cluster"), {}).get("id_caso")
+            st.session_state.review_case = linked if linked in by_case else next(iter(by_case))
+        case_id = st.selectbox(
+            "Ficha", list(by_case), key="review_case",
+            format_func=lambda i: f"{i} · {by_case[i].get('estado_revision') or 'nuevo'} · "
+                                  f"{by_case[i].get('titulo') or by_case[i].get('consulta') or '—'}",
+        )
+        rcard = by_case[case_id]
+        current = rcard.get("estado_revision") or "nuevo"
+        who = f" · {rcard['revisor']} · {panama_time(rcard.get('fecha_revision'))}" if rcard.get("revisor") else ""
+        st.markdown(f"Estado actual: **{current}**{who}")
+
+        with st.form("revision"):
+            new_state = st.radio("Nuevo estado", REVIEW_STATES, horizontal=True,
+                                 index=REVIEW_STATES.index(current) if current in REVIEW_STATES else 0)
+            reviewer = st.text_input("Persona revisora", placeholder="Nombre de quien revisa")
+            note = st.text_area("Nota", placeholder="Por qué se decide esto (opcional)")
+            submitted = st.form_submit_button("Guardar decisión")
+        if submitted:
+            if not reviewer.strip():
+                st.error("Falta la persona revisora: toda decisión lleva quién la tomó.")
+            else:
+                record = append_review(case_id, new_state, reviewer, note.strip())
+                st.session_state.review_saved = (
+                    f"Guardado: `{case_id}` → **{record['estado_revision']}** · {record['revisor']} · "
+                    f"{panama_time(record['fecha_revision'])}")
+                st.rerun()
+
+        records, skipped = read_reviews()
+        if history := case_history(records, case_id):
+            st.markdown("#### Historial de esta ficha")
+            st.dataframe(pd.DataFrame([{
+                "Fecha (Panamá)": panama_time(r.get("fecha_revision")), "Estado": r["estado_revision"],
+                "Persona revisora": r.get("revisor"), "Nota": r.get("nota") or "—",
+            } for r in history]), hide_index=True, width="stretch")
+        if skipped:
+            st.warning(f"{skipped} línea(s) de `revisiones.jsonl` no son válidas y se ignoran.")
+
+        st.markdown("#### Copiar para Notion")
+        scored_row = scored.set_index("cluster_id").loc[rcard["cluster_id"]].to_dict() \
+            if rcard.get("cluster_id") in set(scored["cluster_id"]) else None
+        markdown = card_markdown(rcard, scored_row, action_for(
+            rcard.get("estado_evidencia"), rcard, bool((scored_row or {}).get("recirculada", rcard.get("recirculada")))))
+        st.caption("Copia con el ícono de la esquina y pega en la base \"Casos y evidencias\" (ADR-008).")
+        st.code(markdown, language="markdown")
+        st.download_button("Descargar .md", markdown, file_name=f"{case_id}.md", mime="text/markdown")
