@@ -2,7 +2,7 @@
 
 Reglas que **toda** sesión de trabajo en este repo debe respetar, sea de José, B o C.
 Contexto completo en `docs/` (`plan-maestro.md`, `jose.md`, `b-datos-ia.md`,
-`c-producto-notion-qa.md`, `reto.pdf`, `backlog.md`). Si algo aquí choca con `docs/`,
+`c-producto-notion-qa.md`, `reto.pdf`, `backlog.md`, `alcance-y-datos.md`). Si algo aquí choca con `docs/`,
 gana el plan maestro y se avisa en la sincronización.
 
 Entrega: **jueves 8 de octubre de 2026, 23:59**. Congelamos código a las 20:00.
@@ -18,6 +18,8 @@ Entrega: **jueves 8 de octubre de 2026, 23:59**. Congelamos código a las 20:00.
 Backlog vigente con dueños y fechas: `docs/backlog.md`. Cómo abrir un PR: `CONTRIBUTING.md`.
 LLM: OpenRouter con `google/gemini-2.5-flash`, temperatura 0 (ADR-005).
 Notion: espacio Business provisto por la organización.
+Modalidad: **TVN · principal** (editor/a y periodista); para qué sirve cada fuente, incluido el
+Banco Mundial: `docs/alcance-y-datos.md`.
 
 ## 1. Qué es
 
