@@ -139,6 +139,8 @@ Funciones públicas acordadas que la app puede importar:
   ni entidades HTML). La app la usa para marcar una cita como encontrada igual que el guard.
 - `src.fichas.recommended_action(...)`: la regla de acción recomendada (ADR-022); la ficha ya la
   trae en `accion_recomendada`.
+- `src.search.load_index().search(pregunta)` → `SearchResult` con `hits` (id, campo, texto, score)
+  y `evidence`, lista para `answer_question`; `sin_evidencia` si nada pasa los filtros (J-06).
 - `src.generate.query.answer_question(pregunta, evidence)` → `DraftResult` para la caja de
   consulta (CU-04). Sin evidencia se abstiene sin llamar al modelo (T06); con evidencia pasa
   por el guard como cualquier borrador (J-10).
