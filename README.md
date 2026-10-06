@@ -15,7 +15,8 @@ evidencia de cada afirmación y redacta **borradores para revisión humana**: br
 
 Equipo: **José** (líder técnico e integración), **Levi** (B · datos e IA) y **Cristian**
 (C · producto, frontend, Notion y QA). El reto está en [`docs/reto.pdf`](docs/reto.pdf); las tareas
-en [`docs/backlog.md`](docs/backlog.md); las reglas de trabajo en [`CLAUDE.md`](CLAUDE.md); cómo
+en [`docs/backlog.md`](docs/backlog.md); el alcance y el uso de cada fuente en
+[`docs/alcance-y-datos.md`](docs/alcance-y-datos.md); las reglas de trabajo en [`CLAUDE.md`](CLAUDE.md); cómo
 abrir un PR en [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 > **Estado (6 oct):** esqueleto. La app corre sobre datos **sintéticos** (`data/stub/`:

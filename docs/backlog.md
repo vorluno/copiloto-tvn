@@ -40,6 +40,7 @@ Parte del backlog del plan maestro (37 tareas) con los cambios de abajo. Estados
 | J-13 | Latencia mediana y p95, tokens y costo | Jue | J-08 | ⬜ |
 | J-14 | Tag v1.0, README final, acceso del jurado | Jue | Todo | ⬜ |
 | J-15 | `fichas_stub.jsonl` para que el frontend avance sin backend | Mar | J-02 | ✅ |
+| J-16 | `docs/alcance-y-datos.md`: modalidad, recorrido y para qué sirve cada fuente (base de "Diseño de solución") | Mar | — | ✅ |
 
 ## Levi · B · datos e IA
 
