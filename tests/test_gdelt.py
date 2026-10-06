@@ -126,6 +126,20 @@ def test_fetch_resumes_without_repeating_saved_requests(tmp_path):
     assert pending == []
 
 
+def test_a_new_run_skips_requests_saved_by_any_earlier_run(tmp_path):
+    calls = []
+
+    def fake_request(query, start, end):
+        calls.append(query)
+        return json.dumps({"articles": []})
+
+    fetch_run(tmp_path, request=fake_request, sleep=lambda s: None)
+    first_round = len(calls)
+    later_run = tmp_path / "20991231T000000Z"  # another run folder under the same raw dir
+    fetch_run(tmp_path, request=fake_request, sleep=lambda s: None, resume=later_run)
+    assert len(calls) == first_round  # the period is fixed: one copy of each request is enough
+
+
 def test_pending_never_lists_requests_already_saved(tmp_path):
     def blocked(query, start, end):
         raise RateLimited("Please limit requests")

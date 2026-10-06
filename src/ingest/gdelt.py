@@ -152,8 +152,8 @@ def fetch_run(raw_dir: Path = RAW_DIR, request=None, sleep=time.sleep, resume: P
     for key, query, start, end in todo:
         path = folder / f"{key}_{start.strftime('%Y%m%d')}.json"
         label = f"{key} {start:%Y-%m-%d}"
-        if path.exists():
-            continue
+        if any(raw_dir.glob(f"*/{path.name}")) or path.exists():
+            continue  # the period is fixed: a request saved by any run is not asked again
         if pending:  # blocked already: list the rest without asking again
             pending.append(label)
             continue
