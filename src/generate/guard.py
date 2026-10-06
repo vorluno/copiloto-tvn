@@ -20,6 +20,7 @@ Runs before anything reaches the UI. The model's word is never trusted:
 `ok` tells generate.py (J-08) whether a retry is worth it.
 """
 
+import html
 import json
 import os
 import re
@@ -58,8 +59,9 @@ TODAY_WORDS = re.compile(r"\b(hoy|actualmente|en la actualidad|este año|al día
 
 
 def normalize(text: str) -> str:
-    """Comparison form: NFC, case-folded, single spaces, straight quotes."""
-    text = unicodedata.normalize("NFC", text).casefold()
+    """Comparison form: HTML entities decoded (sources are escaped in <fuente>), NFC,
+    case-folded, single spaces, straight quotes."""
+    text = unicodedata.normalize("NFC", html.unescape(text)).casefold()
     text = text.translate(str.maketrans({"“": '"', "”": '"', "‘": "'", "’": "'", "«": '"', "»": '"'}))
     return " ".join(text.split())
 
