@@ -13,11 +13,13 @@ evidencia de cada afirmación y redacta **borradores para revisión humana**: br
 - Prioridad alta no habilita publicar: nada sale de aquí sin una persona.
 - Funciona sin internet (`OFFLINE=1`).
 
-Equipo: José (líder técnico e integración), B (datos e IA), C (producto, Notion y QA).
-Contexto completo en [`docs/`](docs/) y reglas de trabajo en [`CLAUDE.md`](CLAUDE.md).
+Equipo: **José** (líder técnico e integración), **Levi** (B · datos e IA) y **Cristian**
+(C · producto, frontend, Notion y QA). El reto está en [`docs/reto.pdf`](docs/reto.pdf); las tareas
+en [`docs/backlog.md`](docs/backlog.md); las reglas de trabajo en [`CLAUDE.md`](CLAUDE.md); cómo
+abrir un PR en [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
-> **Estado (J-01):** esqueleto. La app corre sobre 10 noticias **sintéticas**
-> (`data/stub/`); ingesta, IA, puntaje y generación llegan en las tareas B-xx y J-05+.
+> **Estado (6 oct):** esqueleto. La app corre sobre datos **sintéticos** (`data/stub/`:
+> 10 noticias y 4 fichas); ingesta, IA, puntaje y generación llegan en las tareas B-xx y J-05+.
 
 ## Instalación
 
@@ -65,63 +67,68 @@ make test             # pytest tests/ -v
 - `tests/test_t01.py` … `test_t10.py`: las 10 pruebas del reto (T01–T10). Cada archivo
   dice la entrada preparada, el resultado esperado y su dueño. Están en `skip` hasta
   que se implemente su tarea.
-- `tests/test_stub_contract.py`: verifica que el stub cumple el contrato de
-  `noticias.parquet` y trae los casos de T02, T03 y T07.
+- `tests/test_stub_contract.py` y `tests/test_fichas_stub_contract.py`: verifican que los
+  datos sintéticos cumplen los contratos y traen los casos de T02, T03, T06, T07 y T08.
 
-Los resultados de cada corrida se registran en la matriz T01–T10 de Notion (C).
+Los resultados de cada corrida se registran en la matriz T01–T10 de Notion (Cristian).
 
 ## Otros comandos
 
 | Comando | Hace | Dueño |
 | --- | --- | --- |
 | `make setup` | Crea `.venv` e instala `requirements.txt` | José |
-| `make stub` | Regenera `data/stub/noticias_stub.parquet` | José |
-| `make data` | Ingesta de las 4 fuentes y validación | B |
-| `make nlp` | Embeddings, temas, procedencia, clusters y baseline | B |
-| `make demo` | Abre la app; `OFFLINE=1` usa solo caché | José |
+| `make stub` | Regenera los datos sintéticos (`noticias_stub.parquet`, `fichas_stub.jsonl`) | José |
+| `make data` | Ingesta de las 4 fuentes y validación | Levi |
+| `make nlp` | Embeddings, temas, procedencia, clusters y baseline | Levi |
+| `make demo` | Abre la app; `OFFLINE=1` usa solo caché | Cristian (app) · José (caché) |
 | `make test` | Corre T01–T10 y pruebas de contrato | Todos |
-| `make eval` | Corre el benchmark y escribe `outputs/reports/` | José y B |
+| `make eval` | Corre el benchmark y escribe `outputs/reports/` | José y Levi |
 
 ## Estructura del repo
 
 ```
 copiloto-tvn/
 ├── CLAUDE.md                 # José · reglas para toda sesión: contratos, reglas del reto, convenciones
-├── README.md                 # José (revisa C)
+├── CONTRIBUTING.md           # José · cómo abrir un PR
+├── README.md                 # José (revisa Cristian)
 ├── Makefile                  # José
 ├── requirements.txt          # José · versiones fijadas
 ├── .env.example              # José · LLM_API_KEY=, LLM_MODEL=, OFFLINE=0
-├── docs/                     # Todos · reto, plan maestro y documento de cada rol
+├── docs/                     # Todos · reto.pdf, plan maestro, backlog.md y documento de cada rol
 ├── rules/
 │   └── scoring_v1.yaml       # José · reglas del puntaje P
 ├── data/
-│   ├── raw/                  # B · descargas originales (no se suben)
-│   ├── processed/            # B · archivos de los contratos
-│   ├── stub/                 # José · datos sintéticos (sintetico=true)
-│   ├── etiquetas_humanas.csv # C · 60 noticias etiquetadas
-│   ├── manifest.json         # B · consultas, cortes, licencias, SHA-256
-│   └── diccionario.md        # B · campos, tipos, unidades, origen
+│   ├── raw/                  # Levi · descargas originales (no se suben)
+│   ├── processed/            # Levi · noticias, clusters, indicadores, eventos, contexto, CSV del reto
+│   ├── stub/                 # José · datos sintéticos (sintetico=true): noticias y fichas
+│   ├── etiquetas_humanas.csv # Cristian · 60 noticias etiquetadas
+│   ├── manifest.json         # Levi · consultas, cortes, licencias, SHA-256
+│   └── diccionario.md        # Levi · campos, tipos, unidades, origen
 ├── benchmark/
-│   └── benchmark_dev.jsonl   # C · 40 consultas de desarrollo
+│   └── benchmark_dev.jsonl   # Cristian · 40 consultas de desarrollo
 ├── src/
-│   ├── ingest/               # B · tvn_rss.py, gdelt.py, worldbank.py, usgs.py
-│   ├── validate.py           # B · reporte de calidad (T01)
-│   ├── nlp/                  # B · embed.py, classify.py, cluster.py, baseline.py, provenance.py
+│   ├── ingest/               # Levi · tvn_rss.py, gdelt.py, worldbank.py, usgs.py
+│   ├── validate.py           # Levi · reporte de calidad (T01)
+│   ├── nlp/                  # Levi · embed.py, classify.py, cluster.py, baseline.py, provenance.py
 │   ├── search.py             # José · búsqueda semántica
 │   ├── score.py              # José · puntaje P
 │   ├── generate/             # José · prompts/, schema.py, generate.py, guard.py
 │   ├── fichas.py             # José · arma y exporta fichas.jsonl
-│   └── eval/                 # B y José · metrics.py, run_benchmark.py
+│   └── eval/                 # Levi y José · metrics.py, run_benchmark.py
 ├── app/
-│   └── streamlit_app.py      # José · interfaz
+│   └── streamlit_app.py      # Cristian · interfaz (lee contratos, escribe revisiones.jsonl)
 ├── outputs/
-│   ├── fichas.jsonl          # José → C
+│   ├── fichas.jsonl          # José → Cristian
+│   ├── revisiones.jsonl      # Cristian (app) · estados de revisión con persona y hora
 │   ├── cache/                # José · salidas del LLM por hash (modo offline; no se sube)
-│   └── reports/              # B y José · calidad, F1, benchmark, latencia
+│   └── reports/              # Levi y José · calidad, F1, benchmark, latencia
 └── tests/                    # test_t01.py … test_t10.py · dueño indicado en cada archivo
 ```
 
 ## Cómo trabajamos
+
+Paso a paso en [`CONTRIBUTING.md`](CONTRIBUTING.md). Lo esencial:
+
 
 - Nadie trabaja en `main`: rama por tarea (`feat/J-05-puntaje`, `feat/B-07-embeddings`,
   `docs/C-04-catalogo`), PR corto y José hace merge.

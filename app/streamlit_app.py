@@ -1,4 +1,4 @@
-"""Copiloto TVN Streamlit skeleton (J-03). Owner: José.
+"""Copiloto TVN Streamlit UI. Owner: Cristian (C-12..C-16); skeleton by José (J-03).
 
 Four tabs: Bandeja, Ficha, Borrador, Revisión. Reads data/processed/noticias.parquet
 when B has delivered it, otherwise the synthetic stub. Data stays in UTC; times
@@ -127,6 +127,9 @@ with card_tab:
     with left:
         st.markdown(f"**Titular** · `{row['id_noticia']} · titulo`")
         st.write(row["titulo"])
+        if pd.notna(row.get("descripcion")):
+            st.markdown(f"**Descripción RSS** · `{row['id_noticia']} · descripcion`")
+            st.write(row["descripcion"])
         st.markdown(f"**Medio:** {row['medio']} (`{row['dominio']}`)")
         st.markdown(f"**Origen:** {row['origen']} · **Alcance:** {row['alcance_texto']}")
         st.markdown(f"**URL:** {row['url']}")
