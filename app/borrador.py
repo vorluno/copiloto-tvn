@@ -8,6 +8,7 @@ import re
 
 # Same ranges the guard enforces (guard.WORD_LIMITS).
 WORD_LIMITS = {"brief": (1, 250), "guion": (110, 150), "copy": (1, 80)}
+ANSWER_LIMIT = (1, 150)  # guard.WORD_LIMITS["respuesta"], for the query box (CU-04)
 TASK_LABELS = {"brief": "Brief (≤250 palabras)", "guion": "Guion (45–60 s · 110–150 palabras)",
                "copy": "Copy digital (≤80 palabras)"}
 # How each claim type is shown, so a hypothesis never reads like a fact.

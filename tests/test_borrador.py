@@ -3,7 +3,7 @@
 from pathlib import Path
 
 from app.bandeja import read_cards
-from app.borrador import WORD_LIMITS, citation_label, claims_by_type, draft_rows, query_cards, word_count
+from app.borrador import ANSWER_LIMIT, WORD_LIMITS, citation_label, claims_by_type, draft_rows, query_cards, word_count
 from src.generate import guard
 
 STUB_DIR = Path(__file__).resolve().parents[1] / "data" / "stub"
@@ -12,6 +12,7 @@ STUB_DIR = Path(__file__).resolve().parents[1] / "data" / "stub"
 def test_limits_and_counting_match_the_guard():
     # The guard also limits other tasks (e.g. "respuesta"); the draft tasks must match it.
     assert WORD_LIMITS == {task: guard.WORD_LIMITS[task] for task in WORD_LIMITS}
+    assert ANSWER_LIMIT == guard.WORD_LIMITS["respuesta"]
     for text in ["Basado únicamente en titular/metadatos.", "co-autor d’Ávila 5,1 M≥3", ""]:
         assert word_count(text) == guard.word_count(text)
 

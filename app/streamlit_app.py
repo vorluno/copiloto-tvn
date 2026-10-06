@@ -23,8 +23,12 @@ from app.bandeja import (
 from app.ficha import (
     CLAIM_TYPES, action_for, citation_found, cluster_sources, component_points, headline_only,
 )
-from app.borrador import CLAIM_STYLE, citation_label, claims_by_type, draft_rows, query_cards
+from app.borrador import (
+    ANSWER_LIMIT, CLAIM_STYLE, citation_label, claims_by_type, draft_rows, query_cards, word_count,
+)
 from src.generate.drafts import official_index
+from src.generate.query import answer_question
+from src.search import load_index
 from src.ingest.worldbank import read_indicators
 from src.score import score_clusters
 
@@ -74,6 +78,53 @@ def load_official() -> dict:
         read_indicators(indicators) if indicators.exists() else None,
         json.loads(events.read_text(encoding="utf-8")) if events.exists() else None,
     )
+
+
+@st.cache_resource
+def load_search():
+    """J-06 index over the same contract files the app reads."""
+    return load_index()
+
+
+def show_claims(card: dict | None) -> None:
+    """Claims grouped by type with their citations, so a hypothesis never reads as a fact."""
+    if not (groups := claims_by_type(card)):
+        return
+    st.markdown("#### Afirmaciones por tipo")
+    for kind, claims in groups:
+        icon, label, meaning = CLAIM_STYLE[kind]
+        st.markdown(f"**{icon} {label}** · *{meaning}*")
+        for claim in claims:
+            cites = " · ".join(citation_label(c) for c in claim.get("citas") or [])
+            st.markdown(f"- {claim['texto']}  \n  {cites}")
+
+
+def show_answer(result) -> None:
+    """A query answer (DraftResult) exactly as the guard left it."""
+    if result.source == "error":
+        st.error("No se pudo consultar el modelo (falta `LLM_API_KEY` o falló el proveedor). "
+                 "No se muestra ninguna respuesta.")
+        return
+    if result.source == "offline_miss":
+        st.warning("Modo sin internet: esta consulta no está en la caché, así que no hay respuesta guardada.")
+    out = result.output.model_dump()
+    for alerta in out["alertas"]:
+        st.warning(f"⚠️ Alerta (T07): {alerta}")
+    if out["abstencion"]:
+        st.error(f"**Sin respuesta (abstención, T06).** {out['motivo_abstencion'] or ''}")
+    elif out["borrador"]:
+        low, high = ANSWER_LIMIT
+        words = word_count(out["borrador"])
+        st.write(out["borrador"])
+        st.caption(f"{words} palabras · rango {low}–{high} · "
+                   + ("dentro del límite" if low <= words <= high else "⚠️ fuera del límite"))
+    show_claims(out)
+    show_contradictions(out["contradicciones"])
+    for pending in out["verificaciones_pendientes"]:
+        st.markdown(f"- Verificación pendiente: {pending}")
+    origin = {"cache": "caché", "llm": "modelo", "sin_evidencia": "sin llamar al modelo (no hay evidencia)",
+              "offline_miss": "sin internet y sin caché"}.get(result.source, result.source)
+    st.caption(f"Origen: {origin}" + (f" · {result.latency_s:.1f} s" if result.latency_s else ""))
 
 
 def show_contradictions(items: list[dict] | None) -> None:
@@ -347,24 +398,28 @@ with draft_tab:
                 fits = "dentro del límite" if draft["dentro"] else "⚠️ fuera del límite"
                 st.caption(f"{draft['palabras']} palabras · rango {draft['min']}–{draft['max']} · {fits}")
 
-        if dcard and (groups := claims_by_type(dcard)):
-            st.markdown("#### Afirmaciones por tipo")
-            for kind, claims in groups:
-                icon, label, meaning = CLAIM_STYLE[kind]
-                st.markdown(f"**{icon} {label}** · *{meaning}*")
-                for claim in claims:
-                    cites = " · ".join(citation_label(c) for c in claim.get("citas") or [])
-                    st.markdown(f"- {claim['texto']}  \n  {cites}")
-
+        show_claims(dcard)
         show_contradictions((dcard or {}).get("contradicciones"))
 
     st.divider()
     st.markdown("#### Consulta (CU-04)")
-    st.text_input("Pregunta en español", disabled=True,
-                  placeholder="¿Cuál fue la inflación de Panamá en 2023?",
-                  help="Se activa cuando esté la búsqueda semántica (J-06).")
-    st.caption("La caja se activa con la búsqueda semántica (J-06). Consultas ya respondidas:")
-    for qcard in query_cards(cards):
+    with st.form("consulta"):
+        question = st.text_input("Pregunta en español", placeholder="¿Cuál fue la inflación de Panamá en 2023?")
+        asked = st.form_submit_button("Consultar")
+    if asked and question.strip():
+        found = load_search().search(question)
+        if found.hits:
+            with st.expander(f"Evidencia encontrada ({len(found.hits)} pasajes, búsqueda J-06)"):
+                st.dataframe(pd.DataFrame([{"ID": h.id_evidencia, "Campo": h.campo, "Pasaje": h.texto,
+                                            "Similitud": h.score} for h in found.hits]),
+                             hide_index=True, width="stretch")
+        with st.spinner("Redactando la respuesta con citas…"):
+            answer = answer_question(question, found.evidence)  # no evidence → abstains without the model
+        show_answer(answer)
+
+    if saved := query_cards(cards):
+        st.caption("Consultas guardadas en las fichas:")
+    for qcard in saved:
         st.markdown(f"**{qcard['consulta']}**")
         if qcard.get("abstencion"):
             st.error(f"Sin respuesta (abstención): {qcard.get('motivo_abstencion')}")
