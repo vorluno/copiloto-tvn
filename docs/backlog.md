@@ -30,7 +30,7 @@ Parte del backlog del plan maestro (37 tareas) con los cambios de abajo. Estados
 | J-03 | Esqueleto Streamlit con 4 pestañas | Mar | J-02 | ✅ → la sigue Cristian (C-12) |
 | J-04 | Proveedor LLM y ADR-005 | Mar | — | 🟡 código listo; falta precio por token en Notion |
 | J-05 | `score.py`: P y 5 componentes desde `scoring_v1.yaml` | Mié | B-08 (empieza con stub) | ✅ sobre el stub; falta correr con datos de Levi y `contexto.parquet` |
-| J-06 | Búsqueda semántica: 10 fragmentos con ID y campo, o "sin evidencia" | Mié | B-07 | ⬜ |
+| J-06 | Búsqueda semántica: 10 fragmentos con ID y campo, o "sin evidencia" | Mié | B-07 | ✅ TF-IDF + cobertura; cambiar a embeddings cuando llegue B-07 |
 | J-07 | Prompt, esquema Pydantic y `guard.py` | Mié | J-04 | ✅ #3 |
 | J-08 | Brief, guion y copy con citas | Mié | J-07 | ✅ `build_package`; falta probar con Gemini y datos reales |
 | J-09 | Exportar `fichas.jsonl` y leer `revisiones.jsonl` (solo backend; la interfaz es C-15) | Mié | J-08 | ✅ `make fichas`; falta correrlo con Gemini y noticias reales |
