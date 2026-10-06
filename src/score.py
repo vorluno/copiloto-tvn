@@ -6,8 +6,8 @@ module implements them and `load_rules` refuses to run if their text changes, so
 YAML and the code cannot drift apart silently (a change means a new rules version).
 
 Decisions not spelled out in the YAML (ADR-013):
-- Panama relation (R): the cluster has a TVN RSS item or its text names Panama or a
-  Panamanian place (PANAMA_PATTERNS).
+- Panama relation (R): the cluster has a TVN item (RSS or web) or its text names Panama
+  or a Panamanian place (PANAMA_PATTERNS).
 - Urgency reference (U): most recent fecha_publicacion in the cluster. GDELT gives no
   outlet date, so when no item has one, the most recent fecha_deteccion is used and
   the row says so (`base_urgencia="deteccion"`). Dates are never copied between fields.
@@ -19,6 +19,9 @@ Decisions not spelled out in the YAML (ADR-013):
 - Novelty (N): TF-IDF cosine against clusters first seen in the previous 7 days,
   one text per cluster, so duplicates inside a cluster never add up. Swap for the
   B-07 embeddings when they exist.
+- Reference time for urgency (ADR-027): by default the latest outlet or detection date in
+  the corpus, not the wall clock. The news period is fixed (02/10/2025-30/09/2026), so
+  the ranking is the same on every run and does not decay while the demo waits.
 """
 
 import re
@@ -45,6 +48,7 @@ PANAMA_PATTERNS = [
     r"la chorrera", r"guna yala", r"ngabe",
 ]
 NOVELTY_WINDOW = pd.Timedelta(days=7)
+TVN_ORIGINS = {"tvn_rss", "tvn_web"}  # the sponsor's own outlet: always Panama-related (ADR-026)
 EVIDENCE_STATES = ("insuficiente", "parcial", "suficiente para el borrador")
 
 
@@ -94,7 +98,7 @@ def evidence_state(provenances: int, official: bool) -> str:
 
 
 def _relates_to_panama(group: pd.DataFrame) -> bool:
-    if (group["origen"] == "tvn_rss").any():
+    if group["origen"].isin(TVN_ORIGINS).any():
         return True
     text_cols = [c for c in ("titulo", "descripcion") if c in group]
     text = _fold(" ".join(group[text_cols].fillna("").astype(str).agg(" ".join, axis=1)))
@@ -135,6 +139,13 @@ def _novelty(clusters: pd.DataFrame) -> pd.Series:
     return pd.Series(novelty, index=clusters.index).clip(0.0, 1.0)
 
 
+def corpus_reference_time(news: pd.DataFrame) -> pd.Timestamp:
+    """Latest outlet or detection date in the corpus; wall clock only for an empty corpus.
+    Extraction time is not used: it says when we downloaded, not when the news happened."""
+    dates = pd.concat([news[c].dropna() for c in ("fecha_publicacion", "fecha_deteccion") if c in news])
+    return dates.max() if not dates.empty else pd.Timestamp.now(tz="UTC")
+
+
 def rank(scored: pd.DataFrame) -> pd.DataFrame:
     """Order by P desc; ties: higher urgency first, then cluster ID asc (ADR-006)."""
     ranked = scored.sort_values(["P", "U", "cluster_id"], ascending=[False, False, True], kind="mergesort")
@@ -149,10 +160,11 @@ def score_clusters(
 ) -> pd.DataFrame:
     """One row per cluster with P, its 5 components and how each was obtained, ranked.
 
-    `now` is fixed by the caller for reproducible runs (tests, demo); defaults to UTC now.
+    `now` defaults to the corpus reference time (latest outlet or detection date), so the
+    same snapshot always gives the same ranking; pass it explicitly to score "as of" a date.
     """
     rules = rules or load_rules()
-    now = pd.Timestamp.now(tz="UTC") if now is None else pd.Timestamp(now).tz_convert("UTC")
+    now = corpus_reference_time(news) if now is None else pd.Timestamp(now).tz_convert("UTC")
     weights = rules["pesos"]
     reach = rules["I_impacto"]["alcance_tema"]
     relevance = rules["R_relevancia"]

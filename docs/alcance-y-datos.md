@@ -53,18 +53,25 @@ salen de `outputs/cache/`.
 Regla general (secc. 7): UTF-8, IDs estables, fechas en UTC, nulos conservados (nunca 0) y
 cada afirmación citada con ID + campo o pasaje.
 
-### A · Noticias: RSS de TVN + GDELT
+### A · Noticias: TVN (RSS y web) + GDELT
 
 | | RSS de TVN | GDELT DOC 2.0 |
 | --- | --- | --- |
 | Qué trae | Titular, enlace, fecha del medio y descripción corta | Titulares de medios de todo el mundo sobre Panamá, con `seendate` (cuándo GDELT la detectó) |
 | Para qué la usamos | La voz del patrocinador: relación directa con Panamá (R = 1) y la única fuente con descripción | Volumen y **corroboración**: ver cuántos medios cubren un hecho y si son independientes |
-| `alcance_texto` | `descripcion_rss` | `titular/metadatos` |
+| `alcance_texto` | `descripcion_rss` (RSS) o `descripcion_web` (sitemaps, ver abajo) | `titular/metadatos` |
 | Fechas | `fecha_publicacion` = la del medio; `fecha_deteccion` vacía | `fecha_deteccion` = `seendate`; `fecha_publicacion` casi siempre vacía (GDELT no la da) |
 | No sirve para | Republicar el artículo, los videos ni las imágenes (la descripción del RSS no da licencia) | Confirmar un hecho por repetición: cinco medios que replican a EFE son **una** procedencia (ADR-007) |
 
-Meta del reto: 200 noticias únicas; mínimo 100, con al menos 20 de TVN; los últimos 30 días
-(hasta 90 si faltan). Entregables con los nombres del reto: `noticias.csv` y `fuentes.json` (B-13).
+**TVN web (`tvn_web`, desde el 6 oct):** artículos de TVN encontrados en los sitemaps
+públicos de tvn-2.com. Solo se guardan los metadatos del JSON-LD del artículo (titular,
+descripción, fecha), nunca el cuerpo, y se respeta robots.txt. Sirve para cubrir el período
+completo, porque el RSS solo guarda cerca de un día.
+
+**Período de noticias:** del 02/10/2025 al 30/09/2026, por regla de datos de la organización
+(reemplaza los "30 días previos" y el intervalo [2024-01-01, 2025-10-01) que el reto no
+lograba conciliar). Banco Mundial y USGS conservan sus años. Meta del reto: 200 noticias
+únicas; mínimo 100, con al menos 20 de TVN. Entregables con los nombres del reto: `noticias.csv` y `fuentes.json` (B-13).
 
 **Consecuencia en el borrador:** como solo tenemos titulares y metadatos, todo borrador basado
 en GDELT dice "Basado únicamente en titular/metadatos." y no agrega detalles (lo impone
@@ -168,6 +175,6 @@ fallida y su corrección → Notion (por ahora `docs/notion/`).
 ## 6. Preguntas abiertas a la organización
 
 1. ¿Entregan el **snapshot congelado** (secc. 6 y 11 lo piden "al menos 72 horas antes")? Si sí, Levi se salta las descargas (B-01 a B-04).
-2. **Ventana de fechas:** el reto pide los 30 días previos a la extracción y también excluir todo lo que esté fuera de [2024-01-01, 2025-10-01). Hoy esas dos reglas no se pueden cumplir juntas.
+2. ~~**Ventana de fechas**~~ *Resuelta el 6 oct:* noticias del 02/10/2025 al 30/09/2026 (ADR-026).
 3. **Banco Mundial:** ¿1.350 o 540 combinaciones?
 4. ¿Cuándo llega el espacio **Notion Business** y con cuántos puestos?

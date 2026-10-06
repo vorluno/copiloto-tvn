@@ -77,7 +77,7 @@ y sección 7 del reto; cambios acordados el 6 oct marcados con *(6 oct)*.
 
 | Archivo | Lo produce | Lo consume | Campos | Primera versión |
 | --- | --- | --- | --- | --- |
-| `data/processed/noticias.parquet` | B | José, app | id_noticia, titulo, *descripcion (nullable; solo tvn_rss) (6 oct)*, url, medio, dominio, idioma, fecha_publicacion, fecha_deteccion, fecha_extraccion, origen (tvn_rss / gdelt), alcance_texto ("titular/metadatos" o "descripcion_rss"), procedencia_id, tema, tema_confianza, cluster_id | Martes 20:00 (parcial vale) |
+| `data/processed/noticias.parquet` | B | José, app | id_noticia, titulo, *descripcion (nullable; solo TVN) (6 oct)*, url, medio, dominio, idioma, fecha_publicacion, fecha_deteccion, fecha_extraccion, origen (tvn_rss / *tvn_web (6 oct)* / gdelt), alcance_texto ("titular/metadatos", "descripcion_rss" o *"descripcion_web" (6 oct)*), procedencia_id, tema, tema_confianza, cluster_id | Martes 20:00 (parcial vale) |
 | `data/processed/noticias.csv` + `data/processed/fuentes.json` *(6 oct)* | B | Jurado | Exportación con los nombres que exige el reto (secc. 6–7): las mismas columnas de `noticias.parquet`; `fuentes.json` con medio, dominio, origen y condiciones de uso | Miércoles 18:00 |
 | `data/processed/clusters.parquet` | B | José | cluster_id, ids_noticia, n_registros, n_procedencias_independientes, tema, fecha_primera, fecha_ultima | Miércoles 12:00 |
 | `data/processed/indicadores.csv` | B | José | pais_iso3, indicador_id, anio, valor (nullable), unidad, fuente_url, fecha_extraccion, licencia | Martes 20:00 |
@@ -96,11 +96,18 @@ Definiciones que todos usan igual:
 - **procedencia_id**: la fuente original de la noticia. Cinco medios que
   replican a EFE comparten la misma procedencia y cuentan como una sola.
 - **fecha_publicacion vs fecha_deteccion**: la primera es la del medio; la
-  segunda es el `seendate` de GDELT. Nunca se mezclan. En `tvn_rss`
-  `fecha_deteccion` es nula (el RSS no tiene `seendate`); la hora de descarga va
-  en `fecha_extraccion` *(6 oct)*.
-- **descripcion**: solo la trae el RSS de TVN; en GDELT es nula. Si hay
-  descripción, `alcance_texto="descripcion_rss"`; si no, `"titular/metadatos"`.
+  segunda es el `seendate` de GDELT. Nunca se mezclan. En `tvn_rss` y `tvn_web`
+  `fecha_deteccion` es nula (no hay `seendate`); la hora de descarga va en
+  `fecha_extraccion` *(6 oct)*.
+- **origen** *(6 oct)*: `tvn_rss` (feed RSS de TVN), `tvn_web` (artículos de TVN desde los
+  sitemaps públicos de tvn-2.com: solo metadatos del JSON-LD, nunca el cuerpo, respetando
+  robots.txt) o `gdelt`.
+- **descripcion**: solo la trae TVN (RSS o web); en GDELT es nula. `alcance_texto` es
+  `"descripcion_rss"` o `"descripcion_web"` según de dónde salió la descripción, y
+  `"titular/metadatos"` si no hay. El guard solo trata distinto `"titular/metadatos"`.
+- **Período de noticias** *(6 oct)*: del 02/10/2025 al 30/09/2026 (regla de datos de la
+  organización). Banco Mundial (2010–2024) y USGS (2024) no cambian: el período aplica
+  solo a noticias. La urgencia se mide contra la fecha más reciente del corpus (ADR-027).
 - **estado_evidencia**: `insuficiente`, `parcial` o `suficiente para el borrador`
   (valores exactos). Es independiente del puntaje.
 - **Cita válida**: ID de evidencia + campo o pasaje que respalda la afirmación.
