@@ -25,8 +25,10 @@ stub: ## Rebuild the synthetic stubs: news (J-02) and case cards for the UI
 	$(PY) data/stub/make_stub.py
 	$(PY) data/stub/make_fichas_stub.py
 
-data: ## Ingestion + validation (B-01..B-05)
-	@echo "Pending B-01..B-05: src/ingest/*.py and src/validate.py have no entry point yet."
+data: ## Ingestion + validation (B-01..B-05); needs internet
+	$(PY) -m src.ingest.worldbank
+	$(PY) -m src.ingest.usgs
+	@echo "Pending B-01, B-02, B-05: TVN RSS, GDELT and validation have no entry point yet."
 
 nlp: ## Embeddings, topics, provenance, clusters and baseline (B-06..B-09, B-11)
 	@echo "Pending B-06..B-09: src/nlp/*.py have no entry point yet."

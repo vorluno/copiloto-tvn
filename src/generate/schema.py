@@ -112,14 +112,20 @@ def evidence_from_quake(feature: dict) -> Evidence:
     props = feature.get("properties", {})
     coords = (feature.get("geometry") or {}).get("coordinates") or [None, None, None]
     fields = {"place": props.get("place"), "magnitude": props.get("mag", props.get("magnitude"))}
+    depth = props.get("depth")
     raw_time = props.get("time")
     if raw_time is not None:  # raw USGS gives epoch ms; a normalized file may give ISO text
         ts = pd.Timestamp(raw_time, unit="ms", tz="UTC") if isinstance(raw_time, (int, float)) else pd.Timestamp(raw_time)
         fields["time"] = _iso(ts if ts.tzinfo else ts.tz_localize("UTC"))
-    if len(coords) > 2 and coords[2] is not None:
-        fields["depth_km"] = coords[2]
+    if depth is None and len(coords) > 2:
+        depth = coords[2]
+    if depth is not None:
+        fields["depth_km"] = depth
+    event_id = feature.get("id") or props.get("id")  # raw USGS: top level; eventos.geojson: properties
+    if not event_id:
+        raise ValueError("USGS feature without id")
     return Evidence(
-        id=str(feature.get("id")),
+        id=str(event_id),
         kind="sismo",
         fields={k: str(v) for k, v in fields.items() if v is not None},
         meta={"url": props.get("url"), "status": props.get("status")},
