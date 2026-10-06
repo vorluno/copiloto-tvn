@@ -83,7 +83,7 @@ Los resultados de cada corrida se registran en la matriz T01–T10 de Notion (Cr
 | `make nlp` | Embeddings, temas, procedencia, clusters y baseline | Levi |
 | `make demo` | Abre la app; `OFFLINE=1` usa solo caché | Cristian (app) · José (caché) |
 | `make test` | Corre T01–T10 y pruebas de contrato | Todos |
-| `make eval` | Corre el benchmark y escribe `outputs/reports/` | José y Levi |
+| `make eval` | Corre `benchmark/benchmark_dev.jsonl` por búsqueda → respuesta → guard y escribe en `outputs/reports/` las métricas (con numerador y denominador), la latencia y la hoja de revisión de sustento; `OFFLINE=1` usa solo la caché | José y Levi |
 | `make fichas` | Genera `outputs/fichas.jsonl` para los 10 clusters de mayor P (`TOP=5` para cambiarlo; con `OFFLINE=1` solo usa la caché) | José |
 | `make llm-check` | Una llamada real al LLM sobre el stub (necesita `LLM_API_KEY` en `.env`); queda en caché | José |
 

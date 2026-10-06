@@ -40,8 +40,8 @@ demo: ## Open the Streamlit app on the local snapshot (stub until B delivers)
 test: ## Run T01-T10 and contract tests
 	$(PY) -m pytest tests/ -v -rs
 
-eval: ## Run the benchmark and write outputs/reports/ (J-13, B-12)
-	@echo "Pending J-13/B-12: src/eval/run_benchmark.py has no entry point yet."
+eval: ## Run the benchmark and write outputs/reports/ (J-13); OFFLINE=1 replays the cache
+	OFFLINE=$(OFFLINE) $(PY) -m src.eval.run_benchmark
 
 llm-check: ## One real LLM call on the stub (needs LLM_API_KEY in .env); result is cached (J-12)
 	$(PY) -m src.generate.generate
