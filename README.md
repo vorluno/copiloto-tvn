@@ -38,8 +38,9 @@ make setup        # crea .venv, instala requirements.txt (versiones fijadas) y c
 
 | Variable | Para qué |
 | --- | --- |
-| `LLM_API_KEY` | Clave del proveedor de LLM (pendiente J-04). **Nunca** se sube al repo. |
-| `LLM_MODEL` | Modelo y versión exactos (se registran en ADR-005). |
+| `LLM_API_KEY` | Clave de OpenRouter (https://openrouter.ai/keys). **Nunca** se sube al repo. |
+| `LLM_MODEL` | Modelo exacto (ADR-005): `google/gemini-2.5-flash`. |
+| `LLM_BASE_URL` | API compatible con OpenAI de OpenRouter: `https://openrouter.ai/api/v1`. |
 | `OFFLINE` | `1` = sin internet: las salidas del LLM se leen solo de `outputs/cache/`. |
 
 ## Demo
