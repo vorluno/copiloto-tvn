@@ -105,3 +105,22 @@ def evidence_from_indicator(row: pd.Series) -> Evidence | None:
         year=year,
         meta={"fuente_url": row.get("fuente_url"), "licencia": row.get("licencia")},
     )
+
+
+def evidence_from_quake(feature: dict) -> Evidence:
+    """USGS event from eventos.geojson (a GeoJSON Feature). Only seismic facts are sent."""
+    props = feature.get("properties", {})
+    coords = (feature.get("geometry") or {}).get("coordinates") or [None, None, None]
+    fields = {"place": props.get("place"), "magnitude": props.get("mag", props.get("magnitude"))}
+    raw_time = props.get("time")
+    if raw_time is not None:  # raw USGS gives epoch ms; a normalized file may give ISO text
+        ts = pd.Timestamp(raw_time, unit="ms", tz="UTC") if isinstance(raw_time, (int, float)) else pd.Timestamp(raw_time)
+        fields["time"] = _iso(ts if ts.tzinfo else ts.tz_localize("UTC"))
+    if len(coords) > 2 and coords[2] is not None:
+        fields["depth_km"] = coords[2]
+    return Evidence(
+        id=str(feature.get("id")),
+        kind="sismo",
+        fields={k: str(v) for k, v in fields.items() if v is not None},
+        meta={"url": props.get("url"), "status": props.get("status")},
+    )
