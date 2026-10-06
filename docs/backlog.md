@@ -46,7 +46,7 @@ Parte del backlog del plan maestro (37 tareas) con los cambios de abajo. Estados
 
 | ID | Tarea | Día · hora | Depende de | Estado |
 | --- | --- | --- | --- | --- |
-| B-01 | Ingesta TVN RSS (≥20 noticias, con `descripcion`) | Mar 20:00 | J-01 | ⬜ |
+| B-01 | Ingesta TVN RSS (≥20 noticias, con `descripcion`) | Mar 20:00 | J-01 | ✅ #15 (55 noticias) |
 | B-02 | Ingesta GDELT DOC 2.0 por fechas, dedupe por URL | Mar 20:00 | J-01 | ⬜ |
 | B-03 | Banco Mundial: cuadrícula completa con nulos (6 países × 6 indicadores × 15 años) | Mar 20:00 | J-01 | ✅ #9 |
 | B-04 | USGS 2024, caja regional, M≥3 | Mar 20:00 | J-01 | ✅ #10 |
@@ -81,7 +81,7 @@ Parte del backlog del plan maestro (37 tareas) con los cambios de abajo. Estados
 | C-10 | 5+ fichas en Notion, una con evidencia insuficiente | Jue | J-09 | ⬜ |
 | C-11 | Pitch en Notion y 2 ensayos cronometrados | Jue 22:00 | Todo | ⬜ |
 | **C-12** | **Bandeja priorizada (CU-01):** top 5 por P con rango, estado de evidencia, tema, "N registros · M procedencias", filtros; hora de Panamá. Lee `fichas_stub.jsonl` y luego `fichas.jsonl` | Mié 12:00 | J-15 | ✅ #7 |
-| **C-13** | **Ficha (etapa 5):** qué se reporta, quién, qué está respaldado, qué falta y acción recomendada; 5 componentes en barras + versión de reglas; cada cita muestra ID, campo y pasaje | Mié 18:00 | C-12 | ⬜ |
+| **C-13** | **Ficha (etapa 5):** qué se reporta, quién, qué está respaldado, qué falta y acción recomendada; 5 componentes en barras + versión de reglas; cada cita muestra ID, campo y pasaje | Mié 18:00 | C-12 | ✅ #16 |
 | **C-14** | **Borrador y consulta:** brief, guion y copy con contador de palabras; afirmaciones con su tipo (hecho / declaración / inferencia / hipótesis) diferenciado; contradicciones lado a lado (T05); abstención visible (T06); alertas (T07); aviso "basado únicamente en titular/metadatos"; caja de consulta en español (CU-04) | Mié 20:00 | C-13 | ⬜ |
 | **C-15** | **Revisión:** 5 estados + persona revisora + nota → `outputs/revisiones.jsonl`; botón "copiar para Notion" con la ficha en Markdown (ADR-008) | Mié 20:00 | C-13 | ⬜ |
 | **C-16** | **Pantalla "Datos y calidad":** reporte de calidad, manifest y licencias; aviso de modo sin internet (T10) | Jue 12:00 | B-10 | ⬜ |

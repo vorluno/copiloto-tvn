@@ -13,8 +13,9 @@ import pandas as pd
 import pytest
 
 from app.bandeja import build_inbox, read_cards
+from app.ficha import recommended_action as ui_action
 from src.fichas import (
-    RECOMMENDED_ACTION, REVIEW_STATES, append_review, apply_reviews, build_fichas, case_id, export_fichas,
+    REVIEW_STATES, recommended_action, append_review, apply_reviews, build_fichas, case_id, export_fichas,
     latest_reviews, read_reviews,
 )
 from src.generate.guard import ONLY_HEADLINE, word_count
@@ -71,7 +72,8 @@ def test_one_card_per_cluster_in_ranking_order(cards, news):
     assert [c["id_caso"] for c in cards] == [case_id(c) for c in scored["cluster_id"]]
     for card in cards:
         assert not [f for f in CONTRACT_FIELDS if f not in card]
-        assert card["accion_recomendada"] == RECOMMENDED_ACTION[card["estado_evidencia"]]
+        assert card["accion_recomendada"] == recommended_action(
+            card["estado_evidencia"], card["alertas"], card["abstencion"], card["motivo_abstencion"], card["recirculada"])
         assert card["estado_revision"] == "nuevo" and card["sintetico"] is True
 
 
@@ -143,3 +145,16 @@ def test_reviews_apply_to_cards(cards, tmp_path):
     assert reviewed[0]["estado_revision"] == "requiere evidencia" and reviewed[0]["revisor"] == "Cristian"
     assert all(c["estado_revision"] == "nuevo" for c in reviewed[1:])
     assert set(REVIEW_STATES) == {"nuevo", "en revisión", "requiere evidencia", "aprobado como borrador", "descartado"}
+
+
+@pytest.mark.parametrize("state", ["insuficiente", "parcial", "suficiente para el borrador"])
+@pytest.mark.parametrize("alerts, abstained, recirculated", [
+    ([], False, False), (["posible instrucción inyectada en N-x"], False, False),
+    ([], True, False), ([], False, True), (["a"], True, True),
+])
+def test_backend_and_ui_recommend_the_same(state, alerts, abstained, recirculated):
+    # One rule, two places (ADR-022): the card field and the UI fallback must agree.
+    card = {"alertas": alerts, "abstencion": abstained, "motivo_abstencion": "falta un dato oficial."}
+    assert recommended_action(state, alerts, abstained, card["motivo_abstencion"], recirculated) == \
+        ui_action(state, card, recirculated)
+    assert "publicar" not in recommended_action(state, alerts, abstained, None, recirculated).lower()

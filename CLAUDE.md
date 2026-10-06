@@ -135,6 +135,10 @@ Funciones públicas acordadas que la app puede importar:
   `outputs/revisiones.jsonl` (valida el estado; nunca reescribe). `latest_reviews()` →
   última decisión por `id_caso`; `apply_reviews(cards, reviews)` la aplica a las fichas (J-09).
   `make fichas` (o `OFFLINE=1 make fichas`) escribe `outputs/fichas.jsonl`.
+- `src.generate.guard.normalize(texto)`: forma de comparación del guard (sin mayúsculas, espacios
+  ni entidades HTML). La app la usa para marcar una cita como encontrada igual que el guard.
+- `src.fichas.recommended_action(...)`: la regla de acción recomendada (ADR-022); la ficha ya la
+  trae en `accion_recomendada`.
 - `src.generate.query.answer_question(pregunta, evidence)` → `DraftResult` para la caja de
   consulta (CU-04). Sin evidencia se abstiene sin llamar al modelo (T06); con evidencia pasa
   por el guard como cualquier borrador (J-10).
