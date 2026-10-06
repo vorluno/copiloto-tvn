@@ -140,3 +140,18 @@ def test_formula_drift_is_refused(tmp_path):
     edited.write_text(yaml.safe_dump(rules, allow_unicode=True), encoding="utf-8")
     with pytest.raises(ValueError, match="E_evidencia"):
         load_rules(edited)
+
+
+def test_tvn_web_counts_as_tvn_for_panama(news):
+    # ADR-026: TVN items from the public sitemaps (tvn_web) are the sponsor's outlet too.
+    item = news[news["cluster_id"] == "C-STUB-07"].assign(origen="tvn_web", alcance_texto="descripcion_web")
+    assert score_clusters(item, now=NOW).iloc[0]["R"] == 1.0  # regulación + TVN -> Panama
+    assert score_clusters(news[news["cluster_id"] == "C-STUB-07"], now=NOW).iloc[0]["R"] == 0.5
+
+
+def test_default_reference_is_the_corpus_not_the_clock(news):
+    from src.score import corpus_reference_time
+    latest = pd.concat([news["fecha_publicacion"].dropna(), news["fecha_deteccion"].dropna()]).max()
+    assert corpus_reference_time(news) == latest
+    # Same snapshot, same ranking, whatever day it runs on.
+    assert score_clusters(news)["P"].tolist() == score_clusters(news, now=latest)["P"].tolist()
