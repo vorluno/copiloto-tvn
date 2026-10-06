@@ -122,9 +122,9 @@ with inbox_tab:
             st.warning("Sin contexto oficial todavía (`contexto.parquet`, B-14): I y E no incluyen "
                        "indicadores del Banco Mundial ni sismos del USGS.")
         f1, f2, f3, f4 = st.columns([2, 2, 2, 1])
-        temas = f1.multiselect("Tema", sorted(inbox["tema"].dropna().unique()))
-        estados = f2.multiselect("Estado de evidencia", EVIDENCE_STATES)
-        rangos = f3.multiselect("Rango de P", SCORE_RANGES)
+        temas = f1.multiselect("Tema", sorted(inbox["tema"].dropna().unique()), placeholder="Todos")
+        estados = f2.multiselect("Estado de evidencia", EVIDENCE_STATES, placeholder="Todos")
+        rangos = f3.multiselect("Rango de P", SCORE_RANGES, placeholder="Todos")
         show_all = f4.toggle("Ver todos", help=f"Por defecto se muestran los {TOP_N} de mayor P.")
         view = filter_inbox(inbox, temas, estados, rangos, top_n=None if show_all else TOP_N)
 
@@ -132,6 +132,8 @@ with inbox_tab:
             "#": view["posicion"],
             "Tema": view["tema"].fillna("— (sin dato)"),
             "Titular": view["titular"].fillna("— (sin titular)"),
+            "ID titular": view["id_titular"],
+            "Título propuesto": view["titulo_propuesto"].fillna("—"),
             "P": view["P"],
             "Rango": view["rango"],
             **{c: view[c] for c in COMPONENTS},
@@ -198,6 +200,9 @@ with card_tab:
         sources = cluster_sources(news, cluster_id)
 
         st.markdown(f"### {row['titular']}")
+        st.caption(f"Titular real más reciente · `{row['id_titular']} · titulo`")
+        if pd.notna(row["titulo_propuesto"]):
+            st.markdown(f"*Título propuesto (generado, para revisión):* {row['titulo_propuesto']}")
         st.markdown(" · ".join(m for m in (
             f"**{row['tema']}**", f"P **{row['P']:.1f}** ({row['rango']})",
             f"Evidencia: **{row['estado_evidencia']}**",

@@ -40,10 +40,13 @@ def test_top_n_keeps_score_order_and_filters(inbox):
 def test_cards_join_by_cluster(inbox):
     canal = inbox.set_index("cluster_id").loc["C-STUB-01"]
     assert canal["id_caso"] == "F-STUB-01"
-    assert canal["titular"] == "Límite de calado en el Canal por bajo nivel de Gatún"
+    # The headline is real evidence; the card's generated title goes in its own column.
+    assert canal["titulo_propuesto"] == "Límite de calado en el Canal por bajo nivel de Gatún"
+    assert canal["titular"] != canal["titulo_propuesto"]
+    assert canal["id_titular"].startswith("N-")
     no_card = inbox[inbox["id_caso"].isna()]
     assert not no_card.empty and no_card["estado_revision"].isna().all()  # null, not "nuevo"
-    assert no_card["titular"].notna().all()  # falls back to a real headline from the cluster
+    assert no_card["titular"].notna().all() and no_card["titulo_propuesto"].isna().all()
 
 
 def test_labels_keep_nulls_visible():

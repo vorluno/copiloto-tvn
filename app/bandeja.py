@@ -46,8 +46,9 @@ def load_contexto() -> pd.DataFrame | None:
 def build_inbox(scored: pd.DataFrame, news: pd.DataFrame, cards: list[dict]) -> pd.DataFrame:
     """score_clusters output plus what the editor needs to read each row.
 
-    Headline: the case card's title if the cluster has a card, otherwise the most
-    recent headline in the cluster, with its news ID so it stays traceable.
+    Headline: always the most recent real headline in the cluster, with its news ID,
+    so evidence is never mixed with generated text. The case card's title is a
+    proposal written by the LLM and goes in its own column.
     """
     by_cluster = {c["cluster_id"]: c for c in cards if c.get("cluster_id")}
     order = news["fecha_deteccion"].fillna(news["fecha_publicacion"])
@@ -60,8 +61,9 @@ def build_inbox(scored: pd.DataFrame, news: pd.DataFrame, cards: list[dict]) -> 
         card = by_cluster.get(row.cluster_id, {})
         top = latest.loc[row.cluster_id] if row.cluster_id in latest.index else None
         rows.append({
-            "titular": card.get("titulo") or (top["titulo"] if top is not None else None),
-            "id_titular": card.get("id_caso") or (top["id_noticia"] if top is not None else None),
+            "titular": top["titulo"] if top is not None else None,
+            "id_titular": top["id_noticia"] if top is not None else None,
+            "titulo_propuesto": card.get("titulo"),
             "id_caso": card.get("id_caso"),
             "estado_revision": card.get("estado_revision"),
             "alertas": len(card.get("alertas") or []),
