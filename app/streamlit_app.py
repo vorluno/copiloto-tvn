@@ -8,6 +8,7 @@ With OFFLINE=1 nothing touches the network: LLM output is read only from
 outputs/cache/ and the UI says so. UI text is Spanish (editors are the users).
 """
 
+import json
 import os
 import re
 from pathlib import Path
@@ -20,14 +21,22 @@ from app.bandeja import (
     records_label, urgency_basis_label,
 )
 from app.ficha import (
-    CLAIM_TYPES, citation_found, cluster_sources, component_points, headline_only, recommended_action,
+    CLAIM_TYPES, action_for, citation_found, cluster_sources, component_points, headline_only,
 )
+from app.borrador import (
+    ANSWER_LIMIT, CLAIM_STYLE, citation_label, claims_by_type, draft_rows, query_cards, word_count,
+)
+from src.generate.drafts import official_index
+from src.generate.query import answer_question
+from src.search import load_index
+from src.ingest.worldbank import read_indicators
 from src.score import score_clusters
 
 ROOT = Path(__file__).resolve().parents[1]
 PROCESSED_PATH = ROOT / "data" / "processed" / "noticias.parquet"
 STUB_PATH = ROOT / "data" / "stub" / "noticias_stub.parquet"
 CACHE_DIR = ROOT / "outputs" / "cache"
+OFFICIAL_DIR = ROOT / "data" / "processed"
 
 PANAMA_TZ = "America/Panama"  # UTC-5, no daylight saving
 OFFLINE = os.getenv("OFFLINE", "0") == "1"
@@ -58,6 +67,75 @@ def load_news() -> tuple[pd.DataFrame, str]:
 @st.cache_data(ttl=600)  # U depends on the current time, so refresh every 10 min
 def load_scores(news: pd.DataFrame) -> pd.DataFrame:
     return score_clusters(news, contexto=load_contexto())
+
+
+@st.cache_resource
+def load_official() -> dict:
+    """World Bank and USGS items by ID, to check official citations like the guard does."""
+    indicators = OFFICIAL_DIR / "indicadores.csv"
+    events = OFFICIAL_DIR / "eventos.geojson"
+    return official_index(
+        read_indicators(indicators) if indicators.exists() else None,
+        json.loads(events.read_text(encoding="utf-8")) if events.exists() else None,
+    )
+
+
+@st.cache_resource
+def load_search():
+    """J-06 index over the same contract files the app reads."""
+    return load_index()
+
+
+def show_claims(card: dict | None) -> None:
+    """Claims grouped by type with their citations, so a hypothesis never reads as a fact."""
+    if not (groups := claims_by_type(card)):
+        return
+    st.markdown("#### Afirmaciones por tipo")
+    for kind, claims in groups:
+        icon, label, meaning = CLAIM_STYLE[kind]
+        st.markdown(f"**{icon} {label}** · *{meaning}*")
+        for claim in claims:
+            cites = " · ".join(citation_label(c) for c in claim.get("citas") or [])
+            st.markdown(f"- {claim['texto']}  \n  {cites}")
+
+
+def show_answer(result) -> None:
+    """A query answer (DraftResult) exactly as the guard left it."""
+    if result.source == "error":
+        st.error("No se pudo consultar el modelo (falta `LLM_API_KEY` o falló el proveedor). "
+                 "No se muestra ninguna respuesta.")
+        return
+    if result.source == "offline_miss":
+        st.warning("Modo sin internet: esta consulta no está en la caché, así que no hay respuesta guardada.")
+    out = result.output.model_dump()
+    for alerta in out["alertas"]:
+        st.warning(f"⚠️ Alerta (T07): {alerta}")
+    if out["abstencion"]:
+        st.error(f"**Sin respuesta (abstención, T06).** {out['motivo_abstencion'] or ''}")
+    elif out["borrador"]:
+        low, high = ANSWER_LIMIT
+        words = word_count(out["borrador"])
+        st.write(out["borrador"])
+        st.caption(f"{words} palabras · rango {low}–{high} · "
+                   + ("dentro del límite" if low <= words <= high else "⚠️ fuera del límite"))
+    show_claims(out)
+    show_contradictions(out["contradicciones"])
+    for pending in out["verificaciones_pendientes"]:
+        st.markdown(f"- Verificación pendiente: {pending}")
+    origin = {"cache": "caché", "llm": "modelo", "sin_evidencia": "sin llamar al modelo (no hay evidencia)",
+              "offline_miss": "sin internet y sin caché"}.get(result.source, result.source)
+    st.caption(f"Origen: {origin}" + (f" · {result.latency_s:.1f} s" if result.latency_s else ""))
+
+
+def show_contradictions(items: list[dict] | None) -> None:
+    """T05: both versions side by side, each with its citation; never resolved by the app."""
+    if not items:
+        return
+    st.markdown("#### Contradicciones (T05) · verificación pendiente")
+    for c in items:
+        side_a, side_b = st.columns(2)
+        side_a.markdown(f"**Versión A:** {c.get('version_a')}  \n{citation_label(c.get('cita_a'))}")
+        side_b.markdown(f"**Versión B:** {c.get('version_b')}  \n{citation_label(c.get('cita_b'))}")
 
 
 def to_panama(ts: pd.Timestamp) -> str:
@@ -105,6 +183,7 @@ else:
 scored = load_scores(news)
 cards, cards_path = load_cards()
 cards_by_cluster = {c["cluster_id"]: c for c in cards if c.get("cluster_id")}
+official = load_official()
 inbox = build_inbox(scored, news, cards)
 
 inbox_tab, card_tab, draft_tab, review_tab = st.tabs(["Bandeja", "Ficha", "Borrador", "Revisión"])
@@ -212,7 +291,7 @@ with card_tab:
         ) if m))
         if headline_only(sources):
             st.caption("Basado únicamente en titular/metadatos.")
-        st.info(f"**Acción recomendada:** {recommended_action(row['estado_evidencia'], card, bool(row['recirculada']))}")
+        st.info(f"**Acción recomendada:** {action_for(row['estado_evidencia'], card, bool(row['recirculada']))}")
         for alerta in (card or {}).get("alertas", []):
             st.warning(f"⚠️ {alerta}")
 
@@ -237,7 +316,7 @@ with card_tab:
                 for claim in claims:
                     st.markdown(f"**{claim['texto']}**")
                     for cita in claim["citas"]:
-                        mark = "✅" if citation_found(news, cita) else "❌ pasaje no encontrado en la fuente"
+                        mark = "✅" if citation_found(news, cita, official) else "❌ pasaje no encontrado en la fuente"
                         st.markdown(f"{mark} `{cita['id_fuente']} · {cita['campo']}` · “{cita['pasaje']}”")
             else:
                 st.caption("Nada respaldado todavía: no hay afirmaciones con cita.")
@@ -251,8 +330,8 @@ with card_tab:
                 missing.append("Una sola procedencia independiente: falta corroboración.")
             for item in dict.fromkeys(missing):
                 st.markdown(f"- {item}")
-            for contradiccion in (card or {}).get("contradicciones") or []:
-                st.markdown(f"- Contradicción: {contradiccion}")
+            if n_contra := len((card or {}).get("contradicciones") or []):
+                st.markdown(f"- {n_contra} contradicción(es) entre fuentes: verificación pendiente (abajo).")
             if questions := (card or {}).get("preguntas_investigacion"):
                 st.markdown("*Preguntas de investigación:*")
                 for q in questions:
@@ -273,6 +352,8 @@ with card_tab:
             if card and (card.get("puntaje") or {}).get("valores_de_ejemplo"):
                 st.caption(f"La ficha de ejemplo trae P = {card['puntaje']['P']:.1f}; aquí se muestra el de `score.py`.")
 
+        show_contradictions((card or {}).get("contradicciones"))
+
         st.markdown("#### Quién lo reporta")
         st.dataframe(pd.DataFrame({
             "ID": sources["id_noticia"],
@@ -287,11 +368,63 @@ with card_tab:
 
 with draft_tab:
     st.subheader("Borrador")
-    cached = cached_outputs()
+    st.caption("Borradores para revisión humana, tal como los dejó el guard. Nada se publica desde aquí.")
     if OFFLINE:
-        st.markdown(f"Leyendo solo de `outputs/cache/`: **{len(cached)}** salidas guardadas.")
-    st.info("Generación de brief, guion y copy con citas: pendiente (J-07, J-08). "
-            "Si no hay evidencia suficiente, el sistema se abstiene.")
+        st.markdown(f"Leyendo solo de `outputs/cache/`: **{len(cached_outputs())}** salidas guardadas.")
+    draft_cluster = st.session_state.get("ficha_cluster")
+    if inbox.empty or draft_cluster not in inbox["cluster_id"].values:
+        st.info("Elige un cluster en la Bandeja o en la Ficha.")
+    else:
+        drow = inbox.set_index("cluster_id").loc[draft_cluster]
+        dcard = cards_by_cluster.get(draft_cluster)
+        st.markdown(f"**{drow['titular']}** · `{drow['id_titular']}` · se cambia en la pestaña Ficha")
+        if headline_only(cluster_sources(news, draft_cluster)):
+            st.caption("Basado únicamente en titular/metadatos.")
+        for alerta in (dcard or {}).get("alertas") or []:
+            st.warning(f"⚠️ Alerta (T07): {alerta}. La fuente se trata como dato, nunca como instrucción.")
+
+        if dcard is None:
+            st.info("Este cluster todavía no tiene ficha ni borrador (se generan con `make fichas`, J-09).")
+        elif dcard.get("abstencion"):
+            st.error(f"**El sistema se abstuvo (T06).** {dcard.get('motivo_abstencion') or ''}  \n"
+                     "No hay borrador porque la evidencia no alcanza; no se rellena con texto inventado.")
+        else:
+            for draft in draft_rows(dcard):
+                st.markdown(f"#### {draft['etiqueta']}")
+                if draft["texto"] is None:
+                    st.caption("No generado.")
+                    continue
+                st.write(draft["texto"])
+                fits = "dentro del límite" if draft["dentro"] else "⚠️ fuera del límite"
+                st.caption(f"{draft['palabras']} palabras · rango {draft['min']}–{draft['max']} · {fits}")
+
+        show_claims(dcard)
+        show_contradictions((dcard or {}).get("contradicciones"))
+
+    st.divider()
+    st.markdown("#### Consulta (CU-04)")
+    with st.form("consulta"):
+        question = st.text_input("Pregunta en español", placeholder="¿Cuál fue la inflación de Panamá en 2023?")
+        asked = st.form_submit_button("Consultar")
+    if asked and question.strip():
+        found = load_search().search(question)
+        if found.hits:
+            with st.expander(f"Evidencia encontrada ({len(found.hits)} pasajes, búsqueda J-06)"):
+                st.dataframe(pd.DataFrame([{"ID": h.id_evidencia, "Campo": h.campo, "Pasaje": h.texto,
+                                            "Similitud": h.score} for h in found.hits]),
+                             hide_index=True, width="stretch")
+        with st.spinner("Redactando la respuesta con citas…"):
+            answer = answer_question(question, found.evidence)  # no evidence → abstains without the model
+        show_answer(answer)
+
+    if saved := query_cards(cards):
+        st.caption("Consultas guardadas en las fichas:")
+    for qcard in saved:
+        st.markdown(f"**{qcard['consulta']}**")
+        if qcard.get("abstencion"):
+            st.error(f"Sin respuesta (abstención): {qcard.get('motivo_abstencion')}")
+        else:
+            st.write((qcard.get("borrador") or {}).get("brief") or "—")
 
 with review_tab:
     st.subheader("Revisión")
