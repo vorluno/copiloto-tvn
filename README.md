@@ -79,7 +79,8 @@ Los resultados de cada corrida se registran en la matriz T01–T10 de Notion (Cr
 | --- | --- | --- |
 | `make setup` | Crea `.venv` e instala `requirements.txt` | José |
 | `make stub` | Regenera los datos sintéticos (`noticias_stub.parquet`, `fichas_stub.jsonl`) | José |
-| `make data` | Ingesta de las 4 fuentes y validación | Levi |
+| `make data` | Descarga las fuentes y reconstruye y valida `noticias.parquet` (necesita internet) | Levi |
+| `make news` | Reconstruye `noticias.parquet` y el reporte de calidad desde las descargas guardadas, sin red | Levi |
 | `make nlp` | Embeddings, temas, procedencia, clusters y baseline | Levi |
 | `make demo` | Abre la app; `OFFLINE=1` usa solo caché | Cristian (app) · José (caché) |
 | `make test` | Corre T01–T10 y pruebas de contrato | Todos |

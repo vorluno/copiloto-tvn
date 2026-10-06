@@ -12,7 +12,7 @@ ifeq ($(OFFLINE),1)
 DEMO_ENV += HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1
 endif
 
-.PHONY: setup stub data nlp demo test eval llm-check fichas
+.PHONY: setup stub data news nlp demo test eval llm-check fichas
 
 setup: ## Create .venv and install pinned requirements
 	python3.11 -m venv $(VENV)
@@ -25,10 +25,15 @@ stub: ## Rebuild the synthetic stubs: news (J-02) and case cards for the UI
 	$(PY) data/stub/make_stub.py
 	$(PY) data/stub/make_fichas_stub.py
 
-data: ## Ingestion + validation (B-01..B-05); needs internet
+data: ## Download every source, then build and validate noticias.parquet (B-01..B-05); needs internet
 	$(PY) -m src.ingest.worldbank
 	$(PY) -m src.ingest.usgs
-	@echo "Pending B-01, B-02, B-05: TVN RSS, GDELT and validation have no entry point yet."
+	$(PY) -m src.ingest.tvn_rss
+	$(PY) -m src.ingest.gdelt --resume
+	$(MAKE) news
+
+news: ## Rebuild noticias.parquet + quality report from the stored raw snapshots (no network)
+	$(PY) -m src.ingest.news
 
 nlp: ## Embeddings, topics, provenance, clusters and baseline (B-06..B-09, B-11)
 	@echo "Pending B-06..B-09: src/nlp/*.py have no entry point yet."
