@@ -8,6 +8,7 @@ With OFFLINE=1 nothing touches the network: LLM output is read only from
 outputs/cache/ and the UI says so. UI text is Spanish (editors are the users).
 """
 
+import json
 import os
 import re
 from pathlib import Path
@@ -20,15 +21,18 @@ from app.bandeja import (
     records_label, urgency_basis_label,
 )
 from app.ficha import (
-    CLAIM_TYPES, citation_found, cluster_sources, component_points, headline_only, recommended_action,
+    CLAIM_TYPES, action_for, citation_found, cluster_sources, component_points, headline_only,
 )
 from app.borrador import CLAIM_STYLE, citation_label, claims_by_type, draft_rows, query_cards
+from src.generate.drafts import official_index
+from src.ingest.worldbank import read_indicators
 from src.score import score_clusters
 
 ROOT = Path(__file__).resolve().parents[1]
 PROCESSED_PATH = ROOT / "data" / "processed" / "noticias.parquet"
 STUB_PATH = ROOT / "data" / "stub" / "noticias_stub.parquet"
 CACHE_DIR = ROOT / "outputs" / "cache"
+OFFICIAL_DIR = ROOT / "data" / "processed"
 
 PANAMA_TZ = "America/Panama"  # UTC-5, no daylight saving
 OFFLINE = os.getenv("OFFLINE", "0") == "1"
@@ -59,6 +63,28 @@ def load_news() -> tuple[pd.DataFrame, str]:
 @st.cache_data(ttl=600)  # U depends on the current time, so refresh every 10 min
 def load_scores(news: pd.DataFrame) -> pd.DataFrame:
     return score_clusters(news, contexto=load_contexto())
+
+
+@st.cache_resource
+def load_official() -> dict:
+    """World Bank and USGS items by ID, to check official citations like the guard does."""
+    indicators = OFFICIAL_DIR / "indicadores.csv"
+    events = OFFICIAL_DIR / "eventos.geojson"
+    return official_index(
+        read_indicators(indicators) if indicators.exists() else None,
+        json.loads(events.read_text(encoding="utf-8")) if events.exists() else None,
+    )
+
+
+def show_contradictions(items: list[dict] | None) -> None:
+    """T05: both versions side by side, each with its citation; never resolved by the app."""
+    if not items:
+        return
+    st.markdown("#### Contradicciones (T05) · verificación pendiente")
+    for c in items:
+        side_a, side_b = st.columns(2)
+        side_a.markdown(f"**Versión A:** {c.get('version_a')}  \n{citation_label(c.get('cita_a'))}")
+        side_b.markdown(f"**Versión B:** {c.get('version_b')}  \n{citation_label(c.get('cita_b'))}")
 
 
 def to_panama(ts: pd.Timestamp) -> str:
@@ -106,6 +132,7 @@ else:
 scored = load_scores(news)
 cards, cards_path = load_cards()
 cards_by_cluster = {c["cluster_id"]: c for c in cards if c.get("cluster_id")}
+official = load_official()
 inbox = build_inbox(scored, news, cards)
 
 inbox_tab, card_tab, draft_tab, review_tab = st.tabs(["Bandeja", "Ficha", "Borrador", "Revisión"])
@@ -213,7 +240,7 @@ with card_tab:
         ) if m))
         if headline_only(sources):
             st.caption("Basado únicamente en titular/metadatos.")
-        st.info(f"**Acción recomendada:** {recommended_action(row['estado_evidencia'], card, bool(row['recirculada']))}")
+        st.info(f"**Acción recomendada:** {action_for(row['estado_evidencia'], card, bool(row['recirculada']))}")
         for alerta in (card or {}).get("alertas", []):
             st.warning(f"⚠️ {alerta}")
 
@@ -238,7 +265,7 @@ with card_tab:
                 for claim in claims:
                     st.markdown(f"**{claim['texto']}**")
                     for cita in claim["citas"]:
-                        mark = "✅" if citation_found(news, cita) else "❌ pasaje no encontrado en la fuente"
+                        mark = "✅" if citation_found(news, cita, official) else "❌ pasaje no encontrado en la fuente"
                         st.markdown(f"{mark} `{cita['id_fuente']} · {cita['campo']}` · “{cita['pasaje']}”")
             else:
                 st.caption("Nada respaldado todavía: no hay afirmaciones con cita.")
@@ -252,8 +279,8 @@ with card_tab:
                 missing.append("Una sola procedencia independiente: falta corroboración.")
             for item in dict.fromkeys(missing):
                 st.markdown(f"- {item}")
-            for contradiccion in (card or {}).get("contradicciones") or []:
-                st.markdown(f"- Contradicción: {contradiccion}")
+            if n_contra := len((card or {}).get("contradicciones") or []):
+                st.markdown(f"- {n_contra} contradicción(es) entre fuentes: verificación pendiente (abajo).")
             if questions := (card or {}).get("preguntas_investigacion"):
                 st.markdown("*Preguntas de investigación:*")
                 for q in questions:
@@ -273,6 +300,8 @@ with card_tab:
             )
             if card and (card.get("puntaje") or {}).get("valores_de_ejemplo"):
                 st.caption(f"La ficha de ejemplo trae P = {card['puntaje']['P']:.1f}; aquí se muestra el de `score.py`.")
+
+        show_contradictions((card or {}).get("contradicciones"))
 
         st.markdown("#### Quién lo reporta")
         st.dataframe(pd.DataFrame({
@@ -327,12 +356,7 @@ with draft_tab:
                     cites = " · ".join(citation_label(c) for c in claim.get("citas") or [])
                     st.markdown(f"- {claim['texto']}  \n  {cites}")
 
-        if dcard and dcard.get("contradicciones"):
-            st.markdown("#### Contradicciones (T05) · verificación pendiente")
-            for c in dcard["contradicciones"]:
-                side_a, side_b = st.columns(2)
-                side_a.markdown(f"**Versión A:** {c.get('version_a')}  \n{citation_label(c.get('cita_a'))}")
-                side_b.markdown(f"**Versión B:** {c.get('version_b')}  \n{citation_label(c.get('cita_b'))}")
+        show_contradictions((dcard or {}).get("contradicciones"))
 
     st.divider()
     st.markdown("#### Consulta (CU-04)")

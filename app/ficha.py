@@ -7,6 +7,8 @@ from score_clusters; claims and citations from the case card when there is one.
 
 import pandas as pd
 
+from src.generate.guard import normalize
+
 # P = 30R + 25I + 20U + 15N + 10E (CLAUDE.md §1, rules/scoring_v1.yaml).
 WEIGHTS = {"R": 30, "I": 25, "U": 20, "N": 15, "E": 10}
 COMPONENT_NAMES = {"R": "Relación con Panamá", "I": "Impacto", "U": "Urgencia",
@@ -34,14 +36,30 @@ def cluster_sources(news: pd.DataFrame, cluster_id: str) -> pd.DataFrame:
     return items.assign(_order=order).sort_values("_order", ascending=False).drop(columns="_order")
 
 
-def citation_found(news: pd.DataFrame, cita: dict) -> bool:
-    """True if the cited passage appears verbatim in the cited field of the cited item."""
-    match = news[news["id_noticia"] == cita.get("id_fuente")]
-    field = cita.get("campo")
-    if match.empty or field not in match.columns:
+def citation_found(news: pd.DataFrame, cita: dict, official: dict | None = None) -> bool:
+    """True if the cited passage appears in the cited field, compared the way the guard does.
+
+    News items are looked up in noticias; World Bank and USGS items in `official`
+    (src.generate.drafts.official_index), so an official citation the guard accepted
+    is not shown as missing.
+    """
+    passage, field = cita.get("pasaje"), cita.get("campo")
+    if not passage:
         return False
-    text = match.iloc[0][field]
-    return isinstance(text, str) and bool(cita.get("pasaje")) and cita["pasaje"] in text
+    item = (official or {}).get(cita.get("id_fuente"))
+    if item is not None:
+        text = item.fields.get(field)
+    else:
+        match = news[news["id_noticia"] == cita.get("id_fuente")]
+        if match.empty or field not in match.columns:
+            return False
+        text = match.iloc[0][field]
+    return isinstance(text, str) and normalize(passage) in normalize(text)
+
+
+def action_for(estado_evidencia: str, card: dict | None, recirculada: bool) -> str:
+    """The card's own recommended action when there is a card; the same rule otherwise."""
+    return (card or {}).get("accion_recomendada") or recommended_action(estado_evidencia, card, recirculada)
 
 
 def headline_only(sources: pd.DataFrame) -> bool:
@@ -50,7 +68,11 @@ def headline_only(sources: pd.DataFrame) -> bool:
 
 
 def recommended_action(estado_evidencia: str, card: dict | None, recirculada: bool) -> str:
-    """Deterministic next step for the editor (ADR-021). Never 'publish'."""
+    """Deterministic next step for the editor (ADR-022). Never 'publish'.
+
+    Fallback only: a case card already carries `accion_recomendada` from the same rule
+    in src/fichas.py; tests/test_fichas.py keeps both in sync.
+    """
     card = card or {}
     if card.get("alertas"):
         return "No usar esta fuente como hecho: contiene instrucciones. Revisar la alerta y descartar si no hay otra fuente."

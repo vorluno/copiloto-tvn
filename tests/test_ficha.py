@@ -6,7 +6,10 @@ import pandas as pd
 import pytest
 
 from app.bandeja import read_cards
-from app.ficha import citation_found, cluster_sources, component_points, headline_only, recommended_action
+from app.ficha import (
+    action_for, citation_found, cluster_sources, component_points, headline_only, recommended_action,
+)
+from src.generate.schema import Evidence
 
 STUB_DIR = Path(__file__).resolve().parents[1] / "data" / "stub"
 
@@ -28,6 +31,23 @@ def test_stub_citations_are_found_and_fakes_are_not(news, cards):
     assert not citation_found(news, {**real, "pasaje": "una cifra que nadie dijo"})
     assert not citation_found(news, {**real, "id_fuente": "N-0000000000"})
     assert not citation_found(news, {**real, "campo": "descripcion_inexistente"})
+    # Compared like the guard: case, spacing and HTML entities do not matter.
+    assert citation_found(news, {**real, "pasaje": "  LÍMITE de calado   por bajo nivel"})
+
+
+def test_official_citations_use_the_official_index(news):
+    item = Evidence(id="WB-PAN-FP.CPI.TOTL.ZG-2023", kind="indicador",
+                    fields={"valor": "1.5", "unidad": "% anual", "anio": "2023"}, year=2023)
+    official = {item.id: item}
+    cita = {"id_fuente": item.id, "campo": "valor", "pasaje": "1.5"}
+    assert citation_found(news, cita, official)
+    assert not citation_found(news, cita)  # without the index it is not a news item
+    assert not citation_found(news, {**cita, "pasaje": "2.0"}, official)
+
+
+def test_card_action_wins_over_the_fallback(cards):
+    assert action_for("parcial", {"accion_recomendada": "Texto de la ficha."}, False) == "Texto de la ficha."
+    assert action_for("parcial", cards["F-STUB-01"], False) == recommended_action("parcial", cards["F-STUB-01"], False)
 
 
 def test_components_add_up_to_p_and_keep_nulls():

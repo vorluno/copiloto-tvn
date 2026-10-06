@@ -10,7 +10,8 @@ STUB_DIR = Path(__file__).resolve().parents[1] / "data" / "stub"
 
 
 def test_limits_and_counting_match_the_guard():
-    assert WORD_LIMITS == guard.WORD_LIMITS
+    # The guard also limits other tasks (e.g. "respuesta"); the draft tasks must match it.
+    assert WORD_LIMITS == {task: guard.WORD_LIMITS[task] for task in WORD_LIMITS}
     for text in ["Basado únicamente en titular/metadatos.", "co-autor d’Ávila 5,1 M≥3", ""]:
         assert word_count(text) == guard.word_count(text)
 
