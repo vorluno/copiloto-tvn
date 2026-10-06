@@ -186,11 +186,11 @@ def generate_draft(
         result = guard({"abstencion": True, "motivo_abstencion": OFFLINE_MISS}, request.evidence, request.task)
         return DraftResult(result.output, result.report, "offline_miss", key)
 
-    client = client or OpenRouterClient()
     started = time.perf_counter()
     try:
+        client = client or OpenRouterClient()  # inside: a missing key is a provider error, not a crash
         text, usage = client.complete(messages, model, TEMPERATURE)
-    except Exception as exc:  # provider down, timeout, bad key: show an abstention, cache nothing
+    except Exception as exc:  # no key, provider down, timeout, bad key: show an abstention, cache nothing
         result = guard({"abstencion": True, "motivo_abstencion": PROVIDER_ERROR}, request.evidence, request.task)
         result.report.violations.append(f"error del proveedor: {type(exc).__name__}")
         return DraftResult(result.output, result.report, "error", key)
