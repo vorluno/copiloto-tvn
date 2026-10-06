@@ -36,7 +36,7 @@ Parte del backlog del plan maestro (37 tareas) con los cambios de abajo. Estados
 | J-09 | Exportar `fichas.jsonl` y leer `revisiones.jsonl` (solo backend; la interfaz es C-15) | Mié | J-08 | ✅ `make fichas`; falta correrlo con Gemini y noticias reales |
 | J-10 | Abstención y contradicciones (T05, T06) | Jue | J-08 | ✅ T05 y T06 activas |
 | J-11 | Defensa anti-inyección (T07) | Jue | J-07 | ✅ T07 activa |
-| J-12 | Caché offline y modo sin internet (T10) | Jue | J-08 | 🟡 caché y modo offline listos; falta llenar la caché con el recorrido del pitch (jueves 12:00) |
+| J-12 | Caché offline y modo sin internet (T10) | Jue | J-08 | 🟡 T10 automatizada (red cortada a nivel de socket); falta llenar la caché con Gemini para el recorrido del pitch |
 | J-13 | Latencia mediana y p95, tokens y costo | Jue | J-08 | 🟡 `make eval` listo; falta correrlo con Gemini y el benchmark de C-06 |
 | J-14 | Tag v1.0, README final, acceso del jurado | Jue | Todo | ⬜ |
 | J-15 | `fichas_stub.jsonl` para que el frontend avance sin backend | Mar | J-02 | ✅ |
