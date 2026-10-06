@@ -22,6 +22,7 @@ from app.bandeja import (
 from app.ficha import (
     CLAIM_TYPES, citation_found, cluster_sources, component_points, headline_only, recommended_action,
 )
+from app.borrador import CLAIM_STYLE, citation_label, claims_by_type, draft_rows, query_cards
 from src.score import score_clusters
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -287,11 +288,64 @@ with card_tab:
 
 with draft_tab:
     st.subheader("Borrador")
-    cached = cached_outputs()
+    st.caption("Borradores para revisión humana, tal como los dejó el guard. Nada se publica desde aquí.")
     if OFFLINE:
-        st.markdown(f"Leyendo solo de `outputs/cache/`: **{len(cached)}** salidas guardadas.")
-    st.info("Generación de brief, guion y copy con citas: pendiente (J-07, J-08). "
-            "Si no hay evidencia suficiente, el sistema se abstiene.")
+        st.markdown(f"Leyendo solo de `outputs/cache/`: **{len(cached_outputs())}** salidas guardadas.")
+    draft_cluster = st.session_state.get("ficha_cluster")
+    if inbox.empty or draft_cluster not in inbox["cluster_id"].values:
+        st.info("Elige un cluster en la Bandeja o en la Ficha.")
+    else:
+        drow = inbox.set_index("cluster_id").loc[draft_cluster]
+        dcard = cards_by_cluster.get(draft_cluster)
+        st.markdown(f"**{drow['titular']}** · `{drow['id_titular']}` · se cambia en la pestaña Ficha")
+        if headline_only(cluster_sources(news, draft_cluster)):
+            st.caption("Basado únicamente en titular/metadatos.")
+        for alerta in (dcard or {}).get("alertas") or []:
+            st.warning(f"⚠️ Alerta (T07): {alerta}. La fuente se trata como dato, nunca como instrucción.")
+
+        if dcard is None:
+            st.info("Este cluster todavía no tiene ficha ni borrador (se generan con `make fichas`, J-09).")
+        elif dcard.get("abstencion"):
+            st.error(f"**El sistema se abstuvo (T06).** {dcard.get('motivo_abstencion') or ''}  \n"
+                     "No hay borrador porque la evidencia no alcanza; no se rellena con texto inventado.")
+        else:
+            for draft in draft_rows(dcard):
+                st.markdown(f"#### {draft['etiqueta']}")
+                if draft["texto"] is None:
+                    st.caption("No generado.")
+                    continue
+                st.write(draft["texto"])
+                fits = "dentro del límite" if draft["dentro"] else "⚠️ fuera del límite"
+                st.caption(f"{draft['palabras']} palabras · rango {draft['min']}–{draft['max']} · {fits}")
+
+        if dcard and (groups := claims_by_type(dcard)):
+            st.markdown("#### Afirmaciones por tipo")
+            for kind, claims in groups:
+                icon, label, meaning = CLAIM_STYLE[kind]
+                st.markdown(f"**{icon} {label}** · *{meaning}*")
+                for claim in claims:
+                    cites = " · ".join(citation_label(c) for c in claim.get("citas") or [])
+                    st.markdown(f"- {claim['texto']}  \n  {cites}")
+
+        if dcard and dcard.get("contradicciones"):
+            st.markdown("#### Contradicciones (T05) · verificación pendiente")
+            for c in dcard["contradicciones"]:
+                side_a, side_b = st.columns(2)
+                side_a.markdown(f"**Versión A:** {c.get('version_a')}  \n{citation_label(c.get('cita_a'))}")
+                side_b.markdown(f"**Versión B:** {c.get('version_b')}  \n{citation_label(c.get('cita_b'))}")
+
+    st.divider()
+    st.markdown("#### Consulta (CU-04)")
+    st.text_input("Pregunta en español", disabled=True,
+                  placeholder="¿Cuál fue la inflación de Panamá en 2023?",
+                  help="Se activa cuando esté la búsqueda semántica (J-06).")
+    st.caption("La caja se activa con la búsqueda semántica (J-06). Consultas ya respondidas:")
+    for qcard in query_cards(cards):
+        st.markdown(f"**{qcard['consulta']}**")
+        if qcard.get("abstencion"):
+            st.error(f"Sin respuesta (abstención): {qcard.get('motivo_abstencion')}")
+        else:
+            st.write((qcard.get("borrador") or {}).get("brief") or "—")
 
 with review_tab:
     st.subheader("Revisión")
