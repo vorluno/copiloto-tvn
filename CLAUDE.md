@@ -116,6 +116,12 @@ los de `data/stub/`) y solo **escribe** `outputs/revisiones.jsonl`. No importa
 lógica de `src/` salvo funciones públicas acordadas en la sincronización. Así
 José y Cristian no tocan los mismos archivos.
 
+Funciones públicas acordadas que la app puede importar:
+
+- `src.score.score_clusters(news, contexto=None, now=None)` → una fila por cluster con
+  `posicion`, `P`, `rango`, `R`, `I`, `U`, `N`, `E`, `estado_evidencia`, `version_reglas`,
+  `n_registros`, `n_procedencias_independientes`, `base_urgencia` y más (J-05).
+
 Columnas extra fuera del contrato (p. ej. `sintetico`, `recirculada`) se
 permiten si se avisan; nunca se quita ni se renombra una columna del contrato
 sin acuerdo.
