@@ -88,6 +88,35 @@ def test_page_that_is_not_an_article_is_skipped():
     assert parse_article("<html></html>", "https://www.tvn-2.com/x", FETCHED_AT) is None
 
 
+def test_parallel_fetch_gives_the_same_sample_as_sequential(tmp_path):
+    import threading
+    import time as _time
+
+    urls = [f"https://www.tvn-2.com/n/{i}_1_{i}.html" for i in range(PER_MONTH + 30)]
+    lock, active, peak = threading.Lock(), [0], [0]
+
+    def fake_get(url):
+        if url.endswith(".xml"):
+            return sitemap(*urls)
+        with lock:
+            active[0] += 1
+            peak[0] = max(peak[0], active[0])
+        _time.sleep(0.002)
+        with lock:
+            active[0] -= 1
+        n = int(url.rsplit("_", 1)[1].split(".")[0])
+        published = "2025-09-30T12:00:00+00:00" if n % 10 == 0 else "2025-10-15T12:00:00+00:00"
+        return page(headline=f"Nota {n}", published=published).encode()
+
+    collect(["2025_10"], tmp_path / "seq", get=fake_get, sleep=lambda s: None, workers=1)
+    peak[0] = 0
+    collect(["2025_10"], tmp_path / "par", get=fake_get, sleep=lambda s: None, workers=3)
+    assert peak[0] > 1  # requests really overlap
+    seq = sorted(load_articles(tmp_path / "seq")["id_noticia"])
+    par = sorted(load_articles(tmp_path / "par")["id_noticia"])
+    assert par == seq and len(par) == PER_MONTH  # same articles, exact quota
+
+
 def test_collect_keeps_per_month_quota_and_resumes(tmp_path):
     urls = [f"https://www.tvn-2.com/n/{i}_1_{i}.html" for i in range(PER_MONTH + 30)]
     fetched = []

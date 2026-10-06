@@ -17,7 +17,9 @@ origen="tvn_web"; alcance_texto="descripcion_web" when there is a description,
 "titular/metadatos" otherwise; fecha_deteccion is null (no seendate) and a missing
 datePublished stays null (and is then excluded by the period).
 
-Requests are spaced by PAUSE_S and identified by a User-Agent. Each sitemap and each
+Up to WORKERS pages are downloaded at once, each worker pausing PAUSE_S after every
+article (about one page per second in total), and requests carry an identifying
+User-Agent. Each sitemap and each
 article's extracted metadata is stored under data/raw/tvn_web/ (git-ignored), so a run
 resumes without fetching anything twice.
 
@@ -29,6 +31,7 @@ import json
 import re
 import time
 import xml.etree.ElementTree as ET
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from urllib.parse import urlsplit
 
@@ -43,7 +46,8 @@ SITEMAP_URL = "https://www.tvn-2.com/tvn_sitemap_contents_{key}.xml"
 DISALLOWED = ("/api/", "/buscador/", "/tag/")
 PER_MONTH = 100
 MAX_CANDIDATES = 2 * PER_MONTH
-PAUSE_S = 1.0
+PAUSE_S = 1.0  # per worker, after each article
+WORKERS = 3  # parallel downloads: about 1 page per second in total
 TIMEOUT_S = 30
 USER_AGENT = "copiloto-tvn/1.0 (hackIAthon; metadata only)"
 MEDIO, DOMINIO, IDIOMA = "TVN", "tvn-2.com", "es"
@@ -132,37 +136,48 @@ def _in_period(published: str | None) -> bool:
     return WINDOW_START <= stamp < WINDOW_END
 
 
-def collect(months: list[str], raw_dir: Path = RAW_DIR, get=_http_get, sleep=time.sleep) -> dict[str, int]:
-    """Fetch up to PER_MONTH in-period articles per month; returns the count kept per month."""
+def _fetch_record(url: str, path: Path, get, sleep) -> dict | None:
+    """Stored record for one URL, fetching it if needed; None on a network error (retried later)."""
+    if path.exists():
+        return json.loads(path.read_text(encoding="utf-8"))
+    fetched_at = pd.Timestamp.now(tz="UTC").floor("s")
+    try:
+        content = get(url)
+    except requests.RequestException:
+        return None
+    row = parse_article(content.decode("utf-8", errors="replace"), url, fetched_at)
+    record = {"url": url, "skip": True} if row is None else {k: (v.isoformat() if isinstance(v, pd.Timestamp) else v) for k, v in row.items()}
+    path.write_text(json.dumps(record, ensure_ascii=False), encoding="utf-8")
+    sleep(PAUSE_S)
+    return record
+
+
+def collect(months: list[str], raw_dir: Path = RAW_DIR, get=_http_get, sleep=time.sleep, workers: int = WORKERS) -> dict[str, int]:
+    """Fetch up to PER_MONTH in-period articles per month; returns the count kept per month.
+
+    Candidates are taken in sample order in batches of at most `workers` and of at most
+    the articles still missing, so parallel and sequential runs keep the same articles
+    and never overshoot the quota.
+    """
     (raw_dir / "sitemaps").mkdir(parents=True, exist_ok=True)
     (raw_dir / "articles").mkdir(parents=True, exist_ok=True)
     kept_by_month = {}
-    for key in months:
-        sitemap_path = raw_dir / "sitemaps" / f"contents_{key}.xml"
-        if not sitemap_path.exists():
-            sitemap_path.write_bytes(get(SITEMAP_URL.format(key=key)))
-            sleep(PAUSE_S)
-        kept = tried = 0
-        for url in sample_order(parse_sitemap(sitemap_path.read_bytes())):
-            if kept >= PER_MONTH or tried >= MAX_CANDIDATES:
-                break
-            tried += 1
-            path = raw_dir / "articles" / f"{news_id(url)}.json"
-            if path.exists():
-                record = json.loads(path.read_text(encoding="utf-8"))
-            else:
-                fetched_at = pd.Timestamp.now(tz="UTC").floor("s")
-                try:
-                    content = get(url)
-                except requests.RequestException:
-                    continue  # not stored: a later run retries it
-                row = parse_article(content.decode("utf-8", errors="replace"), url, fetched_at)
-                record = {"url": url, "skip": True} if row is None else {k: (v.isoformat() if isinstance(v, pd.Timestamp) else v) for k, v in row.items()}
-                path.write_text(json.dumps(record, ensure_ascii=False), encoding="utf-8")
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        for key in months:
+            sitemap_path = raw_dir / "sitemaps" / f"contents_{key}.xml"
+            if not sitemap_path.exists():
+                sitemap_path.write_bytes(get(SITEMAP_URL.format(key=key)))
                 sleep(PAUSE_S)
-            if not record.get("skip") and _in_period(record.get("fecha_publicacion")):
-                kept += 1
-        kept_by_month[key] = kept
+            candidates = sample_order(parse_sitemap(sitemap_path.read_bytes()))[:MAX_CANDIDATES]
+            kept, pos = 0, 0
+            while kept < PER_MONTH and pos < len(candidates):
+                batch = candidates[pos: pos + min(workers, PER_MONTH - kept)]
+                pos += len(batch)
+                paths = [raw_dir / "articles" / f"{news_id(url)}.json" for url in batch]
+                for record in pool.map(lambda args: _fetch_record(*args, get, sleep), zip(batch, paths)):
+                    if record and not record.get("skip") and _in_period(record.get("fecha_publicacion")):
+                        kept += 1
+            kept_by_month[key] = kept
     return kept_by_month
 
 
