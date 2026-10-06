@@ -135,6 +135,9 @@ Funciones públicas acordadas que la app puede importar:
   `outputs/revisiones.jsonl` (valida el estado; nunca reescribe). `latest_reviews()` →
   última decisión por `id_caso`; `apply_reviews(cards, reviews)` la aplica a las fichas (J-09).
   `make fichas` (o `OFFLINE=1 make fichas`) escribe `outputs/fichas.jsonl`.
+- `src.generate.query.answer_question(pregunta, evidence)` → `DraftResult` para la caja de
+  consulta (CU-04). Sin evidencia se abstiene sin llamar al modelo (T06); con evidencia pasa
+  por el guard como cualquier borrador (J-10).
 
 Columnas extra fuera del contrato (p. ej. `sintetico`, `recirculada`) se
 permiten si se avisan; nunca se quita ni se renombra una columna del contrato

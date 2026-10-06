@@ -16,6 +16,12 @@ Runs before anything reaches the UI. The model's word is never trusted:
    unsupported claim. If no claim survives, the result becomes an abstention (T06).
 7. Headline-only sources force the phrase "Basado únicamente en titular/metadatos."
 8. Word limits per task and exactly 3 research questions for the brief.
+9. Figures (J-10): a number in a claim must exist in the evidence it cites, and a number
+   in the draft must exist in some evidence sent; otherwise the claim or draft is dropped
+   (no invented figure, T06). Two sources with different figures for the same unit
+   become a contradiction plus a pending verification, added by code if the model did
+   not, and a claim taking one side as "hecho" becomes "declaracion" (T05).
+10. Injection (J-11): a draft that repeats an instruction-like text is dropped (T07).
 
 `GuardReport` keeps the numerator and denominator for the citation metrics, and
 `ok` tells generate.py (J-08) whether a retry is worth it.
@@ -30,24 +36,32 @@ from dataclasses import dataclass, field
 
 from pydantic import ValidationError
 
-from src.generate.schema import Afirmacion, Cita, Evidence, SalidaLLM, Task
+from src.generate.figures import find_conflicts, unsupported_figures
+from src.generate.schema import Afirmacion, Cita, Contradiccion, Evidence, SalidaLLM, Task
 
 ONLY_HEADLINE = "Basado únicamente en titular/metadatos."
 WORD_LIMITS: dict[str, tuple[int, int]] = {
     "brief": (1, 250),
     "guion": (110, 150),  # 45-60 s of speech
     "copy": (1, 80),
+    "respuesta": (1, 150),  # answer to an editor's question (CU-04)
 }
 QUESTIONS_FOR_BRIEF = 3
 
+# Instruction-like text in a source (J-11). Matched on normalized (lowercase) text.
 INJECTION_PATTERNS = [
-    r"ignor[ae]\w* (?:\w+ ){0,3}(?:instrucciones|reglas|indicaciones)",
-    r"olvida\w* (?:\w+ ){0,3}(?:instrucciones|reglas)",
-    r"revela\w* (?:\w+ ){0,4}(?:clave|api|configuraci[oó]n|prompt|instrucciones|secreto)",
-    r"muestra\w* (?:\w+ ){0,3}(?:configuraci[oó]n|prompt|instrucciones)",
-    r"\bsystem prompt\b",
+    r"ignor[ae]\w* (?:\w+ ){0,3}(?:instrucciones|reglas|indicaciones|órdenes)",
+    r"olvida\w* (?:\w+ ){0,3}(?:instrucciones|reglas|indicaciones)",
+    r"(?:revela|muestra|imprime|repite|comparte|env[ií]a)\w* (?:\w+ ){0,4}(?:clave|api|configuraci[oó]n|prompt|instrucciones|secreto|contraseña|token)",
+    r"(?:a partir de ahora|desde ahora) (?:eres|act[uú]a|responde|debes)",
+    r"\bact[uú]a como\b",
+    r"nuevas? instrucci[oó]n(?:es)?\b",
+    r"\b(?:system|developer) prompt\b",
     r"\bapi[ _-]?key\b",
-    r"ignore (?:all |any |the )?(?:previous |prior )?instructions",
+    r"ignore (?:all |any |the |your )?(?:previous |prior |above )?(?:instructions|rules)",
+    r"disregard (?:all |any |the |your )?(?:previous |prior |above )?(?:instructions|rules)",
+    r"\byou are now\b",
+    r"</?\s*(?:fuente|system|assistant|instrucciones)\b",
 ]
 SECRET_PATTERNS = [r"sk-or-v1-[A-Za-z0-9]{16,}", r"\bsk-[A-Za-z0-9_-]{20,}"]
 # Distinctive lines of the system prompt; seeing them in an output means it leaked.
@@ -121,8 +135,32 @@ class GuardResult:
     report: GuardReport
 
 
-def _abstention(reason: str, alerts: list[str] | None = None) -> SalidaLLM:
-    return SalidaLLM(abstencion=True, motivo_abstencion=reason, alertas=alerts or [])
+def _abstention(reason: str, alerts: list[str] | None = None, pending: list[str] | None = None) -> SalidaLLM:
+    return SalidaLLM(abstencion=True, motivo_abstencion=reason, alertas=alerts or [],
+                     verificaciones_pendientes=pending or [])
+
+
+def _field_with(item: Evidence, raw: str) -> str:
+    return next((name for name, text in item.fields.items() if raw in text), "titulo")
+
+
+def _conflict_entries(evidence: list[Evidence], existing: list[Contradiccion]) -> tuple[list, list[str]]:
+    """Contradictions the code finds between sources, minus the ones the model already gave."""
+    by_id = {item.id: item for item in evidence}
+    added, pending = [], []
+    for conflict in find_conflicts(evidence):
+        if any(conflict.involves(c.cita_a.id_fuente, c.cita_b.id_fuente) for c in existing + added):
+            continue
+        a, b = by_id[conflict.id_a], by_id[conflict.id_b]
+        added.append(Contradiccion(
+            version_a=a.fields.get("titulo", ""),
+            cita_a=Cita(id_fuente=a.id, campo=_field_with(a, conflict.raw_a), pasaje=conflict.raw_a),
+            version_b=b.fields.get("titulo", ""),
+            cita_b=Cita(id_fuente=b.id, campo=_field_with(b, conflict.raw_b), pasaje=conflict.raw_b),
+        ))
+        pending.append(f"Cifras distintas: {a.id} dice {conflict.raw_a} {conflict.unit} y {b.id} dice "
+                       f"{conflict.raw_b} {conflict.unit}. Verificación pendiente; no se elige una.")
+    return added, pending
 
 
 def _parse(raw: str | dict) -> SalidaLLM:
@@ -199,6 +237,10 @@ def _check_claim(
         reason = "cita una fuente con instrucción inyectada"
     else:
         reason = next((r for c in valid if (r := _official_data_error(claim.texto, by_id[c.id_fuente]))), None)
+    if reason is None:
+        cited_texts = [t for c in valid for t in by_id[c.id_fuente].fields.values()]
+        if missing := unsupported_figures(claim.texto, cited_texts):
+            reason = f"cifra sin respaldo en la fuente citada ({', '.join(missing)})"
     if reason:
         report.dropped_claims.append(DroppedClaim(claim.texto, reason))
         return None
@@ -232,12 +274,17 @@ def guard(raw: str | dict, evidence: list[Evidence], task: Task) -> GuardResult:
             alerts.append(alert)
             report.fixes.append(f"alerta agregada por el guard: {alert}")
 
+    found, conflict_pending = _conflict_entries(evidence, [])
+    conflicting = {(c.cita_a.id_fuente, c.cita_a.pasaje) for c in found} | {(c.cita_b.id_fuente, c.cita_b.pasaje) for c in found}
+
     if output.abstencion:
         if output.afirmaciones:
             report.violations.append("abstención con afirmaciones: se descartan las afirmaciones")
         if not output.motivo_abstencion:
             report.violations.append("abstención sin motivo")
-        result = output.model_copy(update={"afirmaciones": [], "contradicciones": [], "borrador": None, "alertas": alerts})
+        pending = list(dict.fromkeys(output.verificaciones_pendientes + conflict_pending))
+        result = output.model_copy(update={"afirmaciones": [], "contradicciones": [], "borrador": None,
+                                           "alertas": alerts, "verificaciones_pendientes": pending})
         return GuardResult(result, report)
 
     report.claims_received = len(output.afirmaciones)
@@ -252,10 +299,23 @@ def guard(raw: str | dict, evidence: list[Evidence], task: Task) -> GuardResult:
         else:
             contradictions.append(item)
 
+    added, _ = _conflict_entries(evidence, contradictions)
+    if added:
+        contradictions += added
+        report.fixes.append(f"{len(added)} contradicción(es) entre fuentes agregadas por el guard")
+    pending = list(dict.fromkeys(output.verificaciones_pendientes + conflict_pending))
+
+    # A claim that takes one side of a conflicting figure as fact is only a statement (T05).
+    for i, claim in enumerate(claims):
+        if claim.tipo == "hecho" and any((c.id_fuente, raw) in conflicting and raw in claim.texto
+                                         for c in claim.citas for (_, raw) in conflicting):
+            claims[i] = claim.model_copy(update={"tipo": "declaracion"})
+            report.fixes.append(f"afirmación con cifra en disputa pasa a declaración: {claim.texto[:60]}")
+
     draft = output.borrador
     if not claims:
         return GuardResult(
-            _abstention("Ninguna afirmación tuvo una cita válida en la evidencia enviada.", alerts),
+            _abstention("Ninguna afirmación tuvo una cita válida en la evidencia enviada.", alerts, pending),
             report,
         )
     if report.dropped_claims and draft:
@@ -266,6 +326,13 @@ def guard(raw: str | dict, evidence: list[Evidence], task: Task) -> GuardResult:
     if draft and any(by_id[i].headline_only for i in cited) and normalize(ONLY_HEADLINE[:-1]) not in normalize(draft):
         draft = f"{ONLY_HEADLINE} {draft}"
         report.fixes.append("se antepuso 'Basado únicamente en titular/metadatos.'")
+
+    if draft and (missing := unsupported_figures(draft, [t for item in evidence for t in item.fields.values()])):
+        report.violations.append(f"borrador descartado: cifras sin respaldo en la evidencia ({', '.join(missing)})")
+        draft = None
+    if draft and any(re.search(p, normalize(draft)) for p in INJECTION_PATTERNS):
+        report.violations.append("borrador descartado: repite una instrucción de una fuente")
+        draft = None
 
     if draft:
         low, high = WORD_LIMITS[task]
@@ -284,6 +351,7 @@ def guard(raw: str | dict, evidence: list[Evidence], task: Task) -> GuardResult:
         "contradicciones": contradictions,
         "borrador": draft,
         "preguntas_investigacion": questions,
+        "verificaciones_pendientes": pending,
         "alertas": alerts,
     })
     return GuardResult(result, report)
