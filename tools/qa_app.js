@@ -110,7 +110,15 @@ async function ask(p, q) {
   await p.screenshot({ path: `${out}-bandeja.png`, fullPage: true });
 
   await toggleAll(p);
-  check('toggle "Ver todos" muestra todos', (await shown(p))?.[0] === total, JSON.stringify(await shown(p)));
+  const [nAll] = (await shown(p)) || [];
+  const langFilter = (await p.locator('[data-testid="stMultiSelect"]').count()) >= 4;
+  check('toggle "Ver todos" muestra todos los del filtro de idioma', nAll > Math.min(5, total) && nAll <= total, `${nAll} de ${total}`);
+  if (langFilter && scenario !== 'stub') {
+    await pick(p, 3, 'alemán');
+    const [nDe] = (await shown(p)) || [];
+    check('Idioma: por defecto español + inglés; sumar alemán agrega clusters', nAll < total && nDe > nAll, `${nAll} → ${nDe} de ${total}`);
+    await open(p); await toggleAll(p);
+  }
   await toggleAll(p);
   check('toggle "Ver todos" vuelve al top 5', (await shown(p))?.[0] === Math.min(5, total));
 
@@ -206,7 +214,7 @@ async function ask(p, q) {
   const pizza = await ask(p, '¿Cuál es la receta de la pizza napolitana?');
   check('consulta sin evidencia: abstención sin modelo (T06)', pizza.includes('abstención') && pizza.includes('sin llamar al modelo'));
   if (real || scenario === 'online') {
-    const cached = await ask(p, '¿Cómo está el desempleo en Panamá?');
+    const cached = await ask(p, '¿Qué anunció el Canal de Panamá sobre los tránsitos diarios y el calado máximo?');
     check('consulta en caché: responde con citas', cached.includes('Origen: caché') && cached.includes('Afirmaciones por tipo'));
     await p.getByText(/Evidencia encontrada/).click(); await idle(p);
     check('expander de evidencia abre la tabla de pasajes', (await p.locator('[role="tabpanel"]:visible [data-testid="stDataFrame"]').count()) >= 1);

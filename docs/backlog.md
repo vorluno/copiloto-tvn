@@ -30,7 +30,7 @@ Parte del backlog del plan maestro (37 tareas) con los cambios de abajo. Estados
 | J-03 | Esqueleto Streamlit con 4 pestañas | Mar | J-02 | ✅ → la sigue Cristian (C-12) |
 | J-04 | Proveedor LLM y ADR-005 | Mar | — | ✅ OpenRouter + Gemini; precio de referencia en `.env.example` (ADR-033) |
 | J-05 | `score.py`: P y 5 componentes desde `scoring_v1.yaml` | Mié | B-08 (empieza con stub) | ✅ sobre el corpus real con `contexto.parquet` (#41: 19 s → 3,6 s) |
-| J-06 | Búsqueda semántica: 10 fragmentos con ID y campo, o "sin evidencia" | Mié | B-07 | ✅ TF-IDF + cobertura sobre el corpus real (#41); embeddings de B-07 opcional |
+| J-06 | Búsqueda semántica: 10 fragmentos con ID y campo, o "sin evidencia" | Mié | B-07 | ✅ TF-IDF sobre el corpus real (#41); tokenizador, recall del benchmark 71 % → 88 % (#48, ADR-044) |
 | J-07 | Prompt, esquema Pydantic y `guard.py` | Mié | J-04 | ✅ #3 |
 | J-08 | Brief, guion y copy con citas | Mié | J-07 | ✅ T09 automatizada (modelo de prueba); falta la corrida con Gemini |
 | J-09 | Exportar `fichas.jsonl` y leer `revisiones.jsonl` (solo backend; la interfaz es C-15) | Mié | J-08 | ✅ `make fichas`; las fichas reales salen de `make demo-cache` |
@@ -74,7 +74,7 @@ Parte del backlog del plan maestro (37 tareas) con los cambios de abajo. Estados
 | C-03 | Post diario en LinkedIn (3 marcas + hashtags) | Mar, Mié, Jue | — | ⬜ |
 | C-04 | Catálogo de datos | — | — | ↪ B-15 (Levi) |
 | C-05 | Etiquetar 60 noticias: tema y evento | Mié 12:00 | B-05 | 🟡 #26, #30: 60 noticias elegidas; faltan las etiquetas |
-| C-06 | Benchmark de desarrollo: 40 consultas | Mié 18:00 | B-05 | ⬜ |
+| C-06 | Benchmark de desarrollo: 40 consultas | Mié 18:00 | B-05 | ✅ #45: 40 consultas (20/7/7/6) |
 | C-07 | Página "Riesgos y ética" (con el aporte de Levi en B-16) | Mié 20:00 | B-16 | ⬜ |
 | C-08 | Ejecutar T01–T10 y registrar resultados | Jue 18:00 | J-12 | ⬜ |
 | C-09 | Precision@5 contra selección independiente | Jue | J-05 | ⬜ |
