@@ -35,7 +35,7 @@ Detalle por medio en `data/processed/fuentes.json` y en el Catálogo de datos (p
 - **81 % del corpus queda en "otro"**: el ranking trabaja sobre una parte. El umbral se calibra con etiquetas humanas (B-12).
 - **Idiomas:** probado en español e inglés; la bandeja filtra esos dos por defecto (ADR-043).
 - **Procedencia aproximada:** un medio que reescribe a EFE sin nombrarla cuenta como fuente propia, así que la corroboración puede **sobrestimarse**.
-- **Búsqueda léxica:** encuentra la evidencia esperada en 87 % del benchmark (#48); una pregunta con palabras distintas a las del titular puede quedarse sin evidencia y abstenerse.
+- **Búsqueda léxica:** encuentra la evidencia esperada en 88 % del benchmark (43 de 49, #48); una pregunta con palabras distintas a las del titular puede quedarse sin evidencia y abstenerse.
 
 ## 4. Inyección al agente (T07)
 
@@ -70,9 +70,11 @@ aprobar es "aprobado **como borrador**".
 
 | Fecha | Qué pasó | Corrección |
 | --- | --- | --- |
-| 6 oct | Dos titulares nulos de GDELT hacían caer la búsqueda | `9e1a731` (#41) |
+| 7 oct | Dos titulares nulos de GDELT hacían caer la búsqueda | `9e1a731` (#41) |
 | 7 oct | La pantalla de Revisión podía guardar una decisión en **otra ficha** | `a033359` (#44), con prueba |
-| 7 oct | Fichas y caché de **relleno** ("palabra palabra…") entraron a `main` como si fueran de Gemini | Detectado en C-08 (#52); pendiente de revertir y regenerar con Gemini |
+| 7 oct | Con ciertos filtros la bandeja quedaba vacía y la app se caía (filtro de idioma) | `ed04499` (#46), con prueba |
+| 7 oct | Un `git add -A` en una copia de prueba subió a `main` un enlace `.venv`: un `git pull` reemplazaba el entorno de cada persona | `e6d1ab4` (#49); `.gitignore` y prueba |
+| 7 oct | Ese mismo commit subió fichas y caché de **relleno** ("palabra palabra…") del modelo de prueba, como si fueran de Gemini | Detectado en C-08 (#52) y por José; quitado en `d2ce64f` (#54), con pruebas que exigen un modelo real en lo que se sube. La caché real sale de `make demo-cache` con Gemini |
 
 ## 8. Fuera de alcance
 
