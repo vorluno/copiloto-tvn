@@ -7,6 +7,7 @@ Reads data/processed/noticias.parquet (from `make news`), then:
 3. procedencia_id (B-06)
 4. cluster_id (B-08)          -> data/processed/clusters.parquet
 5. baseline (B-09)            -> data/processed/baseline.parquet, same columns as the AI
+6. export (B-13)              -> data/processed/noticias.csv + fuentes.json
 
 and rewrites noticias.parquet with the four contract columns filled. No network once the
 embedding model is in the local cache.
@@ -18,6 +19,7 @@ from pathlib import Path
 
 import pandas as pd
 
+from src import export
 from src.ingest.common import finalize
 from src.nlp import baseline, classify, cluster, embed, provenance
 
@@ -50,6 +52,8 @@ def main() -> None:
     clusters.to_parquet(CLUSTERS_PATH, index=False)
     base = baseline.run_baseline(news)
     base.to_parquet(BASELINE_PATH, index=False)
+    export.write_csv(enriched)
+    export.write_sources(enriched)
 
     grouped = clusters[clusters["n_registros"] > 1]
     print(f"{len(enriched)} news -> {len(clusters)} clusters ({len(grouped)} with 2+ records, "

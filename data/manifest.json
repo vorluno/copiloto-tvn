@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "generado_UTC": "2026-10-07T12:00:29Z",
+  "generado_UTC": "2026-10-07T12:24:32Z",
   "fecha_corte_UTC": "2026-10-06T22:50:45Z",
   "fecha_corte_nota": "última fecha_extraccion del corpus de noticias; nada posterior se pidió a las fuentes",
   "reporte_calidad": {
@@ -114,6 +114,32 @@
         "tema por similitud con sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2; bajo 0.5 -> 'otro' (B-07)",
         "procedencia_id: agencia > casi copia (TF-IDF >= 0.9, 48 h, otro dominio) > medio (B-06)",
         "cluster_id: enlace completo, distancia coseno <= 0.3, ventana 72 h (B-08)"
+      ]
+    },
+    {
+      "ruta": "data/processed/noticias.csv",
+      "sha256": "82822b63a08fe417abbddd8079f34ec1042e85f0d6046df6d5b25fdb87009678",
+      "bytes": 1084238,
+      "filas": 2462,
+      "descripcion": "Entregable del reto (secc. 6–7): las mismas filas y columnas de noticias.parquet en CSV UTF-8 (B-13).",
+      "consultas": "Las de noticias.parquet.",
+      "licencia": "La de cada noticia (ver fuentes.json).",
+      "transformaciones": [
+        "fechas como texto ISO 8601 UTC (Z)",
+        "nulos como celda vacía, nunca 0",
+        "fin de línea LF"
+      ]
+    },
+    {
+      "ruta": "data/processed/fuentes.json",
+      "sha256": "fd2f4bc7c4aa28bd2fe35127d1711b675f98e895c0aadd6d816412f407d4ac02",
+      "bytes": 240259,
+      "filas": null,
+      "descripcion": "Entregable del reto (secc. 6): consultas usadas y cada medio con origen, cantidad, fechas y condiciones de uso (B-13).",
+      "consultas": "Las de noticias.parquet.",
+      "licencia": "Condiciones por medio dentro del archivo.",
+      "transformaciones": [
+        "un registro por (origen, dominio)"
       ]
     },
     {
