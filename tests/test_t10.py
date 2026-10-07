@@ -149,3 +149,11 @@ def test_t10_loopback_is_not_network(no_network):
         server.close()
     with pytest.raises(AssertionError, match="network access attempted"):
         socket.create_connection(("93.184.216.34", 443), timeout=5)
+
+
+def test_streamlit_usage_stats_are_off():
+    """Streamlit's telemetry would call data.streamlit.io from the demo; T10 forbids any call."""
+    import tomllib
+
+    config = Path(__file__).resolve().parents[1] / ".streamlit" / "config.toml"
+    assert tomllib.loads(config.read_text(encoding="utf-8"))["browser"]["gatherUsageStats"] is False

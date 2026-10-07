@@ -14,3 +14,7 @@ dataframeBorderColor = "#E3E1DA"
 dataframeHeaderBackgroundColor = "#F1F0EC"
 baseRadius = "10px"
 showWidgetBorder = true
+
+# T10: the demo must not reach the network. Streamlit's usage stats call data.streamlit.io.
+[browser]
+gatherUsageStats = false
