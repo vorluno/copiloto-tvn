@@ -107,6 +107,20 @@ def cluster_sensitivity(news: pd.DataFrame, labeled: pd.DataFrame) -> list[tuple
     return out
 
 
+def same_base(m_ai: dict, m_bl: dict) -> dict:
+    """Macro-F1 of both systems over the same topics (José, 7 oct): each system's macro-F1
+    leaves out the topics it did not measure, so the two averages can use different bases.
+
+    "comunes": only topics measured for both. "union": topics measured for either, a topic
+    missing for one system counting 0 there (it had cases and got none right)."""
+    a, b = m_ai["per_topic"], m_bl["per_topic"]
+    common = [t for t in a if a[t]["f1"] is not None and b[t]["f1"] is not None]
+    union = [t for t in a if a[t]["f1"] is not None or b[t]["f1"] is not None]
+    mean = lambda topics, m: sum(m[t]["f1"] or 0 for t in topics) / len(topics) if topics else None
+    return {"comunes": (len(common), mean(common, a), mean(common, b)),
+            "union": (len(union), mean(union, a), mean(union, b))}
+
+
 def _fmt(value: float | None) -> str:
     return "—" if value is None else f"{value:.2f}"
 
@@ -122,6 +136,7 @@ def build_report(labeled: pd.DataFrame, problems: list[str], news: pd.DataFrame,
     ai = predict(scores.loc[test_ids], threshold)
     bl = base.set_index("id_noticia").loc[test_ids, "tema"]
     m_ai, m_bl = topic_f1(truth.tolist(), ai.tolist(), LABELS), topic_f1(truth.tolist(), bl.tolist(), LABELS)
+    same = same_base(m_ai, m_bl)
 
     by_id = news.set_index("id_noticia")
     all_ids = labeled.index.tolist()
@@ -150,6 +165,12 @@ def build_report(labeled: pd.DataFrame, problems: list[str], news: pd.DataFrame,
         "| Sistema | Macro-F1 | Temas medidos | n |", "| --- | --- | --- | --- |",
         f"| IA (embeddings, umbral {threshold:.2f}) | {_fmt(m_ai['macro_f1'])} | {m_ai['n_temas']} | {m_ai['n']} |",
         f"| Baseline (palabras clave) | {_fmt(m_bl['macro_f1'])} | {m_bl['n_temas']} | {m_bl['n']} |", "",
+        "Cada macro-F1 de arriba deja fuera los temas sin casos para ese sistema, así que las bases pueden diferir. "
+        "Con la misma base:", "",
+        "| Comparación | IA | Baseline |", "| --- | --- | --- |",
+        f"| Mismos {same['comunes'][0]} temas (medidos en los dos) | {_fmt(same['comunes'][1])} | {_fmt(same['comunes'][2])} |",
+        f"| Ambos sobre los {same['union'][0]} temas (sin casos acertados = 0) | {_fmt(same['union'][1])} | {_fmt(same['union'][2])} |", "",
+        f"**La ventaja de la IA es chica** con n = {m_ai['n']}: una o dos noticias pueden invertirla.", "",
         "Por tema (VP / FP / FN y F1):", "",
         "| Tema | IA | Baseline | Gana |", "| --- | --- | --- | --- |",
     ]

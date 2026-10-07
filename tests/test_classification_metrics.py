@@ -5,7 +5,7 @@ Hand-made labels; exact numbers.
 
 import pandas as pd
 
-from src.eval.classification import LABELS, blind_events, calibrate, load_labels, predict, split_halves
+from src.eval.classification import LABELS, blind_events, calibrate, load_labels, predict, same_base, split_halves
 from src.eval.metrics import pairwise, topic_f1
 
 
@@ -66,3 +66,11 @@ def test_labels_corrected_after_seeing_the_system_go_back_to_their_own_event():
     blind = blind_events(labeled)
     assert blind["a"] != blind["b"]  # both corrected: separate again, as in the blind delivery
     assert blind["c"] == blind["d"] == "3"
+
+
+def test_same_base_compares_both_systems_on_the_same_topics():
+    ai = {"per_topic": {"a": {"f1": 0.6}, "b": {"f1": None}, "c": {"f1": 0.0}}}
+    bl = {"per_topic": {"a": {"f1": 0.4}, "b": {"f1": 0.0}, "c": {"f1": 0.2}}}
+    out = same_base(ai, bl)
+    assert out["comunes"][0] == 2 and out["comunes"][1] == 0.3 and abs(out["comunes"][2] - 0.3) < 1e-9
+    assert out["union"][0] == 3 and abs(out["union"][1] - 0.2) < 1e-9 and abs(out["union"][2] - 0.2) < 1e-9
