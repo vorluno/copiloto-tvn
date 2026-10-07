@@ -3,8 +3,8 @@
 Each topic is described by a few Spanish sentences. A news item's score for a topic is
 its best cosine similarity to that topic's sentences; tema is the best topic and
 tema_confianza that similarity. Below THRESHOLD the item is "otro": a weak match is not
-forced into a topic. THRESHOLD is provisional until B-12 calibrates it with half of the
-human labels and reports it on the other half.
+forced into a topic. THRESHOLD was calibrated by B-12 (outputs/reports/clasificacion.md) on half of the
+human labels and reported on the other half.
 
 Sports, crime, entertainment and foreign news with no Panama link have no description
 on purpose: they should land under the threshold and become "otro".
@@ -17,7 +17,7 @@ from src.nlp.embed import MODEL_NAME, encode
 
 TOPICS = ["economía", "logística/Canal", "turismo", "servicios públicos", "eventos naturales", "regulación"]
 OTHER = "otro"
-THRESHOLD = 0.50  # 20-headline dev check on 7 oct: acc 0.80 (MiniLM); e5-small scored all topics 0.79-0.88
+THRESHOLD = 0.45  # B-12 (7 oct): best macro-F1 on the calibration half of the human labels (was 0.50 from a 20-headline check)
 
 DESCRIPTIONS = {
     "economía": [

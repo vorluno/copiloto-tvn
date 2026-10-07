@@ -52,7 +52,7 @@ Una URL que aparece en TVN y en GDELT se queda con la fila de TVN (trae descripc
 
 ### Tema (B-07)
 
-Modelo `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2` (CPU, revisión en `embeddings_modelo.json`). Texto: título + descripción si existe. Cada tema tiene 2–3 frases en español (`src/nlp/classify.py`); el puntaje de un tema es la mejor similitud con sus frases. Umbral **0,50** (provisional: se calibra en B-12 con la mitad de las etiquetas humanas y se reporta con la otra mitad). Deportes, crimen, farándula e internacional sin relación con Panamá no tienen frases: caen en `otro`.
+Modelo `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2` (CPU, revisión en `embeddings_modelo.json`). Texto: título + descripción si existe. Cada tema tiene 2–3 frases en español (`src/nlp/classify.py`); el puntaje de un tema es la mejor similitud con sus frases. Umbral **0,45**: calibrado en B-12 con la mitad de las etiquetas humanas y reportado con la otra mitad (`outputs/reports/clasificacion.md`; antes 0,50 provisional). Deportes, crimen, farándula e internacional sin relación con Panamá no tienen frases: caen en `otro`.
 
 ### Eventos (B-08)
 

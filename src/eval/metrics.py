@@ -62,3 +62,44 @@ def cost_usd(prompt_tokens: int | None, completion_tokens: int | None,
 
 
 # --- B-12 (Levi): macro-F1 de tema, precisión/recall por pares de clusters --------------------
+
+
+def topic_f1(truth: list[str], predicted: list[str], labels: list[str]) -> dict:
+    """Per-topic precision, recall and F1 with their counts, plus macro-F1 over `labels`.
+
+    A topic with no true and no predicted items has F1 None and is left out of the macro
+    average (it was not measured), never counted as 0 or 1.
+    """
+    per_topic = {}
+    for label in labels:
+        tp = sum(t == label and p == label for t, p in zip(truth, predicted))
+        fp = sum(t != label and p == label for t, p in zip(truth, predicted))
+        fn = sum(t == label and p != label for t, p in zip(truth, predicted))
+        precision = tp / (tp + fp) if tp + fp else None
+        recall = tp / (tp + fn) if tp + fn else None
+        if tp + fp + fn == 0:
+            f1 = None
+        else:
+            f1 = 2 * tp / (2 * tp + fp + fn)
+        per_topic[label] = {"tp": tp, "fp": fp, "fn": fn, "precision": precision, "recall": recall, "f1": f1}
+    measured = [v["f1"] for v in per_topic.values() if v["f1"] is not None]
+    return {"per_topic": per_topic, "macro_f1": sum(measured) / len(measured) if measured else None,
+            "n_temas": len(measured), "n": len(truth)}
+
+
+def pairwise(truth: list, predicted: list, ids: list[str]) -> tuple[Ratio, Ratio]:
+    """Pairwise precision and recall of a grouping: a pair counts as "same event" when both
+    items share a label. Precision = predicted same-event pairs that are true; recall = true
+    same-event pairs that were predicted."""
+    precision = Ratio("precisión por pares")
+    recall = Ratio("recall por pares")
+    n = len(ids)
+    for i in range(n):
+        for j in range(i + 1, n):
+            same_true, same_pred = truth[i] == truth[j], predicted[i] == predicted[j]
+            case = f"{ids[i]} · {ids[j]}"
+            if same_pred:
+                precision.add(same_true, case)
+            if same_true:
+                recall.add(same_pred, case)
+    return precision, recall
