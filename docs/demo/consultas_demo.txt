@@ -1,0 +1,9 @@
+# Consultas del pitch para la caja de consulta (CU-04). Una por línea; # = comentario.
+# make demo-cache las responde con el modelo y las deja en outputs/cache/ para la demo sin internet.
+# En la demo hay que escribirlas igual (mayúsculas y signos incluidos): otra redacción es otra consulta.
+# Dueño: Cristian (pitch). Si cambias una, vuelve a correr make demo-cache con internet.
+¿Qué se reporta sobre el calado del Canal de Panamá?
+¿Cómo está el desempleo en Panamá?
+¿Qué dicen las noticias sobre el turismo en Panamá?
+¿Cuál fue la inflación de Panamá en 2024?
+¿Cuál es la receta de la pizza napolitana?

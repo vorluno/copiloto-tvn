@@ -1,6 +1,6 @@
 # Backlog vigente · Copiloto TVN
 
-Actualizado: martes 6 oct 2026. Fuente para la base "Tareas" de Notion (Cristian la carga en C-02).
+Actualizado: miércoles 7 oct 2026. Fuente para la base "Tareas" de Notion (Cristian la carga en C-02).
 Parte del backlog del plan maestro (37 tareas) con los cambios de abajo. Estados: ✅ hecha · 🟡 en curso · ⬜ por hacer · ↪ reasignada.
 
 ## Equipo
@@ -28,16 +28,16 @@ Parte del backlog del plan maestro (37 tareas) con los cambios de abajo. Estados
 | J-01 | Repo, estructura, README, Makefile, .env.example | Mar | — | ✅ (falta proteger `main`) |
 | J-02 | Stub de 10 noticias sintéticas | Mar | J-01 | ✅ |
 | J-03 | Esqueleto Streamlit con 4 pestañas | Mar | J-02 | ✅ → la sigue Cristian (C-12) |
-| J-04 | Proveedor LLM y ADR-005 | Mar | — | 🟡 código listo; falta precio por token en Notion |
-| J-05 | `score.py`: P y 5 componentes desde `scoring_v1.yaml` | Mié | B-08 (empieza con stub) | ✅ sobre el stub; falta correr con datos de Levi y `contexto.parquet` |
-| J-06 | Búsqueda semántica: 10 fragmentos con ID y campo, o "sin evidencia" | Mié | B-07 | ✅ TF-IDF + cobertura; cambiar a embeddings cuando llegue B-07 |
+| J-04 | Proveedor LLM y ADR-005 | Mar | — | ✅ OpenRouter + Gemini; precio de referencia en `.env.example` (ADR-033) |
+| J-05 | `score.py`: P y 5 componentes desde `scoring_v1.yaml` | Mié | B-08 (empieza con stub) | ✅ sobre el corpus real con `contexto.parquet` (#41: 19 s → 3,6 s) |
+| J-06 | Búsqueda semántica: 10 fragmentos con ID y campo, o "sin evidencia" | Mié | B-07 | ✅ TF-IDF + cobertura sobre el corpus real (#41); embeddings de B-07 opcional |
 | J-07 | Prompt, esquema Pydantic y `guard.py` | Mié | J-04 | ✅ #3 |
-| J-08 | Brief, guion y copy con citas | Mié | J-07 | ✅ `build_package`; falta probar con Gemini y datos reales |
-| J-09 | Exportar `fichas.jsonl` y leer `revisiones.jsonl` (solo backend; la interfaz es C-15) | Mié | J-08 | ✅ `make fichas`; falta correrlo con Gemini y noticias reales |
+| J-08 | Brief, guion y copy con citas | Mié | J-07 | ✅ T09 automatizada (modelo de prueba); falta la corrida con Gemini |
+| J-09 | Exportar `fichas.jsonl` y leer `revisiones.jsonl` (solo backend; la interfaz es C-15) | Mié | J-08 | ✅ `make fichas`; las fichas reales salen de `make demo-cache` |
 | J-10 | Abstención y contradicciones (T05, T06) | Jue | J-08 | ✅ T05 y T06 activas |
 | J-11 | Defensa anti-inyección (T07) | Jue | J-07 | ✅ T07 activa |
-| J-12 | Caché offline y modo sin internet (T10) | Jue | J-08 | 🟡 T10 automatizada (red cortada a nivel de socket); falta llenar la caché con Gemini para el recorrido del pitch |
-| J-13 | Latencia mediana y p95, tokens y costo | Jue | J-08 | 🟡 `make eval` listo; falta correrlo con Gemini y el benchmark de C-06 |
+| J-12 | Caché offline y modo sin internet (T10) | Jue | J-08 | 🟡 `make demo-cache` llena y comprueba la caché (ADR-033); falta la corrida de Levi con Gemini |
+| J-13 | Latencia mediana y p95, tokens y costo | Jue | J-08 | 🟡 `make eval` listo; falta el benchmark de C-06 y la corrida con Gemini |
 | J-14 | Tag v1.0, README final, acceso del jurado | Jue | Todo | ⬜ |
 | J-15 | `fichas_stub.jsonl` para que el frontend avance sin backend | Mar | J-02 | ✅ |
 | J-16 | `docs/alcance-y-datos.md`: modalidad, recorrido y para qué sirve cada fuente (base de "Diseño de solución") | Mar | — | ✅ |
@@ -46,23 +46,23 @@ Parte del backlog del plan maestro (37 tareas) con los cambios de abajo. Estados
 
 | ID | Tarea | Día · hora | Depende de | Estado |
 | --- | --- | --- | --- | --- |
-| B-01 | Ingesta TVN RSS (≥20 noticias, con `descripcion`) | Mar 20:00 | J-01 | ✅ #15 (55 noticias) |
-| B-02 | Ingesta GDELT DOC 2.0 por fechas, dedupe por URL | Mar 20:00 | J-01 | ✅ #21 (631 noticias) |
+| B-01 | Ingesta TVN RSS (≥20 noticias, con `descripcion`) | Mar 20:00 | J-01 | ✅ #15, #29: 1,248 noticias de TVN (RSS + sitemaps) |
+| B-02 | Ingesta GDELT DOC 2.0 por fechas, dedupe por URL | Mar 20:00 | J-01 | 🟡 #21, #29: 1,214 noticias; 24 de 48 consultas (límite de GDELT) |
 | B-03 | Banco Mundial: cuadrícula completa con nulos (6 países × 6 indicadores × 15 años) | Mar 20:00 | J-01 | ✅ #9 |
 | B-04 | USGS 2024, caja regional, M≥3 | Mar 20:00 | J-01 | ✅ #10 |
 | B-05 | Validación y reporte de calidad (T01) | Mar 20:00 | B-01..B-04 | ✅ #12 (T01 activa) |
-| B-06 | `procedencia_id`: agencias replicadas | Mié | B-05 | ⬜ |
-| B-07 | Embeddings y clasificación por tema | Mié | B-05 | ⬜ |
-| B-08 | Agrupación y conteo de procedencias (T02) | Mié 12:00 | B-06, B-07 | ⬜ |
-| B-09 | Baseline: palabras clave + TF-IDF | Mié | B-05 | ⬜ |
-| B-10 | `manifest.json` con SHA-256 y `diccionario.md` | Mié 12:00 | B-05 | ⬜ |
-| B-11 | Recirculadas: conservar fecha original (T03) | Jue | B-08 | ⬜ |
-| B-12 | Macro-F1 IA vs baseline sobre etiquetas humanas | Jue 14:00 | B-09, C-05 | ⬜ |
-| **B-13** | **`noticias.csv` + `fuentes.json`** con los nombres del reto, desde el parquet | Mié 18:00 | B-05 | ⬜ |
-| **B-14** | **Contexto oficial** (`contexto.parquet`): relacionar clusters con indicadores del Banco Mundial y sismos del USGS con una regla escrita; sin relación sustentada, sin fila. Alimenta el I y la E del puntaje y T04 | Mié 18:00 | B-03, B-04, B-08 | ⬜ |
-| **B-15** | **Catálogo de datos en Notion** (antes C-04): una fila por fuente con los 8 campos del reto | Mié 18:00 | B-10 | ⬜ |
-| **B-16** | **Riesgos de los datos** para la página "Riesgos y ética": derechos por fuente, sesgos (solo titulares, cobertura de GDELT), límites de la caja del USGS | Mié 20:00 | B-15 | ⬜ |
-| **B-17** | **`make verify`**: recalcula los SHA-256 y los compara con `manifest.json` (reproducibilidad para el jurado) | Jue 12:00 | B-10 | ⬜ |
+| B-06 | `procedencia_id`: agencias replicadas | Mié | B-05 | ✅ #32 |
+| B-07 | Embeddings y clasificación por tema | Mié | B-05 | ✅ #32 (MiniLM multilingüe, umbral 0.50) |
+| B-08 | Agrupación y conteo de procedencias (T02) | Mié 12:00 | B-06, B-07 | ✅ #32: 2,015 clusters; T02 activa |
+| B-09 | Baseline: palabras clave + TF-IDF | Mié | B-05 | ✅ #32 |
+| B-10 | `manifest.json` con SHA-256 y `diccionario.md` | Mié 12:00 | B-05 | ✅ #33 |
+| B-11 | Recirculadas: conservar fecha original (T03) | Jue | B-08 | ✅ #38; T03 activa |
+| B-12 | Macro-F1 IA vs baseline sobre etiquetas humanas | Jue 14:00 | B-09, C-05 | 🟡 #40 en borrador: cálculo listo, faltan las etiquetas de C-05 |
+| **B-13** | **`noticias.csv` + `fuentes.json`** con los nombres del reto, desde el parquet | Mié 18:00 | B-05 | ✅ #34 |
+| **B-14** | **Contexto oficial** (`contexto.parquet`): relacionar clusters con indicadores del Banco Mundial y sismos del USGS con una regla escrita; sin relación sustentada, sin fila. Alimenta el I y la E del puntaje y T04 | Mié 18:00 | B-03, B-04, B-08 | ✅ #35: 6 eventos con indicador del Banco Mundial |
+| **B-15** | **Catálogo de datos en Notion** (antes C-04): una fila por fuente con los 8 campos del reto | Mié 18:00 | B-10 | ✅ #36 |
+| **B-16** | **Riesgos de los datos** para la página "Riesgos y ética": derechos por fuente, sesgos (solo titulares, cobertura de GDELT), límites de la caja del USGS | Mié 20:00 | B-15 | ✅ #37 |
+| **B-17** | **`make verify`**: recalcula los SHA-256 y los compara con `manifest.json` (reproducibilidad para el jurado) | Jue 12:00 | B-10 | ✅ #39 |
 | **B-18** | **Pitch, bloque 4** (2 min: IA, baseline y métricas): sección en la página 8 de Notion con la tabla IA vs baseline y una frase honesta sobre cuándo no ayuda; 2 ensayos | Jue 20:00 | B-12 | ⬜ |
 
 ## Cristian · C · producto, frontend, Notion y QA
@@ -73,7 +73,7 @@ Parte del backlog del plan maestro (37 tareas) con los cambios de abajo. Estados
 | C-02 | Llevar Tareas y Decisiones en `docs/notion/*.csv` desde hoy e importarlas a "Plan y decisiones" cuando llegue Notion | Mar 18:00 | — | 🟡 CSV iniciales listos |
 | C-03 | Post diario en LinkedIn (3 marcas + hashtags) | Mar, Mié, Jue | — | ⬜ |
 | C-04 | Catálogo de datos | — | — | ↪ B-15 (Levi) |
-| C-05 | Etiquetar 60 noticias: tema y evento | Mié 12:00 | B-05 | ⬜ |
+| C-05 | Etiquetar 60 noticias: tema y evento | Mié 12:00 | B-05 | 🟡 #26, #30: 60 noticias elegidas; faltan las etiquetas |
 | C-06 | Benchmark de desarrollo: 40 consultas | Mié 18:00 | B-05 | ⬜ |
 | C-07 | Página "Riesgos y ética" (con el aporte de Levi en B-16) | Mié 20:00 | B-16 | ⬜ |
 | C-08 | Ejecutar T01–T10 y registrar resultados | Jue 18:00 | J-12 | ⬜ |

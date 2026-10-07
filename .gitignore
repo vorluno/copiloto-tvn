@@ -14,6 +14,8 @@ data/raw/*
 !data/raw/.gitkeep
 outputs/cache/*
 !outputs/cache/.gitkeep
+# Cached LLM answers are committed: the offline demo (T10) must work on any machine (ADR-033)
+!outputs/cache/*.json
 
 # OS
 .DS_Store
