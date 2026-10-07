@@ -164,8 +164,10 @@ async function ask(p, q) {
   await tab(p, 'Bandeja');
   const cards = p.locator('[role="tabpanel"]:visible').getByRole('button', { name: 'Abrir ficha' });
   check('bandeja: una tarjeta con "Abrir ficha" por evento del top', (await cards.count()) === Math.min(5, total), `${await cards.count()}`);
-  await cards.nth(2).click(); await idle(p);
-  check('tarjeta: confirma que el caso quedó abierto', (await panel(p)).includes('Abierta en la pestaña Ficha'));
+  await cards.nth(2).click();
+  // With the full corpus the rerun can start after idle()'s first look: wait for the confirmation itself.
+  const opened = await waitPanel(p, t => t.includes('Abierta en la pestaña Ficha'), 20000); await idle(p);
+  check('tarjeta: confirma que el caso quedó abierto', opened.includes('Abierta en la pestaña Ficha'));
   await tab(p, 'Ficha');
   const h3 = await heading(p);
   check('"Abrir ficha" de la tarjeta 3 abre la ficha #3', h3 === thirdTitle, h3.slice(0, 70));
