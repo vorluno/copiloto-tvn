@@ -183,7 +183,8 @@ else:
     st.info(f"Datos: `{source_path}`")
 
 scored = load_scores(news)
-cards, cards_path = load_cards()
+cards, cards_path = load_cards(news_from_stub=source_path == STUB_PATH.relative_to(ROOT).as_posix())
+CARDS_LABEL = f"`{cards_path}`" if cards_path else "sin fichas todavía (`make fichas`, J-09)"
 cards = apply_reviews(cards, latest_reviews())  # the review log wins over the state in the file
 cards_by_cluster = {c["cluster_id"]: c for c in cards if c.get("cluster_id")}
 official = load_official()
@@ -248,7 +249,7 @@ with inbox_tab:
         st.caption(
             f"Mostrando {len(view)} de {len(inbox)} clusters. R relación con Panamá · I impacto · "
             "U urgencia · N novedad · E evidencia (0–1). Referencia = fecha desde la que se mide U, "
-            f"en hora de Panamá (UTC−5). Fichas: `{cards_path}`. Elige una fila para abrirla en **Ficha**."
+            f"en hora de Panamá (UTC−5). Fichas: {CARDS_LABEL}. Elige una fila para abrirla en **Ficha**."
         )
 
     with st.expander(f"Noticias del corpus ({len(news)})"):
@@ -423,7 +424,7 @@ with draft_tab:
     if saved := query_cards(cards):
         st.caption("Consultas guardadas en las fichas:")
     for qcard in saved:
-        st.markdown(f"**{qcard['consulta']}**")
+        st.markdown(f"**{qcard['consulta']}**" + (" · 🧪 sintético" if qcard.get("sintetico") else ""))
         if qcard.get("abstencion"):
             st.error(f"Sin respuesta (abstención): {qcard.get('motivo_abstencion')}")
         else:
@@ -446,7 +447,8 @@ with review_tab:
             st.session_state.review_case = linked if linked in by_case else next(iter(by_case))
         case_id = st.selectbox(
             "Ficha", list(by_case), key="review_case",
-            format_func=lambda i: f"{i} · {by_case[i].get('estado_revision') or 'nuevo'} · "
+            format_func=lambda i: ("🧪 " if by_case[i].get("sintetico") else "")
+                                  + f"{i} · {by_case[i].get('estado_revision') or 'nuevo'} · "
                                   f"{by_case[i].get('titulo') or by_case[i].get('consulta') or '—'}",
         )
         rcard = by_case[case_id]

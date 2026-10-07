@@ -28,14 +28,19 @@ def read_cards(path: Path) -> list[dict]:
         return [json.loads(line) for line in f if line.strip()]
 
 
-def load_cards() -> tuple[list[dict], str]:
-    """Real case cards if José has written any; the repo ships an empty placeholder."""
-    path = FICHAS_PATH
-    cards = read_cards(path) if path.exists() else []
-    if not cards:
-        path = FICHAS_STUB_PATH
-        cards = read_cards(path)
-    return cards, path.relative_to(ROOT).as_posix()
+def load_cards(news_from_stub: bool) -> tuple[list[dict], str | None]:
+    """Real case cards if José has written any (the repo ships an empty placeholder).
+
+    The synthetic stub cards are used only while the news also come from the stub:
+    synthetic data never sits next to the real corpus (rule 12). With real news and
+    no real cards, there are no cards and the path is None.
+    """
+    cards = read_cards(FICHAS_PATH) if FICHAS_PATH.exists() else []
+    if cards:
+        return cards, FICHAS_PATH.relative_to(ROOT).as_posix()
+    if news_from_stub:
+        return read_cards(FICHAS_STUB_PATH), FICHAS_STUB_PATH.relative_to(ROOT).as_posix()
+    return [], None
 
 
 def load_contexto() -> pd.DataFrame | None:
