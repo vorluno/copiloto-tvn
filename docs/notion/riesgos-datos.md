@@ -33,7 +33,7 @@ cita ID + campo y, si solo hay titular, dice "basado únicamente en titular/meta
 | **Pocos medios panameños en GDELT** | 7.8 % de las notas de GDELT vienen de dominios `.pa`; los 10 dominios con más notas suman 16.2 % | La "corroboración" pesa más la prensa internacional que la local | Se cuentan procedencias, no registros; la ficha muestra qué medios son |
 | **Idioma** | es 52.9 %, en 26.5 %, zh 6.1 %, el resto en 45 idiomas más (pt, el…) | El modelo es multilingüe pero se probó en español; en otros idiomas tema y agrupación son menos fiables. La muestra de etiquetas solo tiene es/en | B-12 mide solo es/en y lo dice |
 | **Muestra de TVN, no censo** | 100 artículos por mes de ~2,300 (orden fijo por hash de la URL) | El volumen de un tema en TVN no es su peso real en la agenda | La muestra es reproducible; no reportamos "TVN publicó X notas de…" |
-| **La mayoría queda en "otro"** | 80.8 % del corpus (85.9 % de TVN: deportes, sucesos, internacional) | El ranking trabaja sobre ~19 % del corpus; un tema relevante mal escrito puede caer en "otro" | Umbral provisional 0.50; B-12 lo calibra con etiquetas humanas y reporta errores |
+| **La mayoría queda en "otro"** | 73.5 % del corpus (78.4 % de TVN: deportes, sucesos, internacional) | El ranking trabaja sobre ~27 % del corpus; un tema relevante mal escrito puede caer en "otro" | Umbral 0.45 calibrado en B-12 con etiquetas humanas; el reporte lista los errores |
 
 ## 4. Límites técnicos que el jurado puede preguntar
 
