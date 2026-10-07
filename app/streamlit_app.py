@@ -72,7 +72,7 @@ def load_news() -> tuple[pd.DataFrame, str]:
     return pd.read_parquet(path), path.relative_to(ROOT).as_posix()
 
 
-@st.cache_data(ttl=600)  # U depends on the current time, so refresh every 10 min
+@st.cache_data  # U is measured against the corpus date (ADR-027), not the clock: no need to refresh
 def load_scores(news: pd.DataFrame) -> pd.DataFrame:
     return score_clusters(news, contexto=load_contexto())
 
@@ -318,6 +318,8 @@ with card_tab:
             "Cluster", list(inbox.sort_values("posicion")["cluster_id"]), key="ficha_cluster",
             format_func=lambda c: f"#{by_id.loc[c, 'posicion']} · {by_id.loc[c, 'tema']} · "
                                   f"{headline_label(by_id.loc[c, 'titular'])}",
+            # "contains", not the default fuzzy match: with 8,421 clusters, "#2 ·" fuzzy-matched #2199 first.
+            filter_mode="contains",
         )
         row = by_id.loc[cluster_id]
         card = cards_by_cluster.get(cluster_id)
@@ -490,7 +492,8 @@ with review_tab:
             remembered = st.session_state.get("review_case_pick")
             linked = cards_by_cluster.get(st.session_state.get("ficha_cluster"), {}).get("id_caso")
             st.session_state.review_case = next(c for c in (remembered, linked, next(iter(by_case))) if c in by_case)
-        case_id = st.selectbox("Ficha", list(by_case), key="review_case", format_func=lambda i: case_label(by_case[i]))
+        case_id = st.selectbox("Ficha", list(by_case), key="review_case", format_func=lambda i: case_label(by_case[i]),
+                               filter_mode="contains")
         st.session_state.review_case_pick = case_id
         rcard = by_case[case_id]
         current = rcard.get("estado_revision") or "nuevo"
