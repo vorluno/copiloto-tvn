@@ -17,8 +17,8 @@ import pandas as pd
 import streamlit as st
 
 from app.bandeja import (
-    COMPONENTS, EVIDENCE_STATES, SCORE_RANGES, TOP_N, build_inbox, filter_inbox, headline_label, inbox_pick,
-    load_cards, load_contexto, records_label, urgency_basis_label,
+    COMPONENTS, EVIDENCE_STATES, HEADLINE_LANGUAGES, SCORE_RANGES, TOP_N, build_inbox, filter_inbox,
+    headline_label, inbox_pick, language_label, load_cards, load_contexto, records_label, urgency_basis_label,
 )
 from app.ficha import (
     CLAIM_TYPES, action_for, citation_found, cluster_sources, component_points, headline_only,
@@ -204,12 +204,17 @@ with inbox_tab:
         if not inbox["contexto_disponible"].all():
             st.warning("Sin contexto oficial todavía (`contexto.parquet`, B-14): I y E no incluyen "
                        "indicadores del Banco Mundial ni sismos del USGS.")
-        f1, f2, f3, f4 = st.columns([2, 2, 2, 1])
+        f1, f2, f3, f4, f5 = st.columns([2, 2, 2, 2, 1])
         temas = f1.multiselect("Tema", sorted(inbox["tema"].dropna().unique()), placeholder="Todos")
         estados = f2.multiselect("Estado de evidencia", EVIDENCE_STATES, placeholder="Todos")
         rangos = f3.multiselect("Rango de P", SCORE_RANGES, placeholder="Todos")
-        show_all = f4.toggle("Ver todos", help=f"Por defecto se muestran los {TOP_N} de mayor P.")
-        view = filter_inbox(inbox, temas, estados, rangos, top_n=None if show_all else TOP_N)
+        all_languages = sorted({code for langs in inbox["idiomas"] for code in langs})
+        idiomas = f4.multiselect(
+            "Idioma", all_languages, default=[c for c in HEADLINE_LANGUAGES if c in all_languages],
+            format_func=language_label, placeholder="Todos",
+            help="Clusters con al menos una noticia en esos idiomas. No cambia el puntaje.")
+        show_all = f5.toggle("Ver todos", help=f"Por defecto se muestran los {TOP_N} de mayor P.")
+        view = filter_inbox(inbox, temas, estados, rangos, top_n=None if show_all else TOP_N, idiomas=idiomas)
 
         table = pd.DataFrame({
             "#": view["posicion"],
