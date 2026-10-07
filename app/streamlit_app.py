@@ -32,6 +32,11 @@ from src.search import load_index
 from src.ingest.worldbank import read_indicators
 from app.revision import card_markdown, case_history, case_label, panama_time
 from src.fichas import append_review, apply_reviews, latest_reviews, read_reviews
+from app.datos import (
+    cache_count, files_table, load_catalog, load_manifest, load_quality, news_by_origin, sources_table,
+    verify_messages,
+)
+from src.manifest import verify as verify_manifest
 from src.score import score_clusters
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -190,7 +195,8 @@ cards_by_cluster = {c["cluster_id"]: c for c in cards if c.get("cluster_id")}
 official = load_official()
 inbox = build_inbox(scored, news, cards)
 
-inbox_tab, card_tab, draft_tab, review_tab = st.tabs(["Bandeja", "Ficha", "Borrador", "Revisión"])
+inbox_tab, card_tab, draft_tab, review_tab, data_tab = st.tabs(
+    ["Bandeja", "Ficha", "Borrador", "Revisión", "Datos y calidad"])
 
 with inbox_tab:
     st.subheader("Bandeja priorizada")
@@ -500,3 +506,54 @@ with review_tab:
         st.caption("Copia con el ícono de la esquina y pega en la base \"Casos y evidencias\" (ADR-008).")
         st.code(markdown, language="markdown")
         st.download_button("Descargar .md", markdown, file_name=f"{case_id}.md", mime="text/markdown")
+
+with data_tab:
+    st.subheader("Datos y calidad")
+    cached = cache_count(CACHE_DIR)
+    if OFFLINE:
+        st.warning(f"**Modo sin internet (OFFLINE=1, T10).** Nada llama a la red: el LLM se sirve solo desde "
+                   f"`outputs/cache/` ({cached} salidas guardadas) y las consultas sin caché se abstienen.")
+    else:
+        st.info(f"En línea: el LLM se consulta y cada respuesta se guarda en `outputs/cache/` ({cached} salidas). "
+                "Para la demo sin internet: `OFFLINE=1 make demo`.")
+
+    manifest = load_manifest()
+    if manifest is None:
+        st.info("Todavía no hay `data/manifest.json` (B-10).")
+    else:
+        origins = news_by_origin(manifest)
+        m1, m2, m3 = st.columns(3)
+        m1.metric("Noticias", f"{sum(origins.values()):,}" if origins else "—",
+                  help=" · ".join(f"{k}: {v:,}" for k, v in origins.items()) or None)
+        m2.metric("Corte de datos", to_panama(pd.Timestamp(manifest["fecha_corte_UTC"])).replace(" (Panamá)", ""),
+                  help=f"{manifest.get('fecha_corte_nota', '')} · {manifest['fecha_corte_UTC']} UTC")
+        m3.metric("Archivos en el manifest", len(manifest.get("archivos", [])))
+        st.caption("Corte en hora de Panamá; los archivos guardan UTC.")
+
+        st.markdown("#### Fuentes y licencias")
+        catalog = load_catalog()
+        if catalog:
+            st.dataframe(sources_table(catalog), hide_index=True, width="stretch")
+            st.caption("Del catálogo de datos (`docs/notion/catalogo.csv`, B-15). De TVN solo se guardan metadatos: "
+                       "nunca el cuerpo, imágenes ni video.")
+        else:
+            st.caption("Sin catálogo todavía (`docs/notion/catalogo.csv`, B-15).")
+
+        st.markdown("#### Archivos entregados")
+        st.dataframe(files_table(manifest), hide_index=True, width="stretch")
+        if st.button("Verificar SHA-256 (make verify)"):
+            problems = verify_messages(verify_manifest())
+            if problems:
+                st.error("La verificación encontró problemas:\n\n" + "\n".join(f"- {p}" for p in problems))
+            else:
+                st.success(f"Los {len(manifest['archivos'])} archivos coinciden con el SHA-256 del manifest.")
+        with st.expander("Cómo reproducir los datos"):
+            st.markdown("\n".join(f"1. `{step}`" for step in manifest.get("reproducir", [])))
+
+    quality = load_quality()
+    st.markdown("#### Reporte de calidad")
+    if quality:
+        with st.expander("Ver `outputs/reports/calidad.md` (B-05)"):
+            st.markdown(quality)
+    else:
+        st.caption("Sin reporte de calidad todavía (B-05).")
