@@ -37,3 +37,18 @@ def test_citation_label_and_query_cards():
     assert citation_label(None) == "— (sin cita)"
     queries = query_cards(read_cards(STUB_DIR / "fichas_stub.jsonl"))
     assert [q["id_caso"] for q in queries] == ["F-STUB-03"] and queries[0]["abstencion"]
+
+
+def test_evidence_context_shows_country_year_and_unit():
+    # Rule 9: a World Bank figure is never shown without country, year and unit (found by C-17).
+    from app.borrador import evidence_context
+    from src.generate.schema import Evidence
+
+    wb = Evidence(id="WB-PAN-SL.UEM.TOTL.ZS-2024", kind="indicador",
+                  fields={"valor": "8.2", "unidad": "% de la fuerza laboral", "pais_iso3": "PAN", "anio": "2024"}, year=2024)
+    assert evidence_context(wb) == "PAN · 2024 · % de la fuerza laboral · Banco Mundial"
+    quake = Evidence(id="us7000n9fn", kind="sismo", fields={"magnitude": "5.8", "place": "Boca Chica", "time": "2024-01-01T00:00:00Z"})
+    assert evidence_context(quake).endswith("· USGS") and "M 5.8" in evidence_context(quake)
+    news = Evidence(id="N-1", kind="noticia", fields={"titulo": "t", "medio": "TVN"}, scope="titular/metadatos")
+    assert evidence_context(news) == "TVN · solo titular/metadatos"
+    assert evidence_context(None) == "—"

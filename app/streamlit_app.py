@@ -24,7 +24,8 @@ from app.ficha import (
     CLAIM_TYPES, action_for, citation_found, cluster_sources, component_points, headline_only,
 )
 from app.borrador import (
-    ANSWER_LIMIT, CLAIM_STYLE, citation_label, claims_by_type, draft_rows, query_cards, word_count,
+    ANSWER_LIMIT, CLAIM_STYLE, citation_label, claims_by_type, draft_rows, evidence_context, query_cards,
+    word_count,
 )
 from src.generate.drafts import official_index
 from src.generate.query import answer_question
@@ -365,7 +366,9 @@ with card_tab:
                     st.markdown(f"**{claim['texto']}**")
                     for cita in claim["citas"]:
                         mark = "✅" if citation_found(news, cita, official) else "❌ pasaje no encontrado en la fuente"
-                        st.markdown(f"{mark} `{cita['id_fuente']} · {cita['campo']}` · “{cita['pasaje']}”")
+                        source = official.get(cita["id_fuente"])  # World Bank / USGS: show country, year, unit
+                        extra = f" · *{evidence_context(source)}*" if source is not None else ""
+                        st.markdown(f"{mark} `{cita['id_fuente']} · {cita['campo']}` · “{cita['pasaje']}”{extra}")
             else:
                 st.caption("Nada respaldado todavía: no hay afirmaciones con cita.")
 
@@ -460,6 +463,7 @@ with draft_tab:
         if found.hits:
             with st.expander(f"Evidencia encontrada ({len(found.hits)} pasajes, búsqueda J-06)"):
                 st.dataframe(pd.DataFrame([{"ID": h.id_evidencia, "Campo": h.campo, "Pasaje": h.texto,
+                                            "Fuente · contexto": evidence_context(h.evidence),
                                             "Similitud": h.score} for h in found.hits]),
                              hide_index=True, width="stretch")
         with st.spinner("Redactando la respuesta con citas…"):

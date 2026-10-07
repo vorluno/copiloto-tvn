@@ -50,6 +50,19 @@ def citation_label(cita: dict | None) -> str:
     return f"`{cita.get('id_fuente')} · {cita.get('campo')}` · “{cita.get('pasaje')}”"
 
 
+def evidence_context(evidence) -> str:
+    """What makes a piece of evidence readable on its own (rule 9 for World Bank: country, year
+    and unit). `evidence` is a src.generate.schema.Evidence; missing fields show as '—'."""
+    if evidence is None:
+        return "—"
+    f = evidence.fields
+    if evidence.kind == "indicador":
+        return f"{f.get('pais_iso3', '—')} · {f.get('anio', '—')} · {f.get('unidad', '—')} · Banco Mundial"
+    if evidence.kind == "sismo":
+        return f"M {f.get('magnitude', '—')} · {f.get('place', '—')} · {f.get('time', '—')} · USGS"
+    return f"{f.get('medio', '—')}" + (" · solo titular/metadatos" if evidence.headline_only else "")
+
+
 def query_cards(cards: list[dict]) -> list[dict]:
     """Cards that answer a free-text query (CU-04) instead of a cluster."""
     return [c for c in cards if c.get("consulta") and not c.get("cluster_id")]
