@@ -12,7 +12,7 @@ ifeq ($(OFFLINE),1)
 DEMO_ENV += HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1
 endif
 
-.PHONY: setup stub data news nlp demo test eval llm-check fichas
+.PHONY: setup stub data news nlp verify demo test eval llm-check fichas
 
 setup: ## Create .venv and install pinned requirements
 	python3.11 -m venv $(VENV)
@@ -37,6 +37,9 @@ news: ## Rebuild noticias.parquet + quality report from the stored raw snapshots
 
 nlp: ## Embeddings, topics, provenance, clusters and baseline (B-06..B-09) on noticias.parquet
 	$(PY) -m src.nlp.run
+
+verify: ## Recompute every SHA-256 in data/manifest.json and compare (B-17); exit 1 on a mismatch
+	$(PY) -m src.manifest --verify
 
 demo: ## Open the Streamlit app on the local snapshot (stub until B delivers)
 	@test -f data/stub/noticias_stub.parquet || $(PY) data/stub/make_stub.py

@@ -36,3 +36,8 @@ def test_quality_counts_reads_the_report_and_leaves_missing_numbers_null():
     assert manifest.quality_counts(text) == {"filas_leidas": 2462, "repetidas_entre_fuentes": 3,
                                              "filas_separadas": 0, "generado": "2026-10-06T22:57:44Z"}
     assert manifest.quality_counts("")["filas_separadas"] is None
+
+
+def test_delivered_manifest_matches_the_delivered_files():
+    """make verify on the real data: fails if a data file changed without rerunning src.manifest."""
+    assert manifest.verify() == []
