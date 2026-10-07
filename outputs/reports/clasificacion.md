@@ -17,6 +17,15 @@ Generado por `python -m src.eval.classification`. Etiquetas: `data/etiquetas_hum
 | IA (embeddings, umbral 0.45) | 0.37 | 6 | 30 |
 | Baseline (palabras clave) | 0.29 | 7 | 30 |
 
+Cada macro-F1 de arriba deja fuera los temas sin casos para ese sistema, así que las bases pueden diferir. Con la misma base:
+
+| Comparación | IA | Baseline |
+| --- | --- | --- |
+| Mismos 6 temas (medidos en los dos) | 0.37 | 0.34 |
+| Ambos sobre los 7 temas (sin casos acertados = 0) | 0.32 | 0.29 |
+
+**La ventaja de la IA es chica** con n = 30: una o dos noticias pueden invertirla.
+
 Por tema (VP / FP / FN y F1):
 
 | Tema | IA | Baseline | Gana |
