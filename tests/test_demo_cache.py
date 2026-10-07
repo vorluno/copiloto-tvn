@@ -109,3 +109,35 @@ def test_committed_cache_holds_no_secret():
         text = path.read_text(encoding="utf-8")
         assert not any(re.search(p, text) for p in SECRET_PATTERNS), path.name
         assert "api_key" not in json.loads(text)
+
+
+MIN_REAL_PROMPT_TOKENS = 200  # the system rules alone are longer; the test models report 1
+
+
+def _tracked(pattern: str) -> list[Path]:
+    import subprocess
+    try:
+        out = subprocess.run(["git", "ls-files", pattern], cwd=ROOT, capture_output=True, text=True, check=True).stdout
+    except (OSError, subprocess.CalledProcessError):
+        pytest.skip("not a git checkout")
+    return [ROOT / line for line in out.splitlines() if line.endswith((".json", ".jsonl"))]
+
+
+def test_committed_cache_comes_from_a_real_model():
+    # A test-model answer stored under the real model's key would be served as Gemini's in the
+    # demo, and `make demo-cache` would never replace it (it happened once: ed04499, fixed).
+    for path in _tracked("outputs/cache"):
+        usage = json.loads(path.read_text(encoding="utf-8")).get("usage") or {}
+        assert (usage.get("prompt_tokens") or 0) >= MIN_REAL_PROMPT_TOKENS, path.name
+
+
+def test_committed_fichas_come_from_a_real_model():
+    for path in _tracked("outputs/fichas.jsonl"):
+        for line in path.read_text(encoding="utf-8").splitlines():
+            if not line.strip():
+                continue
+            card = json.loads(line)
+            for task, gen in card["generacion"].items():
+                if gen.get("origen") in ("llm", "cache") and gen.get("intentos"):
+                    tokens = (gen.get("tokens") or {}).get("prompt_tokens") or 0
+                    assert tokens >= MIN_REAL_PROMPT_TOKENS, f"{card['id_caso']} · {task}"
