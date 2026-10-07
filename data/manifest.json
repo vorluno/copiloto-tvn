@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "generado_UTC": "2026-10-07T12:37:47Z",
+  "generado_UTC": "2026-10-07T13:11:31Z",
   "fecha_corte_UTC": "2026-10-06T22:50:45Z",
   "fecha_corte_nota": "última fecha_extraccion del corpus de noticias; nada posterior se pidió a las fuentes",
   "reporte_calidad": {
@@ -19,8 +19,8 @@
   "archivos": [
     {
       "ruta": "data/processed/noticias.parquet",
-      "sha256": "6ac50765ac38566d31e32a75861644287c0118ce60c23f856395c62da7dc9301",
-      "bytes": 559650,
+      "sha256": "5e36ed06f1f5e63e43a6f50b37b755af85c22475251122032cf7711cbb5cbc78",
+      "bytes": 560150,
       "filas": 2462,
       "descripcion": "Noticias del período con tema, procedencia y evento (contrato noticias.parquet).",
       "por_origen": {
@@ -118,8 +118,8 @@
     },
     {
       "ruta": "data/processed/noticias.csv",
-      "sha256": "82822b63a08fe417abbddd8079f34ec1042e85f0d6046df6d5b25fdb87009678",
-      "bytes": 1084238,
+      "sha256": "0c2695ca40441c7364bd424edc852906981d3bfffe3ff730d617e349afdcb352",
+      "bytes": 1099022,
       "filas": 2462,
       "descripcion": "Entregable del reto (secc. 6–7): las mismas filas y columnas de noticias.parquet en CSV UTF-8 (B-13).",
       "consultas": "Las de noticias.parquet.",
@@ -144,8 +144,8 @@
     },
     {
       "ruta": "data/processed/clusters.parquet",
-      "sha256": "bee6306d49992a1b899d90a62f759d250bdf2076f8e5f0ee03f3946615035d79",
-      "bytes": 103901,
+      "sha256": "92d47b4bab9bbd97fb3e69a72a0e4f8530a359d417c47a09fc41cf2b155a67b6",
+      "bytes": 104399,
       "filas": 2015,
       "descripcion": "Un evento por fila: noticias, registros, procedencias independientes, tema y fechas (B-08).",
       "consultas": "Derivado de noticias.parquet (sin consultas propias).",

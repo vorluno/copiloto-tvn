@@ -6,6 +6,7 @@ Reads data/processed/noticias.parquet (from `make news`), then:
 2. tema, tema_confianza (B-07)
 3. procedencia_id (B-06)
 4. cluster_id (B-08)          -> data/processed/clusters.parquet
+   recirculada (B-11)          extra column: published long before detected (T03)
 5. baseline (B-09)            -> data/processed/baseline.parquet, same columns as the AI
 6. export (B-13)              -> data/processed/noticias.csv + fuentes.json
 7. official context (B-14)    -> data/processed/contexto.parquet
@@ -23,7 +24,7 @@ import pandas as pd
 
 from src import context, export
 from src.ingest.common import finalize
-from src.nlp import baseline, classify, cluster, embed, provenance
+from src.nlp import baseline, classify, cluster, embed, provenance, recirculation
 
 ROOT = Path(__file__).resolve().parents[2]
 PROCESSED = ROOT / "data" / "processed"
@@ -33,7 +34,7 @@ BASELINE_PATH = PROCESSED / "baseline.parquet"
 
 
 def enrich(news: pd.DataFrame, vectors) -> pd.DataFrame:
-    """news with tema, tema_confianza, procedencia_id and cluster_id from the AI pipeline."""
+    """news with tema, tema_confianza, procedencia_id, cluster_id and recirculada (B-11)."""
     out = news.reset_index(drop=True).copy()
     topics = classify.classify(vectors)
     out["tema"] = topics["tema"].to_numpy()
@@ -41,7 +42,9 @@ def enrich(news: pd.DataFrame, vectors) -> pd.DataFrame:
     out["procedencia_id"] = provenance.assign_provenance(out).to_numpy()
     labels = cluster.cluster_labels(vectors, provenance.reference_time(out))
     out["cluster_id"] = cluster.cluster_ids(out["id_noticia"], labels).to_numpy()
-    return finalize(out)
+    out = finalize(out)
+    out["recirculada"] = recirculation.mark_recirculated(out)  # extra column (B-11), announced to José
+    return out
 
 
 def main() -> None:
