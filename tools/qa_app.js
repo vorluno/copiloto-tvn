@@ -46,15 +46,18 @@ async function shown(p) {
 }
 async function pick(p, idx, option) {
   const before = JSON.stringify(await shown(p));
-  await p.locator('[data-testid="stMultiSelect"]').nth(idx).click();
-  await p.getByRole('option', { name: option, exact: true }).click();
+  // Click the inner input: on the box itself the click can land on a selected chip and not open the list.
+  await p.locator('[data-testid="stMultiSelect"]').nth(idx).locator('input').click();
+  const wanted = p.getByRole('option', { name: option, exact: true });
+  if (!(await wanted.count())) await p.keyboard.type(option);
+  await wanted.click();
   await p.keyboard.press('Escape');
   await waitPanel(p, t => { const m = t.match(/Mostrando (\d+) de (\d+)/); return m && JSON.stringify([+m[1], +m[2]]) !== before; }, 20000);
   await idle(p);
 }
 async function toggleAll(p) {
   const before = JSON.stringify(await shown(p));
-  await p.getByText('Ver todos').click();
+  await p.locator('[data-testid="stCheckbox"]').getByText('Ver todos').click();
   await waitPanel(p, t => { const m = t.match(/Mostrando (\d+) de (\d+)/); return m && JSON.stringify([+m[1], +m[2]]) !== before; }, 20000);
 }
 async function clickRow(p, i) {
@@ -87,7 +90,11 @@ async function ask(p, q) {
   const prev = section(await panel(p));
   await p.getByRole('button', { name: 'Consultar' }).click();
   let t = await waitPanel(p, x => section(x) !== prev && /Origen:|No se pudo consultar/.test(section(x)), 60000);
-  await p.waitForTimeout(1500); t = await panel(p);   // let the rerun settle
+  // Let the rerun settle: the previous answer stays on screen, marked stale, until it is replaced.
+  await idle(p);
+  const stale = p.locator('[role="tabpanel"]:visible [data-stale="true"]');
+  for (let i = 0; i < 40 && (await stale.count()); i++) await p.waitForTimeout(250);
+  await p.waitForTimeout(500); t = await panel(p);
   return t.slice(t.indexOf('Consulta (CU-04)'));
 }
 
@@ -101,7 +108,7 @@ async function ask(p, q) {
   await open(p);
   check('carga inicial', true, `${((Date.now() - t0) / 1000).toFixed(1)} s`);
   const header = await p.locator('[data-testid="stMain"]').first().innerText();
-  check('aviso sin internet visible', scenario === 'online' ? !header.includes('Modo sin internet') : header.includes('Modo sin internet (OFFLINE=1)'));
+  check('aviso sin internet visible', scenario === 'online' ? (!header.includes('Sin internet') && header.includes('En línea')) : header.includes('Sin internet (OFFLINE=1)'));
   if (scenario === 'stub') check('aviso de datos sintéticos', header.includes('sintéticas'));
 
   // ---------------- Bandeja ----------------
@@ -143,25 +150,33 @@ async function ask(p, q) {
   // Corpus expander
   await open(p);
   await p.getByText(/Noticias del corpus/).click(); await idle(p);
-  check('expander "Noticias del corpus" abre una tabla', (await p.locator('[data-testid="stDataFrame"]').count()) >= 2);
+  check('expander "Noticias del corpus" abre una tabla', (await p.locator('[data-testid="stDataFrame"]').count()) >= 1);
   if (scenario === 'stub') {
     const tp = await panel(p);
     check('stub: no hay excepción al mostrar marcas (🧪/⚠️)', (await exceptions(p)) === 0);
   }
 
-  // Row click -> Ficha -> Borrador follow the same cluster
+  // Card "Abrir ficha" (top view) and table row (Ver todos) -> Ficha -> Borrador follow the same cluster
   await open(p);
   await tab(p, 'Ficha');
   const third = await optionAt(p, 'Cluster', 2);           // "#3 · tema · titular"
   const thirdTitle = third.split(' · ').slice(2).join(' · ');
   await tab(p, 'Bandeja');
-  await clickRow(p, 2);
+  const cards = p.locator('[role="tabpanel"]:visible').getByRole('button', { name: 'Abrir ficha' });
+  check('bandeja: una tarjeta con "Abrir ficha" por evento del top', (await cards.count()) === Math.min(5, total), `${await cards.count()}`);
+  await cards.nth(2).click(); await idle(p);
+  check('tarjeta: confirma que el caso quedó abierto', (await panel(p)).includes('Abierta en la pestaña Ficha'));
   await tab(p, 'Ficha');
   const h3 = await heading(p);
-  check('clic en la fila 3 de la bandeja abre la ficha #3', h3 === thirdTitle, h3.slice(0, 70));
+  check('"Abrir ficha" de la tarjeta 3 abre la ficha #3', h3 === thirdTitle, h3.slice(0, 70));
   await p.screenshot({ path: `${out}-ficha.png`, fullPage: true });
   await tab(p, 'Borrador');
-  check('Borrador sigue al cluster elegido en la bandeja', (await panel(p)).includes(thirdTitle.slice(0, 40)));
+  check('Borrador sigue al caso abierto desde la tarjeta', (await panel(p)).includes(thirdTitle.slice(0, 40)));
+  await open(p); await toggleAll(p);
+  await clickRow(p, 1);
+  await tab(p, 'Ficha');
+  const second = await optionAt(p, 'Cluster', 1);
+  check('"Ver todos": clic en la fila 2 de la tabla abre la ficha #2', (await heading(p)) === second.split(' · ').slice(2).join(' · '), (await heading(p)).slice(0, 70));
 
   // Ficha selectbox -> Borrador
   await tab(p, 'Ficha');

@@ -1,0 +1,20 @@
+# Editorial light theme (C-12 redesign). System fonts only: the demo runs without internet.
+[theme]
+base = "light"
+primaryColor = "#1E4FC2"
+backgroundColor = "#F7F6F2"
+secondaryBackgroundColor = "#FFFFFF"
+textColor = "#14161B"
+linkColor = "#1E4FC2"
+font = "'IBM Plex Sans', 'Segoe UI', system-ui, -apple-system, Helvetica, Arial, sans-serif"
+headingFont = "'Source Serif 4', Georgia, 'Times New Roman', serif"
+codeFont = "'IBM Plex Mono', Menlo, Consolas, monospace"
+borderColor = "#E3E1DA"
+dataframeBorderColor = "#E3E1DA"
+dataframeHeaderBackgroundColor = "#F1F0EC"
+baseRadius = "10px"
+showWidgetBorder = true
+
+# T10: the demo must not reach the network. Streamlit's usage stats call data.streamlit.io.
+[browser]
+gatherUsageStats = false

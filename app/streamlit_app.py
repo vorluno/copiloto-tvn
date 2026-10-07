@@ -37,6 +37,7 @@ from app.datos import (
     verify_messages,
 )
 from src.manifest import verify as verify_manifest
+from app.estilo import CSS, chip, claim_type_chip, event_card_html, evidence_chip, header_html, tiles_html
 from src.score import score_clusters
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -99,8 +100,9 @@ def show_claims(card: dict | None) -> None:
         return
     st.markdown("#### Afirmaciones por tipo")
     for kind, claims in groups:
-        icon, label, meaning = CLAIM_STYLE[kind]
-        st.markdown(f"**{icon} {label}** · *{meaning}*")
+        _icon, label, meaning = CLAIM_STYLE[kind]
+        st.markdown(f"{claim_type_chip(kind, label)} <span style='color:#4A505C'>{meaning}</span>",
+                    unsafe_allow_html=True)
         for claim in claims:
             cites = " · ".join(citation_label(c) for c in claim.get("citas") or [])
             st.markdown(f"- {claim['texto']}  \n  {cites}")
@@ -174,20 +176,16 @@ def cached_outputs() -> list[Path]:
 
 
 st.set_page_config(page_title="Copiloto TVN", page_icon="📰", layout="wide")
-st.title("Copiloto TVN")
-st.caption("Borradores para revisión humana. Nada se publica desde aquí.")
-
-if OFFLINE:
-    st.warning("Modo sin internet (OFFLINE=1): las salidas del LLM se sirven solo desde `outputs/cache/`.")
+st.markdown(CSS, unsafe_allow_html=True)
 
 news, source_path = load_news()
-has_synthetic = "sintetico" in news and news["sintetico"].fillna(False).any()
-if has_synthetic:
-    st.info(f"Datos: `{source_path}` · contiene noticias **sintéticas** (sintetico=true).")
-else:
-    st.info(f"Datos: `{source_path}`")
-
+has_synthetic = bool("sintetico" in news and news["sintetico"].fillna(False).any())
 scored = load_scores(news)
+_manifest = load_manifest()
+DATA_CUT = to_panama(pd.Timestamp(_manifest["fecha_corte_UTC"])) if _manifest else None
+# One bar with what the editor must always see: offline or online, data cut, corpus and data source.
+st.markdown(header_html(OFFLINE, source_path, len(news), scored["cluster_id"].nunique() if not scored.empty else 0,
+                        DATA_CUT, has_synthetic), unsafe_allow_html=True)
 cards, cards_path = load_cards(news_from_stub=source_path == STUB_PATH.relative_to(ROOT).as_posix())
 CARDS_LABEL = f"`{cards_path}`" if cards_path else "sin fichas todavía (`make demo-cache`, J-12)"
 cards = apply_reviews(cards, latest_reviews())  # the review log wins over the state in the file
@@ -207,6 +205,13 @@ with inbox_tab:
     if inbox.empty:
         st.info("Todavía no hay clusters para priorizar.")
     else:
+        states = inbox["estado_evidencia"].value_counts()
+        st.markdown(tiles_html([
+            ("Eventos en rango alto", f"{int((inbox['rango'] == 'alto').sum()):,}", f"de {len(inbox):,}"),
+            ("Suficiente para el borrador", f"{int(states.get('suficiente para el borrador', 0)):,}", ""),
+            ("Parcial", f"{int(states.get('parcial', 0)):,}", ""),
+            ("Insuficiente", f"{int(states.get('insuficiente', 0)):,}", ""),
+        ]), unsafe_allow_html=True)
         if not inbox["contexto_disponible"].all():
             st.warning("Sin contexto oficial todavía (`contexto.parquet`, B-14): I y E no incluyen "
                        "indicadores del Banco Mundial ni sismos del USGS.")
@@ -222,6 +227,25 @@ with inbox_tab:
         show_all = f5.toggle("Ver todos", help=f"Por defecto se muestran los {TOP_N} de mayor P.")
         view = filter_inbox(inbox, temas, estados, rangos, top_n=None if show_all else TOP_N, idiomas=idiomas)
 
+        if not show_all:
+            # Top of the inbox as cards; "Ver todos" keeps the compact, selectable table.
+            for row in view.itertuples():
+                marks = " · ".join(m for m in (
+                    "🧪 sintético" if row.sintetico else "", "♻️ recirculada" if row.recirculada else "",
+                    f"⚠️ {row.alertas} alerta(s)" if row.alertas else "") if m)
+                meta = (f"{records_label(row.n_registros, row.n_procedencias_independientes)} · U desde "
+                        f"{urgency_basis_label(row.base_urgencia)} {to_panama(row.fecha_referencia_urgencia)}")
+                with st.container(border=True):
+                    st.markdown(event_card_html(row.posicion, row.P, row.rango, row.tema, row.estado_evidencia,
+                                                headline_label(row.titular), meta, row.id_titular,
+                                                {c: getattr(row, c) for c in COMPONENTS}, marks),
+                                unsafe_allow_html=True)
+                    # Runs before the Ficha selectbox exists in this run, so it can set its value.
+                    if st.button("Abrir ficha", key=f"abrir_{row.cluster_id}"):
+                        st.session_state.ficha_cluster = row.cluster_id
+                        st.session_state.abierta = row.cluster_id
+                    if st.session_state.get("abierta") == row.cluster_id:
+                        st.caption("Abierta en la pestaña **Ficha**.")
         table = pd.DataFrame({
             "#": view["posicion"],
             "Tema": view["tema"].fillna("— (sin dato)"),
@@ -246,24 +270,26 @@ with inbox_tab:
         })
         component_help = {"R": "Relación con Panamá", "I": "Impacto", "U": "Urgencia",
                           "N": "Novedad", "E": "Evidencia"}
-        event = st.dataframe(
-            table, hide_index=True, width="stretch", on_select="rerun", selection_mode="single-row",
-            column_config={
-                "P": st.column_config.ProgressColumn("P", min_value=0, max_value=100, format="%.1f"),
-                **{c: st.column_config.NumberColumn(c, help=f"{component_help[c]} (0–1)", format="%.2f")
-                   for c in COMPONENTS},
-            },
-        )
-        # Runs before the Ficha selectbox is created, so it can set its value. Only a new
-        # selection moves the Ficha; otherwise its selector would stay pinned to this row.
-        picked = view.iloc[event.selection.rows[0]]["cluster_id"] if event.selection.rows else None
-        if (target := inbox_pick(picked, st.session_state.get("inbox_pick"))) is not None:
-            st.session_state.ficha_cluster = target
-        st.session_state.inbox_pick = picked
+        if show_all:
+            event = st.dataframe(
+                table, hide_index=True, width="stretch", on_select="rerun", selection_mode="single-row",
+                column_config={
+                    "P": st.column_config.ProgressColumn("P", min_value=0, max_value=100, format="%.1f"),
+                    **{c: st.column_config.NumberColumn(c, help=f"{component_help[c]} (0–1)", format="%.2f")
+                       for c in COMPONENTS},
+                },
+            )
+            # Runs before the Ficha selectbox is created, so it can set its value. Only a new
+            # selection moves the Ficha; otherwise its selector would stay pinned to this row.
+            picked = view.iloc[event.selection.rows[0]]["cluster_id"] if event.selection.rows else None
+            if (target := inbox_pick(picked, st.session_state.get("inbox_pick"))) is not None:
+                st.session_state.ficha_cluster = target
+            st.session_state.inbox_pick = picked
         st.caption(
             f"Mostrando {len(view)} de {len(inbox)} clusters. R relación con Panamá · I impacto · "
             "U urgencia · N novedad · E evidencia (0–1). Referencia = fecha desde la que se mide U, "
-            f"en hora de Panamá (UTC−5). Fichas: {CARDS_LABEL}. Elige una fila para abrirla en **Ficha**."
+            f"en hora de Panamá (UTC−5). Fichas: {CARDS_LABEL}. Abre un caso con **Abrir ficha**, o con "
+            "**Ver todos** elige una fila de la tabla."
         )
 
     with st.expander(f"Noticias del corpus ({len(news)})"):
@@ -301,13 +327,14 @@ with card_tab:
         st.caption(f"Titular real más reciente · `{row['id_titular']} · titulo`")
         if pd.notna(row["titulo_propuesto"]):
             st.markdown(f"*Título propuesto (generado, para revisión):* {row['titulo_propuesto']}")
-        st.markdown(" · ".join(m for m in (
-            f"**{row['tema']}**", f"P **{row['P']:.1f}** ({row['rango']})",
-            f"Evidencia: **{row['estado_evidencia']}**",
-            records_label(row["n_registros"], row["n_procedencias_independientes"]),
-            f"Ficha `{card['id_caso']}`" if card else "Sin ficha generada (J-09)",
-            "🧪 sintético" if row["sintetico"] else "", "♻️ recirculada" if row["recirculada"] else "",
-        ) if m))
+        st.markdown('<div class="ctvn-chips">' + "".join(m for m in (
+            chip(row["tema"] or "— (sin dato)"), chip(f"P {row['P']:.1f} · {row['rango']}", row["rango"]),
+            evidence_chip(row["estado_evidencia"]),
+            chip(records_label(row["n_registros"], row["n_procedencias_independientes"])),
+            chip(f"Ficha {card['id_caso']}" if card else "Sin ficha generada (J-12)"),
+            chip("🧪 sintético", "synthetic") if row["sintetico"] else "",
+            chip("♻️ recirculada") if row["recirculada"] else "",
+        ) if m) + "</div>", unsafe_allow_html=True)
         if headline_only(sources):
             st.caption("Basado únicamente en titular/metadatos.")
         st.info(f"**Acción recomendada:** {action_for(row['estado_evidencia'], card, bool(row['recirculada']))}")
@@ -315,7 +342,7 @@ with card_tab:
             st.warning(f"⚠️ {alerta}")
 
         left, right = st.columns([3, 2])
-        with left:
+        with left, st.container(border=True):
             st.markdown("#### Qué se reporta")
             if card and card.get("enfoque_interes_publico"):
                 st.markdown(f"*Enfoque de interés público:* {card['enfoque_interes_publico']}")
@@ -356,7 +383,7 @@ with card_tab:
                 for q in questions:
                     st.markdown(f"- {q}")
 
-        with right:
+        with right, st.container(border=True):
             st.markdown("#### Puntaje")
             for comp in component_points(row):
                 if comp["valor"] is None:
@@ -409,13 +436,14 @@ with draft_tab:
                      "No hay borrador porque la evidencia no alcanza; no se rellena con texto inventado.")
         else:
             for draft in draft_rows(dcard):
-                st.markdown(f"#### {draft['etiqueta']}")
-                if draft["texto"] is None:
-                    st.caption("No generado.")
-                    continue
-                st.write(draft["texto"])
-                fits = "dentro del límite" if draft["dentro"] else "⚠️ fuera del límite"
-                st.caption(f"{draft['palabras']} palabras · rango {draft['min']}–{draft['max']} · {fits}")
+                with st.container(border=True):
+                    st.markdown(f"#### {draft['etiqueta']}")
+                    if draft["texto"] is None:
+                        st.caption("No generado.")
+                        continue
+                    st.write(draft["texto"])
+                    fits = "dentro del límite" if draft["dentro"] else "⚠️ fuera del límite"
+                    st.caption(f"{draft['palabras']} palabras · rango {draft['min']}–{draft['max']} · {fits}")
 
         show_claims(dcard)
         show_contradictions((dcard or {}).get("contradicciones"))
