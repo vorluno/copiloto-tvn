@@ -8,6 +8,30 @@ Para la página **6 · Pruebas y métricas** de Notion, debajo de la matriz T01�
 elegiría un editor. Es una **evaluación exploratoria**, no una medición con un editor real (ver
 límites).
 
+> **Fecha y corte:** medida el 7 oct 2026 con el corpus de entonces (**2,462 noticias, 2,015
+> eventos**). El corpus final (11,337 noticias, 8,421 eventos) cambió el top 5: el Canal sube a #2,
+> y entran Cobre Panamá (#4) y el aporte del Canal al Estado (#5). Este resultado **no** describe el
+> ranking final; la corrida con el corpus final está al final de esta página.
+
+## Corrida 2 · corpus final (7 oct, tarde)
+
+**Precision@5 = 2/5 (40 %).** Mismos temas del editor y mismo método. Top 5 de `main` `86cacce`
+(11,337 noticias, 8,421 eventos, `scoring_v1`, filtro es + en):
+
+| # | P | Tema del sistema | Titular | Registros · procedencias | ¿Coincide? |
+| --- | --- | --- | --- | --- | --- |
+| 1 | 91.0 | economía | ¿Cómo está el empleo en Panamá? Presidente afirma que el desempleo baja y sector privado gana terreno | 1 · 1 | No |
+| 2 | 78.3 | logística/Canal | Autoridad del Canal de Panamá aumenta a 33 buques capacidad diaria de tránsito | 7 · 7 | **Sí** (Canal) |
+| 3 | 77.4 | logística/Canal | Panama Canal disruption creates new cargo accumulation headache | 1 · 1 | **Sí** (Canal) |
+| 4 | 76.1 | economía | Panama panel backs path to Cobre Panama restart | 1 · 1 | No |
+| 5 | 76.0 | logística/Canal | Canal de Panamá: esta es la millonaria cifra que aportará al Estado en 2027 | 1 · 1 | No |
+
+**Fila dudosa:** la #5 trata del Canal (su aporte al Estado) y el evaluador la juzgó fuera de su
+tema "Canal de Panamá". Se respeta su criterio; con la otra lectura serían 3/5 (60 %).
+
+**Lectura:** el resultado no cambia con el corpus final (2/5). Siguen ausentes deuda pública, El Niño,
+CSS y turismo, y 4 de las 5 filas tienen una sola fuente (1 · 1).
+
 ## Método
 
 1. **Selección humana independiente.** Cristian (C, producto) eligió, sin abrir la app, los 5 temas
