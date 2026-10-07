@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "generado_UTC": "2026-10-07T12:24:32Z",
+  "generado_UTC": "2026-10-07T12:37:47Z",
   "fecha_corte_UTC": "2026-10-06T22:50:45Z",
   "fecha_corte_nota": "última fecha_extraccion del corpus de noticias; nada posterior se pidió a las fuentes",
   "reporte_calidad": {
@@ -201,6 +201,20 @@
       "descripcion": "Modelo y revisión usados para los embeddings.",
       "consultas": "Derivado de noticias.parquet (sin consultas propias).",
       "licencia": "—"
+    },
+    {
+      "ruta": "data/processed/contexto.parquet",
+      "sha256": "3952be85ddb12842ce75b57b5564e97e7cc5f03f24528a69c009838a2c27f980",
+      "bytes": 4657,
+      "filas": 6,
+      "descripcion": "Eventos relacionados con un indicador del Banco Mundial o un sismo del USGS por una regla escrita; sin relación sustentada, sin fila (B-14).",
+      "consultas": "Derivado de noticias.parquet, indicadores.csv y eventos.geojson.",
+      "licencia": "Banco Mundial CC BY 4.0; USGS dominio público.",
+      "transformaciones": [
+        "regla en src/context.py: tema + menciona Panamá + menciona lo que mide el indicador",
+        "valor citado: último año con dato de Panamá (nunca nulo)",
+        "sismo solo si está a 72 h o menos del evento (catálogo 2024 vs noticias 2025-2026: 0 filas)"
+      ]
     },
     {
       "ruta": "data/processed/indicadores.csv",
