@@ -1,6 +1,244 @@
 {
-  "_owner": "B (B-10) · pending",
-  "version": null,
-  "fecha_corte_UTC": null,
-  "archivos": []
+  "version": "1.0",
+  "generado_UTC": "2026-10-07T11:57:55Z",
+  "fecha_corte_UTC": "2026-10-06T22:50:45Z",
+  "fecha_corte_nota": "última fecha_extraccion del corpus de noticias; nada posterior se pidió a las fuentes",
+  "reporte_calidad": {
+    "ruta": "outputs/reports/calidad.md",
+    "filas_leidas": 2462,
+    "repetidas_entre_fuentes": 3,
+    "filas_separadas": 0,
+    "generado": "2026-10-06T22:57:44Z"
+  },
+  "reproducir": [
+    "make data (necesita internet)",
+    "make news",
+    "make nlp",
+    "python -m src.manifest"
+  ],
+  "archivos": [
+    {
+      "ruta": "data/processed/noticias.parquet",
+      "sha256": "6ac50765ac38566d31e32a75861644287c0118ce60c23f856395c62da7dc9301",
+      "bytes": 559650,
+      "filas": 2462,
+      "descripcion": "Noticias del período con tema, procedencia y evento (contrato noticias.parquet).",
+      "por_origen": {
+        "gdelt": 1214,
+        "tvn_web": 1198,
+        "tvn_rss": 50
+      },
+      "periodo_UTC": [
+        "2025-10-02T00:00:00+00:00",
+        "2026-09-30T23:59:59+00:00"
+      ],
+      "consultas": [
+        {
+          "fuente": "tvn_rss",
+          "url": "https://www.tvn-2.com/rss/"
+        },
+        {
+          "fuente": "tvn_web",
+          "url": "https://www.tvn-2.com/tvn_sitemap_contents_<YYYY>_<MM>.xml",
+          "regla": "hasta 100 artículos por mes, orden SHA-1 de la URL; solo JSON-LD NewsArticle; respeta robots.txt (excluye /api/, /buscador/, /tag/)"
+        },
+        {
+          "fuente": "gdelt",
+          "url": "https://api.gdeltproject.org/api/v2/doc/doc",
+          "query": "(Panama OR Panamá) (canal OR logística OR logistica OR puerto OR shipping)",
+          "tema_consulta": "logistica",
+          "parametros": {
+            "mode": "ArtList",
+            "format": "json",
+            "maxrecords": 250,
+            "sort": "DateDesc"
+          },
+          "ventanas": "un mes calendario por consulta"
+        },
+        {
+          "fuente": "gdelt",
+          "url": "https://api.gdeltproject.org/api/v2/doc/doc",
+          "query": "(Panama OR Panamá) (turismo OR tourism OR turistas)",
+          "tema_consulta": "turismo",
+          "parametros": {
+            "mode": "ArtList",
+            "format": "json",
+            "maxrecords": 250,
+            "sort": "DateDesc"
+          },
+          "ventanas": "un mes calendario por consulta"
+        },
+        {
+          "fuente": "gdelt",
+          "url": "https://api.gdeltproject.org/api/v2/doc/doc",
+          "query": "(Panama OR Panamá) (economía OR economia OR economy OR inflación OR empleo)",
+          "tema_consulta": "economia",
+          "parametros": {
+            "mode": "ArtList",
+            "format": "json",
+            "maxrecords": 250,
+            "sort": "DateDesc"
+          },
+          "ventanas": "un mes calendario por consulta"
+        },
+        {
+          "fuente": "gdelt",
+          "url": "https://api.gdeltproject.org/api/v2/doc/doc",
+          "query": "(Panama OR Panamá) (sismo OR terremoto OR inundación OR inundaciones OR earthquake OR flood)",
+          "tema_consulta": "eventos_naturales",
+          "parametros": {
+            "mode": "ArtList",
+            "format": "json",
+            "maxrecords": 250,
+            "sort": "DateDesc"
+          },
+          "ventanas": "un mes calendario por consulta"
+        }
+      ],
+      "licencia": {
+        "tvn_rss": "Metadatos públicos de TVN (titular, descripción, fecha y URL). Sin licencia sobre el artículo: no se guarda el cuerpo, imágenes ni video.",
+        "tvn_web": "Metadatos públicos de TVN (titular, descripción, fecha y URL). Sin licencia sobre el artículo: no se guarda el cuerpo, imágenes ni video.",
+        "gdelt": "GDELT Project: uso libre citando la fuente (gdeltproject.org). Solo titular y metadatos."
+      },
+      "filas_excluidas": {
+        "fuera_del_periodo_o_sin_fecha": "se descartan en la ingesta (sin fecha no se puede probar que esté en el período)",
+        "repetidas_entre_fuentes": 3,
+        "repetidas_motivo": "misma URL normalizada en dos fuentes: se conserva la fila de TVN (trae descripción)",
+        "separadas_por_validacion": 0,
+        "separadas_motivo": "fecha inválida, URL rota o campo obligatorio vacío (B-05, outputs/reports/calidad.md)"
+      },
+      "transformaciones": [
+        "id_noticia = 'N-' + 10 primeros hex del SHA-1 de la URL normalizada",
+        "fechas a UTC; fecha_publicacion = la del medio; fecha_deteccion = seendate de GDELT; nunca se mezclan",
+        "HTML y entidades quitados de titulo y descripcion",
+        "tema por similitud con sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2; bajo 0.5 -> 'otro' (B-07)",
+        "procedencia_id: agencia > casi copia (TF-IDF >= 0.9, 48 h, otro dominio) > medio (B-06)",
+        "cluster_id: enlace completo, distancia coseno <= 0.3, ventana 72 h (B-08)"
+      ]
+    },
+    {
+      "ruta": "data/processed/clusters.parquet",
+      "sha256": "bee6306d49992a1b899d90a62f759d250bdf2076f8e5f0ee03f3946615035d79",
+      "bytes": 103901,
+      "filas": 2015,
+      "descripcion": "Un evento por fila: noticias, registros, procedencias independientes, tema y fechas (B-08).",
+      "consultas": "Derivado de noticias.parquet (sin consultas propias).",
+      "licencia": "La de cada noticia (ver noticias.parquet).",
+      "transformaciones": [
+        "agrupa por cluster_id",
+        "n_procedencias_independientes = procedencia_id únicos",
+        "tema = el más frecuente (empate: orden alfabético)",
+        "fecha_primera/ultima = fecha del medio o, si no hay, de detección"
+      ]
+    },
+    {
+      "ruta": "data/processed/baseline.parquet",
+      "sha256": "f4c51a01c5521b407db81491fcb60c76fbeca5f924819ca3936cd5d1fef9cb5d",
+      "bytes": 72367,
+      "filas": 2462,
+      "descripcion": "Tema, procedencia y cluster sin embeddings (palabras clave + TF-IDF), para comparar (B-09).",
+      "consultas": "Derivado de noticias.parquet (sin consultas propias).",
+      "licencia": "La de cada noticia (ver noticias.parquet).",
+      "transformaciones": [
+        "tema por palabras clave",
+        "duplicados: TF-IDF >= 0.9 en 72 h"
+      ]
+    },
+    {
+      "ruta": "data/processed/embeddings.npy",
+      "sha256": "08723b983f0704ee6e41611e1009d1597bf2c2c4a79a0773a02b8a7fb65954a1",
+      "bytes": 3781760,
+      "filas": 2462,
+      "descripcion": "Vector normalizado por noticia, en el orden de embeddings_ids.json (B-07).",
+      "consultas": "Derivado de noticias.parquet (sin consultas propias).",
+      "licencia": "La de cada noticia; modelo bajo Apache 2.0.",
+      "modelo": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+      "revision_modelo": "e8f8c211226b894fcb81acc59f3b34ba3efd5f42",
+      "transformaciones": [
+        "texto = titulo + descripcion (si existe)"
+      ]
+    },
+    {
+      "ruta": "data/processed/embeddings_ids.json",
+      "sha256": "9b07b0a50c6e6479e22aac05f95b3bd6ef7eb2f5f3d38abcb7d70fef0eff95f0",
+      "bytes": 39392,
+      "filas": 2462,
+      "descripcion": "id_noticia de cada fila de embeddings.npy.",
+      "consultas": "Derivado de noticias.parquet (sin consultas propias).",
+      "licencia": "—"
+    },
+    {
+      "ruta": "data/processed/embeddings_modelo.json",
+      "sha256": "dff6cd2d0d72d7df1d52b5b7dbee3954dd7ce7ca23a68d52e34416e1546445ac",
+      "bytes": 231,
+      "filas": null,
+      "descripcion": "Modelo y revisión usados para los embeddings.",
+      "consultas": "Derivado de noticias.parquet (sin consultas propias).",
+      "licencia": "—"
+    },
+    {
+      "ruta": "data/processed/indicadores.csv",
+      "sha256": "93c1db5e18c202e16edc50db13ad7cec2b62afb98263fc5ec11722ecad3e8c30",
+      "bytes": 113035,
+      "filas": 540,
+      "descripcion": "Banco Mundial: cuadrícula país x indicador x año con nulos explícitos (B-03).",
+      "consultas": [
+        {
+          "indicador": "NY.GDP.MKTP.KD.ZG",
+          "url": "https://api.worldbank.org/v2/country/PAN;CRI;COL;DOM;MEX;GTM/indicator/NY.GDP.MKTP.KD.ZG?date=2010:2024&format=json&per_page=1000",
+          "unidad": "% anual"
+        },
+        {
+          "indicador": "FP.CPI.TOTL.ZG",
+          "url": "https://api.worldbank.org/v2/country/PAN;CRI;COL;DOM;MEX;GTM/indicator/FP.CPI.TOTL.ZG?date=2010:2024&format=json&per_page=1000",
+          "unidad": "% anual"
+        },
+        {
+          "indicador": "SL.UEM.TOTL.ZS",
+          "url": "https://api.worldbank.org/v2/country/PAN;CRI;COL;DOM;MEX;GTM/indicator/SL.UEM.TOTL.ZS?date=2010:2024&format=json&per_page=1000",
+          "unidad": "% de la fuerza laboral"
+        },
+        {
+          "indicador": "SP.POP.TOTL",
+          "url": "https://api.worldbank.org/v2/country/PAN;CRI;COL;DOM;MEX;GTM/indicator/SP.POP.TOTL?date=2010:2024&format=json&per_page=1000",
+          "unidad": "personas"
+        },
+        {
+          "indicador": "IT.NET.USER.ZS",
+          "url": "https://api.worldbank.org/v2/country/PAN;CRI;COL;DOM;MEX;GTM/indicator/IT.NET.USER.ZS?date=2010:2024&format=json&per_page=1000",
+          "unidad": "% de la población"
+        },
+        {
+          "indicador": "NE.EXP.GNFS.ZS",
+          "url": "https://api.worldbank.org/v2/country/PAN;CRI;COL;DOM;MEX;GTM/indicator/NE.EXP.GNFS.ZS?date=2010:2024&format=json&per_page=1000",
+          "unidad": "% del PIB"
+        }
+      ],
+      "licencia": "CC BY 4.0",
+      "filas_excluidas": "ninguna: 6 países x 6 indicadores x 15 años = 540; valor nulo donde falta (nunca 0)",
+      "valores_nulos": 0,
+      "transformaciones": [
+        "una fila por combinación",
+        "unidad por indicador"
+      ]
+    },
+    {
+      "ruta": "data/processed/eventos.geojson",
+      "sha256": "d831215aaf3341aabdf28ecd384ff26a1837796933fd7facaa8dc5ac1870542b",
+      "bytes": 44010,
+      "filas": 82,
+      "descripcion": "USGS: sismos M>=3 de 2024 en la caja lat 5–12, lon −86 a −76 (B-04).",
+      "consultas": [
+        {
+          "url": "https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&starttime=2024-01-01&endtime=2024-12-31T23:59:59&minlatitude=5&maxlatitude=12&minlongitude=-86&maxlongitude=-76&minmagnitude=3&eventtype=earthquake&orderby=time-asc"
+        }
+      ],
+      "licencia": "Dominio público (USGS)",
+      "filas_excluidas": "ninguna: todos los sismos que devuelve la consulta",
+      "transformaciones": [
+        "propiedades del contrato; time y updated a ISO 8601 UTC"
+      ],
+      "advertencia": "La caja regional no es el territorio de Panamá; solo hechos sísmicos."
+    }
+  ]
 }
