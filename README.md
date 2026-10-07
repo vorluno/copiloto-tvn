@@ -2,7 +2,7 @@
 
 Copiloto editorial para la redacción de **TVN Panamá** (hackIAthon 2026, reto TVN Media).
 
-Lee noticias públicas (RSS de TVN y GDELT) y datos oficiales (Banco Mundial y USGS),
+Lee noticias públicas (TVN y GDELT) y datos oficiales (Banco Mundial y USGS),
 agrupa las noticias del mismo evento, **ordena los temas por una prioridad explicada**
 (P = 30R + 25I + 20U + 15N + 10E, con sus 5 componentes a la vista), muestra la
 evidencia de cada afirmación y redacta **borradores para revisión humana**: brief
@@ -17,22 +17,78 @@ Equipo: **José** (líder técnico e integración), **Levi** (B · datos e IA) y
 (C · producto, frontend, Notion y QA). El reto está en [`docs/reto.pdf`](docs/reto.pdf); las tareas
 en [`docs/backlog.md`](docs/backlog.md); el alcance y el uso de cada fuente en
 [`docs/alcance-y-datos.md`](docs/alcance-y-datos.md); las reglas de trabajo en [`CLAUDE.md`](CLAUDE.md); cómo
-abrir un PR en [`CONTRIBUTING.md`](CONTRIBUTING.md).
+abrir un PR en [`CONTRIBUTING.md`](CONTRIBUTING.md); la entrega en [`docs/entrega.md`](docs/entrega.md).
 
 > **Estado (7 oct):** corpus real en `data/processed/`: 2,462 noticias del 02/10/2025 al
-> 30/09/2026 (1,248 de TVN y 1,214 de GDELT), 2,015 clusters, contexto oficial del Banco
+> 30/09/2026 (1,248 de TVN y 1,214 de GDELT), 2,015 eventos, contexto oficial del Banco
 > Mundial y del USGS. Puntaje, búsqueda, guard, caché offline y fichas funcionan sobre él.
 > Falta: correr Gemini para llenar la caché de la demo (`make demo-cache`, guía en `docs/demo/corrida-llm.md`)
 > y las métricas con las etiquetas humanas (B-12).
+
+## Para el jurado: probarlo en 5 minutos
+
+Requisitos: **Python 3.11** y `make` (en Windows, WSL o Git Bash). No hace falta clave ni internet
+para la demo: las respuestas del modelo vienen guardadas en `outputs/cache/` (ADR-033).
+
+```bash
+git clone https://github.com/vorluno/copiloto-tvn.git
+cd copiloto-tvn
+make setup            # .venv con versiones fijadas + modelo de embeddings (única descarga)
+OFFLINE=1 make demo   # app en http://localhost:8501, sin red: lo dice en pantalla
+make test             # T01–T10 y pruebas de contrato
+make verify           # recalcula los SHA-256 de los datos contra data/manifest.json
+```
+
+Qué mirar en la app, en el orden del pitch:
+
+1. **Bandeja:** eventos ordenados por P, con sus componentes, el estado de evidencia
+   (independiente de P) y "N registros · M procedencias".
+2. **Ficha:** qué se reporta, quién lo dice, qué está respaldado (cada cita con ID, campo y pasaje),
+   qué falta y la acción recomendada.
+3. **Borrador:** brief, guion y copy con contador de palabras; afirmaciones separadas en hecho,
+   declaración, inferencia e hipótesis; caja de consulta en español.
+4. **Revisión:** una persona marca el estado; queda en `outputs/revisiones.jsonl` con persona y hora.
+
+Las consultas del pitch están en [`docs/demo/consultas_demo.txt`](docs/demo/consultas_demo.txt). Sin internet,
+una consulta distinta dice "no está en caché" y se abstiene: no inventa.
+
+### Cómo cumple el reto
+
+| Lo que pide el reto | Dónde está | Prueba |
+| --- | --- | --- |
+| Cargar y reportar calidad | `src/validate.py` → `outputs/reports/calidad.md` | T01 |
+| Temas y eventos; procedencias, no registros | `src/nlp/` (`classify.py`, `cluster.py`, `provenance.py`), ADR-007 | T02 |
+| Recirculadas con su fecha original | `src/nlp/recirculation.py` | T03 |
+| Contexto oficial sin forzar relaciones | `src/context.py` → `data/processed/contexto.parquet` (regla escrita; sin relación, sin fila) | — |
+| Prioridad explicada y determinista | `rules/scoring_v1.yaml`, `src/score.py` | T08 |
+| Cita por afirmación, cifras con respaldo | `src/generate/guard.py`, `src/generate/figures.py` | T04, T05, T09 |
+| Abstención sin evidencia | `src/generate/query.py`, `guard.py` | T06 |
+| Fuente que intenta dar instrucciones | `<fuente>` escapada en `generate.py`; alertas en `guard.py` | T07 |
+| Demo sin internet | `outputs/cache/`, `make demo-cache`, `OFFLINE=1` | T10 |
+| Cero secretos | `.env` ignorado; escaneo de todo archivo versionado | `tests/test_no_secrets.py` |
+| Entregables con los nombres del reto | `data/processed/noticias.csv`, `fuentes.json`, `data/diccionario.md`, `data/manifest.json` | `tests/test_export.py`, `test_manifest.py` |
+
+Las cuatro preguntas del jurado:
+
+- **¿De dónde viene esta cifra y de qué año?** Cada cifra cita su ID (`WB-PAN-<indicador>-<año>`) y
+  el campo `valor`. El guard descarta una cifra del Banco Mundial sin país, año y unidad, o dicha como
+  "hoy" (T04). URL, licencia y fecha de extracción están en `data/manifest.json` y en el catálogo.
+- **¿Cuántas fuentes independientes hay si 5 medios replican una agencia?** Una: comparten
+  `procedencia_id` (ADR-007, T02). La bandeja muestra registros y procedencias por separado.
+- **¿Qué pasa sin evidencia o con una fuente que intenta cambiar instrucciones?** Se abstiene y dice
+  qué falta (T06). La instrucción no se obedece y queda en `alertas` (T07).
+- **¿Dónde está una decisión, una prueba fallida y su corrección?** Las decisiones, de ADR-001 en
+  adelante, están en Notion ("Plan y decisiones") y en `docs/notion/decisiones.csv`. Ejemplo de prueba
+  fallida: T10 fallaba en Windows (asyncio abre un socket local) y se corrigió en el PR #41.
 
 ## Instalación
 
 Requisitos: **Python 3.11** y `make` (en Windows, usar WSL o Git Bash).
 
 ```bash
-git clone <url-del-repo> copiloto-tvn
+git clone https://github.com/vorluno/copiloto-tvn.git copiloto-tvn
 cd copiloto-tvn
-make setup        # crea .venv, instala requirements.txt (versiones fijadas) y copia .env.example a .env
+make setup        # crea .venv, instala requirements.txt, copia .env.example a .env y descarga el modelo
 ```
 
 > En Linux, `torch` desde PyPI baja también las librerías de CUDA (~6 GB). Si no tienes
@@ -42,11 +98,14 @@ make setup        # crea .venv, instala requirements.txt (versiones fijadas) y c
 
 ### Variables de entorno (`.env`)
 
+Solo hacen falta para generar respuestas nuevas con el modelo; la demo sin internet no las usa.
+
 | Variable | Para qué |
 | --- | --- |
 | `LLM_API_KEY` | Clave de OpenRouter (https://openrouter.ai/keys). **Nunca** se sube al repo. |
-| `LLM_MODEL` | Modelo exacto (ADR-005): `google/gemini-2.5-flash`. |
+| `LLM_MODEL` | Modelo exacto (ADR-005): `google/gemini-2.5-flash`, temperatura 0. |
 | `LLM_BASE_URL` | API compatible con OpenAI de OpenRouter: `https://openrouter.ai/api/v1`. |
+| `LLM_PRICE_INPUT_PER_M`, `LLM_PRICE_OUTPUT_PER_M` | USD por millón de tokens, para el costo en `make eval` y `make demo-cache`. |
 | `OFFLINE` | `1` = sin internet: las salidas del LLM se leen solo de `outputs/cache/`. |
 
 ## Demo
@@ -54,13 +113,15 @@ make setup        # crea .venv, instala requirements.txt (versiones fijadas) y c
 ```bash
 make demo             # abre Streamlit en http://localhost:8501
 OFFLINE=1 make demo   # sin internet: solo caché local, y la app lo indica en pantalla
+OFFLINE=1 make demo-cache   # comprueba que la caché tenga todo el recorrido del pitch
 ```
 
 Pestañas: **Bandeja** (noticias con hora de Panamá, marcas de sintético, recirculada
 y posible inyección), **Ficha**, **Borrador** y **Revisión** (estados: nuevo,
 en revisión, requiere evidencia, aprobado como borrador, descartado).
 
-La app lee `data/processed/noticias.parquet` si existe; si no, el stub sintético.
+La app lee `data/processed/noticias.parquet` si existe; si no, el stub sintético (y entonces
+solo muestra fichas sintéticas: nunca se mezclan con el corpus real).
 
 ## Pruebas
 
@@ -104,6 +165,9 @@ copiloto-tvn/
 ├── requirements.txt          # José · versiones fijadas
 ├── .env.example              # José · LLM_API_KEY=, LLM_MODEL=, OFFLINE=0
 ├── docs/                     # Todos · reto.pdf, plan maestro, backlog.md y documento de cada rol
+│   ├── demo/                 # José y Cristian · consultas del pitch y guía de la corrida con Gemini
+│   ├── notion/               # Todos · decisiones, tareas, catálogo y riesgos para Notion
+│   └── entrega.md            # José · lista de la entrega del jueves
 ├── rules/
 │   └── scoring_v1.yaml       # José · reglas del puntaje P
 ├── data/
@@ -116,13 +180,16 @@ copiloto-tvn/
 ├── benchmark/
 │   └── benchmark_dev.jsonl   # Cristian · 40 consultas de desarrollo
 ├── src/
-│   ├── ingest/               # Levi · tvn_rss.py, gdelt.py, worldbank.py, usgs.py
+│   ├── ingest/               # Levi · tvn_rss.py, tvn_web.py, gdelt.py, worldbank.py, usgs.py, news.py
 │   ├── validate.py           # Levi · reporte de calidad (T01)
-│   ├── nlp/                  # Levi · embed.py, classify.py, cluster.py, baseline.py, provenance.py
+│   ├── nlp/                  # Levi · embed, classify, cluster, baseline, provenance, recirculation; run.py = make nlp
+│   ├── context.py            # Levi · contexto oficial (contexto.parquet)
+│   ├── export.py · manifest.py · catalog.py  # Levi · CSV del reto, manifest + make verify, catálogo
 │   ├── search.py             # José · búsqueda semántica
 │   ├── score.py              # José · puntaje P
 │   ├── generate/             # José · prompts/, schema.py, generate.py, guard.py
 │   ├── fichas.py             # José · arma y exporta fichas.jsonl
+│   ├── demo_cache.py         # José · make demo-cache: llena y comprueba la caché de la demo
 │   └── eval/                 # Levi y José · metrics.py, run_benchmark.py
 ├── app/
 │   └── streamlit_app.py      # Cristian · interfaz (lee contratos, escribe revisiones.jsonl)
@@ -131,7 +198,7 @@ copiloto-tvn/
 │   ├── revisiones.jsonl      # Cristian (app) · estados de revisión con persona y hora
 │   ├── cache/                # José · salidas del LLM por hash para la demo sin internet (se sube, ADR-033)
 │   └── reports/              # Levi y José · calidad, F1, benchmark, latencia
-└── tests/                    # test_t01.py … test_t10.py · dueño indicado en cada archivo
+└── tests/                    # test_t01.py … test_t10.py y pruebas de contrato · dueño indicado en cada archivo
 ```
 
 ## Cómo trabajamos
