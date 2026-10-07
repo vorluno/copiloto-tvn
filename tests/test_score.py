@@ -155,3 +155,33 @@ def test_default_reference_is_the_corpus_not_the_clock(news):
     assert corpus_reference_time(news) == latest
     # Same snapshot, same ranking, whatever day it runs on.
     assert score_clusters(news)["P"].tolist() == score_clusters(news, now=latest)["P"].tolist()
+
+
+def _brute_novelty(clusters: pd.DataFrame) -> pd.Series:
+    """The full n x n version that _novelty replaced (7 oct): every pair, then the 7-day mask."""
+    import numpy as np
+    from sklearn.feature_extraction.text import TfidfVectorizer
+    from sklearn.metrics.pairwise import cosine_similarity
+
+    sims = cosine_similarity(TfidfVectorizer(strip_accents="unicode", lowercase=True).fit_transform(clusters["_text"]))
+    start = pd.to_datetime(clusters["fecha_primera"], utc=True).to_numpy(dtype="datetime64[ns]")
+    known = ~np.isnat(start)
+    delta = start[:, None] - start[None, :]
+    prior = known[:, None] & known[None, :] & (delta > np.timedelta64(0, "ns")) & (delta <= pd.Timedelta(days=7).to_timedelta64())
+    return pd.Series(1.0 - np.where(prior, sims, 0.0).max(axis=1), index=clusters.index).clip(0.0, 1.0)
+
+
+@pytest.mark.parametrize("block", [1, 2, 3, 512])
+def test_windowed_novelty_matches_the_full_matrix(block):
+    from src.score import _novelty
+
+    t0 = pd.Timestamp("2026-09-01T00:00:00Z")
+    clusters = pd.DataFrame({
+        "_text": ["Canal de Panamá suma tránsitos", "Canal de Panamá suma tránsitos diarios",
+                  "Canal de Panamá suma tránsitos", "Canal de Panamá suma tránsitos",
+                  "lluvias en Chiriquí", "Canal de Panamá suma tránsitos", "lluvias en Chiriquí"],
+        "fecha_primera": [t0, t0 + pd.Timedelta(days=1), t0 + pd.Timedelta(days=1),  # same instant: not prior
+                          t0 + pd.Timedelta(days=8), pd.NaT,  # exactly 7 days after #2 and #3: still prior
+                          t0 + pd.Timedelta(days=30), t0 + pd.Timedelta(days=30, hours=1)],
+    }, index=[10, 11, 12, 13, 14, 15, 16])
+    pd.testing.assert_series_equal(_novelty(clusters, block=block), _brute_novelty(clusters), check_exact=False, atol=1e-12)

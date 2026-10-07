@@ -72,7 +72,7 @@ def load_news() -> tuple[pd.DataFrame, str]:
     return pd.read_parquet(path), path.relative_to(ROOT).as_posix()
 
 
-@st.cache_data(ttl=600)  # U depends on the current time, so refresh every 10 min
+@st.cache_data  # U is measured against the corpus date (ADR-027), not the clock: no need to refresh
 def load_scores(news: pd.DataFrame) -> pd.DataFrame:
     return score_clusters(news, contexto=load_contexto())
 
