@@ -21,6 +21,15 @@ COMPONENTS = ["R", "I", "U", "N", "E"]
 # Written exactly as the contract defines them.
 EVIDENCE_STATES = ["insuficiente", "parcial", "suficiente para el borrador"]
 SCORE_RANGES = ["alto", "medio", "bajo"]
+HEADLINE_LANGUAGES = ("es", "en")  # default language filter and preferred headline languages
+LANGUAGE_NAMES = {
+    "es": "español", "en": "inglés", "pt": "portugués", "fr": "francés", "de": "alemán", "it": "italiano",
+    "zh": "chino", "ru": "ruso", "ja": "japonés", "ko": "coreano", "ar": "árabe", "bn": "bengalí",
+    "cs": "checo", "el": "griego", "fa": "persa", "he": "hebreo", "hr": "croata", "hu": "húngaro",
+    "id": "indonesio", "lt": "lituano", "ml": "malayalam", "nl": "neerlandés", "pl": "polaco",
+    "ro": "rumano", "th": "tailandés", "tr": "turco", "uk": "ucraniano",
+    "hungarian": "húngaro", "thai": "tailandés",  # two values in the corpus are names, not ISO codes
+}
 
 
 def read_cards(path: Path) -> list[dict]:
@@ -57,10 +66,15 @@ def build_inbox(scored: pd.DataFrame, news: pd.DataFrame, cards: list[dict]) -> 
     """
     by_cluster = {c["cluster_id"]: c for c in cards if c.get("cluster_id")}
     order = news["fecha_deteccion"].fillna(news["fecha_publicacion"])
-    titled = news.assign(_order=order)[news["titulo"].notna()]  # a null headline is never the one shown
-    latest = titled.sort_values("_order", ascending=False).drop_duplicates("cluster_id")
-    latest = latest.set_index("cluster_id")
+    lang = news["idioma"] if "idioma" in news else pd.Series(None, index=news.index)
+    # Headline: a Spanish or English one if the cluster has it (the editors read those),
+    # then the most recent; other languages only when there is nothing else.
+    titled = news.assign(_order=order, _foreign=~lang.isin(HEADLINE_LANGUAGES))[news["titulo"].notna()]
+    latest = titled.sort_values(["_foreign", "_order"], ascending=[True, False]).drop_duplicates("cluster_id")
+    latest = latest.set_index("cluster_id")  # a null headline is never the one shown
     synthetic = news.groupby("cluster_id")["sintetico"].any() if "sintetico" in news else pd.Series(dtype=bool)
+    languages = news.assign(_lang=lang).dropna(subset=["_lang"]).groupby("cluster_id")["_lang"].agg(
+        lambda s: tuple(sorted(set(s))))
 
     rows = []
     for row in scored.itertuples(index=False):
@@ -74,18 +88,33 @@ def build_inbox(scored: pd.DataFrame, news: pd.DataFrame, cards: list[dict]) -> 
             "estado_revision": card.get("estado_revision"),
             "alertas": len(card.get("alertas") or []),
             "sintetico": bool(synthetic.get(row.cluster_id, False)),
+            "idiomas": languages.get(row.cluster_id, ()),
+            "idioma_titular": top["idioma"] if top is not None and "idioma" in top else None,
         })
     return pd.concat([scored.reset_index(drop=True), pd.DataFrame(rows)], axis=1)
 
 
 def filter_inbox(inbox: pd.DataFrame, temas=None, estados=None, rangos=None,
-                 top_n: int | None = TOP_N) -> pd.DataFrame:
-    """Keeps score order. Empty or None filters mean "all"; top_n=None shows every row."""
+                 top_n: int | None = TOP_N, idiomas=None) -> pd.DataFrame:
+    """Keeps score order. Empty or None filters mean "all"; top_n=None shows every row.
+
+    `idiomas` keeps clusters with at least one news item in those languages; the score
+    is untouched (filtering only changes what is shown, never P).
+    """
     view = inbox.sort_values("posicion")
     for column, allowed in (("tema", temas), ("estado_evidencia", estados), ("rango", rangos)):
         if allowed:
             view = view[view[column].isin(allowed)]
+    if idiomas:
+        wanted = set(idiomas)
+        # astype(bool): on an empty view the mask is an empty object Series, which pandas
+        # would read as a list of columns and drop them all.
+        view = view[view["idiomas"].map(lambda langs: bool(wanted & set(langs or ()))).astype(bool)]
     return view.head(top_n) if top_n else view
+
+
+def language_label(code: str | None) -> str:
+    return LANGUAGE_NAMES.get(code, code or "— (sin dato)")
 
 
 def records_label(n_registros, n_procedencias) -> str:

@@ -95,3 +95,31 @@ def test_null_headline_is_never_the_one_shown(news):
     row = inbox.set_index("cluster_id").loc[cluster]
     assert pd.notna(row["titular"]) and row["id_titular"] != "N-0000000000"
     assert bandeja.headline_label(None) == bandeja.headline_label(float("nan")) == "— (sin titular)"
+
+
+def test_language_filter_and_headline_preference():
+    news = pd.DataFrame({
+        "id_noticia": ["N-de", "N-es", "N-zh"],
+        "titulo": ["Deutsche Schlagzeile", "Titular en español", "中文标题"],
+        "idioma": ["de", "es", "zh"],
+        "cluster_id": ["K-mix", "K-mix", "K-zh"],
+        "fecha_publicacion": pd.to_datetime(["2026-09-02", "2026-09-01", "2026-09-03"], utc=True),
+        "fecha_deteccion": pd.NaT,
+    })
+    scored = pd.DataFrame({"cluster_id": ["K-zh", "K-mix"], "posicion": [1, 2], "P": [60.0, 50.0],
+                           "tema": ["otro", "otro"], "estado_evidencia": ["insuficiente"] * 2, "rango": ["medio"] * 2})
+    inbox = build_inbox(scored, news, []).set_index("cluster_id", drop=False)
+    # A mixed cluster shows its Spanish headline even though the German one is newer.
+    assert inbox.loc["K-mix", "titular"] == "Titular en español"
+    assert inbox.loc["K-mix", "idiomas"] == ("de", "es")
+    # Default es + en hides the Chinese-only cluster and keeps score order; P is untouched.
+    shown = filter_inbox(inbox, idiomas=["es", "en"], top_n=None)
+    assert list(shown["cluster_id"]) == ["K-mix"] and shown["P"].tolist() == [50.0]
+    assert list(filter_inbox(inbox, idiomas=[], top_n=None)["cluster_id"]) == ["K-zh", "K-mix"]  # empty = all
+
+
+def test_language_filter_on_an_empty_view_keeps_the_columns(inbox):
+    # Browser QA: "regulación" + "suficiente para el borrador" + the default languages crashed the
+    # inbox (KeyError 'posicion'): an empty object mask selected columns instead of rows.
+    view = filter_inbox(inbox, temas=["no existe"], idiomas=["es", "en"], top_n=None)
+    assert view.empty and list(view.columns) == list(inbox.columns)
