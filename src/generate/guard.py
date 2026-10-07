@@ -53,7 +53,11 @@ QUESTIONS_FOR_BRIEF = 3
 INJECTION_PATTERNS = [
     r"ignor[ae]\w* (?:\w+ ){0,3}(?:instrucciones|reglas|indicaciones|órdenes)",
     r"olvida\w* (?:\w+ ){0,3}(?:instrucciones|reglas|indicaciones)",
-    r"(?:revela|muestra|imprime|repite|comparte|env[ií]a)\w* (?:\w+ ){0,4}(?:clave|api|configuraci[oó]n|prompt|instrucciones|secreto|contraseña|token)",
+    # Objects are specific on purpose: "revela la clave del éxito" or "revela … en secreto" are real headlines (8 oct).
+    r"(?:revela|muestra|imprime|repite|comparte|env[ií]a|lista|dime)\w* (?:\w+ ){0,4}"
+    r"(?:clave (?:de )?(?:api|acceso)|claves? secretas?|api|configuraci[oó]n|prompt|instrucciones|reglas|contraseña|token)",
+    r"\binventa\w* (?:\w+ ){0,3}(?:citas?|declaraci[oó]n(?:es)?|entrevistas?|cifras?)\b",
+    r"\b(?:publica|env[ií]a)\w* (?:\w+ ){0,4}sin revisi[oó]n",
     r"(?:a partir de ahora|desde ahora) (?:eres|act[uú]a|responde|debes)",
     r"\bact[uú]a como\b",
     r"nuevas? instrucci[oó]n(?:es)?\b",
@@ -101,14 +105,15 @@ def word_count(text: str) -> int:
     return len(re.findall(r"\w+(?:[-'’]\w+)*", text))
 
 
+def injection_in(text: str | None) -> bool:
+    """True if the text tries to give instructions to the model (a source, a query or a headline)."""
+    folded = normalize(text or "")
+    return any(re.search(p, folded) for p in INJECTION_PATTERNS)
+
+
 def find_injections(evidence: list[Evidence]) -> set[str]:
     """IDs of evidence whose text tries to give instructions to the model."""
-    flagged = set()
-    for item in evidence:
-        text = normalize(" ".join(item.fields.values()))
-        if any(re.search(p, text) for p in INJECTION_PATTERNS):
-            flagged.add(item.id)
-    return flagged
+    return {item.id for item in evidence if injection_in(" ".join(item.fields.values()))}
 
 
 @dataclass
