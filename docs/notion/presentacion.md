@@ -93,7 +93,7 @@ Si algo falla en vivo: el video de respaldo (C-18).
 | Pregunta | Responde | Qué mostrar |
 | --- | --- | --- |
 | "¿De dónde viene esta cifra y de qué año es?" | José | La cita en la ficha → la fila de `indicadores.csv` con país, año y unidad |
-| "Si cinco medios replican la misma agencia, ¿cuántas fuentes independientes cuentas?" | Levi | Ficha #570 (en "Ver todos"): 8 diarios del mismo grupo (abc.es, elcorreo, diariosur…) con el mismo titular = **8 registros · 1 procedencia** (ADR-007) |
+| "Si cinco medios replican la misma agencia, ¿cuántas fuentes independientes cuentas?" | Levi | Ficha #749 (en "Ver todos"; cluster `K-d7ca5e47a9`): "Panama wins canal expansion arbitration against Spanish company", 5 medios (yahoo.com, digitaljournal, tuko.co.ke…) con el mismo titular = **5 registros · 1 procedencia** (ADR-007). Con el corpus anterior era la ficha #570 de los 8 diarios del mismo grupo español; en el corpus final esas notas quedaron dentro de un evento más grande. |
 | "¿Qué pasa sin evidencia o si una fuente intenta cambiar instrucciones?" | José | T06 y T07 en vivo; alerta en la ficha |
 | "Muéstrame una decisión, una prueba fallida y su corrección" | Cristian | Base Decisiones (página 2) y la matriz (página 6): T10 en Windows, corregido en `9e1a731` (#41) |
 
