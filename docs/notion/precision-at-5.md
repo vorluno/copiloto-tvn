@@ -8,6 +8,11 @@ Para la página **6 · Pruebas y métricas** de Notion, debajo de la matriz T01�
 elegiría un editor. Es una **evaluación exploratoria**, no una medición con un editor real (ver
 límites).
 
+> **Fecha y corte:** medida el 7 oct 2026 con el corpus de entonces (**2,462 noticias, 2,015
+> eventos**). El corpus final (11,337 noticias, 8,421 eventos) cambió el top 5: el Canal sube a #2,
+> y entran Cobre Panamá (#4) y el aporte del Canal al Estado (#5). Este resultado **no** describe el
+> ranking final; si se repite, se agrega como una corrida nueva, sin borrar esta.
+
 ## Método
 
 1. **Selección humana independiente.** Cristian (C, producto) eligió, sin abrir la app, los 5 temas
