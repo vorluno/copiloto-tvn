@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "generado_UTC": "2026-10-07T11:57:55Z",
+  "generado_UTC": "2026-10-07T12:00:29Z",
   "fecha_corte_UTC": "2026-10-06T22:50:45Z",
   "fecha_corte_nota": "última fecha_extraccion del corpus de noticias; nada posterior se pidió a las fuentes",
   "reporte_calidad": {
@@ -169,8 +169,8 @@
     },
     {
       "ruta": "data/processed/embeddings_modelo.json",
-      "sha256": "dff6cd2d0d72d7df1d52b5b7dbee3954dd7ce7ca23a68d52e34416e1546445ac",
-      "bytes": 231,
+      "sha256": "c7d0728e40de2df139d6079944051ded083873e03804f9f0372c4a2253be79a3",
+      "bytes": 225,
       "filas": null,
       "descripcion": "Modelo y revisión usados para los embeddings.",
       "consultas": "Derivado de noticias.parquet (sin consultas propias).",
@@ -178,8 +178,8 @@
     },
     {
       "ruta": "data/processed/indicadores.csv",
-      "sha256": "93c1db5e18c202e16edc50db13ad7cec2b62afb98263fc5ec11722ecad3e8c30",
-      "bytes": 113035,
+      "sha256": "c5ea86304b64d61afe577a71c92c112619f5385bcef9d438afcdc101b603a2cf",
+      "bytes": 112494,
       "filas": 540,
       "descripcion": "Banco Mundial: cuadrícula país x indicador x año con nulos explícitos (B-03).",
       "consultas": [
@@ -224,8 +224,8 @@
     },
     {
       "ruta": "data/processed/eventos.geojson",
-      "sha256": "d831215aaf3341aabdf28ecd384ff26a1837796933fd7facaa8dc5ac1870542b",
-      "bytes": 44010,
+      "sha256": "108644e3eef133319dc6cc120bf9e1c230d5426984e486f2719a9e4c631b546d",
+      "bytes": 42114,
       "filas": 82,
       "descripcion": "USGS: sismos M>=3 de 2024 en la caja lat 5–12, lon −86 a −76 (B-04).",
       "consultas": [

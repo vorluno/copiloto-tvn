@@ -172,7 +172,7 @@ def build_manifest() -> dict:
 
 
 def write(manifest: dict, path: Path = MANIFEST_PATH) -> None:
-    path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2, default=str) + "\n", encoding="utf-8")
+    path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2, default=str) + "\n", encoding="utf-8", newline="\n")
 
 
 def verify(path: Path = MANIFEST_PATH) -> list[str]:

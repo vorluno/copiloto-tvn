@@ -1,0 +1,4 @@
+# Data files are stored byte for byte (no CRLF conversion on Windows), so the SHA-256
+# in data/manifest.json matches on every OS (B-10). The writers always use LF.
+data/processed/** -text
+data/manifest.json -text

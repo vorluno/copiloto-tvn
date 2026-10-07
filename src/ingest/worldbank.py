@@ -102,7 +102,7 @@ def build_grid(records_by_indicator: dict[str, list[dict]], extracted_at: str) -
 def write_indicators(grid: pd.DataFrame, path: Path = OUTPUT_PATH) -> None:
     """UTF-8 CSV; a null valor is written as an empty cell."""
     path.parent.mkdir(parents=True, exist_ok=True)
-    grid.to_csv(path, index=False, encoding="utf-8", na_rep="")
+    grid.to_csv(path, index=False, encoding="utf-8", na_rep="", lineterminator="\n")  # LF on every OS: same SHA-256 (B-10)
 
 
 def read_indicators(path: Path = OUTPUT_PATH) -> pd.DataFrame:

@@ -84,8 +84,9 @@ def embed_news(news: pd.DataFrame, name: str = MODEL_NAME, cache: bool = True) -
 def save(news: pd.DataFrame, vectors: np.ndarray, name: str = MODEL_NAME) -> None:
     PROCESSED.mkdir(parents=True, exist_ok=True)
     np.save(EMBEDDINGS_PATH, vectors)
-    IDS_PATH.write_text(json.dumps(news["id_noticia"].tolist()), encoding="utf-8")
-    MODEL_INFO_PATH.write_text(json.dumps(model_info(name), ensure_ascii=False, indent=2), encoding="utf-8")
+    # newline="\n": the same bytes (and SHA-256 in the manifest) on every OS.
+    IDS_PATH.write_text(json.dumps(news["id_noticia"].tolist()), encoding="utf-8", newline="\n")
+    MODEL_INFO_PATH.write_text(json.dumps(model_info(name), ensure_ascii=False, indent=2), encoding="utf-8", newline="\n")
 
 
 def main() -> None:
