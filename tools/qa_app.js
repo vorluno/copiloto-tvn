@@ -289,6 +289,25 @@ async function ask(p, q) {
     await p.screenshot({ path: `${out}-revision-bandeja.png`, fullPage: true });
   }
 
+  // ---------------- Datos y calidad (C-16) ----------------
+  if (await p.getByRole('tab', { name: 'Datos y calidad' }).count()) {
+    await tab(p, 'Datos y calidad');
+    let dq = await panel(p);
+    check('Datos y calidad: aviso de modo sin internet / en línea', scenario === 'online' ? dq.includes('En línea') : dq.includes('Modo sin internet (OFFLINE=1, T10)'));
+    if (scenario !== 'stub') {
+      check('Datos y calidad: métricas del manifest (noticias, corte, archivos)', /Noticias\s+[\d,]+/.test(dq) && dq.includes('Corte de datos') && dq.includes('Archivos en el manifest'), (dq.match(/Noticias\s+[\d,]+/) || [''])[0]);
+      check('Datos y calidad: tablas de fuentes y de archivos', dq.includes('Fuentes y licencias') && dq.includes('Archivos entregados') && (await p.locator('[role="tabpanel"]:visible [data-testid="stDataFrame"]').count()) >= 2);
+      await p.getByRole('button', { name: 'Verificar SHA-256 (make verify)' }).click();
+      dq = await waitPanel(p, t => /coinciden con el SHA-256|encontró problemas/.test(t), 60000);
+      check('botón "Verificar SHA-256": todos los archivos coinciden', /archivos coinciden con el SHA-256 del manifest/.test(dq), (dq.match(/Los \d+ archivos[^\n]*|La verificación[^\n]*/) || [''])[0]);
+      await p.getByText('Cómo reproducir los datos').click(); await idle(p);
+      check('expander "Cómo reproducir los datos" muestra los pasos', /make /.test(await panel(p)));
+    }
+    await p.getByText(/Ver `?outputs\/reports\/calidad\.md/).click().catch(() => {}); await idle(p);
+    check('reporte de calidad visible', (await panel(p)).includes('Reporte de calidad'));
+    await p.screenshot({ path: `${out}-datos.png`, fullPage: true });
+  }
+
   check('ninguna excepción de Streamlit en todo el recorrido', (await exceptions(p)) === 0);
   check('ningún error de JavaScript en la página', pageErrors.length === 0, pageErrors.join(' | ').slice(0, 200));
   const failed = results.filter(r => !r.ok);
