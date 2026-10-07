@@ -116,3 +116,10 @@ def test_language_filter_and_headline_preference():
     shown = filter_inbox(inbox, idiomas=["es", "en"], top_n=None)
     assert list(shown["cluster_id"]) == ["K-mix"] and shown["P"].tolist() == [50.0]
     assert list(filter_inbox(inbox, idiomas=[], top_n=None)["cluster_id"]) == ["K-zh", "K-mix"]  # empty = all
+
+
+def test_language_filter_on_an_empty_view_keeps_the_columns(inbox):
+    # Browser QA: "regulación" + "suficiente para el borrador" + the default languages crashed the
+    # inbox (KeyError 'posicion'): an empty object mask selected columns instead of rows.
+    view = filter_inbox(inbox, temas=["no existe"], idiomas=["es", "en"], top_n=None)
+    assert view.empty and list(view.columns) == list(inbox.columns)

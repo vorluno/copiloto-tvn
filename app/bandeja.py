@@ -107,7 +107,9 @@ def filter_inbox(inbox: pd.DataFrame, temas=None, estados=None, rangos=None,
             view = view[view[column].isin(allowed)]
     if idiomas:
         wanted = set(idiomas)
-        view = view[view["idiomas"].map(lambda langs: bool(wanted & set(langs or ())))]
+        # astype(bool): on an empty view the mask is an empty object Series, which pandas
+        # would read as a list of columns and drop them all.
+        view = view[view["idiomas"].map(lambda langs: bool(wanted & set(langs or ()))).astype(bool)]
     return view.head(top_n) if top_n else view
 
 
