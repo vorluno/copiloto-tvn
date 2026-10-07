@@ -57,7 +57,8 @@ def build_inbox(scored: pd.DataFrame, news: pd.DataFrame, cards: list[dict]) -> 
     """
     by_cluster = {c["cluster_id"]: c for c in cards if c.get("cluster_id")}
     order = news["fecha_deteccion"].fillna(news["fecha_publicacion"])
-    latest = news.assign(_order=order).sort_values("_order", ascending=False).drop_duplicates("cluster_id")
+    titled = news.assign(_order=order)[news["titulo"].notna()]  # a null headline is never the one shown
+    latest = titled.sort_values("_order", ascending=False).drop_duplicates("cluster_id")
     latest = latest.set_index("cluster_id")
     synthetic = news.groupby("cluster_id")["sintetico"].any() if "sintetico" in news else pd.Series(dtype=bool)
 
@@ -100,3 +101,17 @@ def records_label(n_registros, n_procedencias) -> str:
 def urgency_basis_label(base: str | None) -> str:
     """Which date U was measured from (ADR-013): the outlet's or GDELT's detection."""
     return {"publicacion": "publicación", "deteccion": "detección (GDELT)"}.get(base, "—")
+
+
+def headline_label(value) -> str:
+    """Headline for selectors and titles; a cluster with no headline says so, never 'nan'."""
+    return "— (sin titular)" if value is None or pd.isna(value) else str(value)
+
+
+def inbox_pick(selected: str | None, last_pick: str | None) -> str | None:
+    """Cluster the Ficha should jump to after a rerun, or None to leave its selector alone.
+
+    A row selected in the inbox table stays selected across reruns. Applying it on every
+    rerun would pin the Ficha selector to that row, so it only counts when it changes.
+    """
+    return selected if selected is not None and selected != last_pick else None

@@ -71,3 +71,27 @@ def test_stub_cards_only_next_to_stub_news(tmp_path, monkeypatch):
     monkeypatch.setattr(bandeja, "FICHAS_PATH", real)
     monkeypatch.setattr(bandeja, "ROOT", tmp_path)
     assert load_cards(news_from_stub=False) == ([{"id_caso": "F-C-1", "cluster_id": "C-1"}], "real.jsonl")
+
+
+def test_inbox_selection_moves_the_ficha_only_when_it_changes():
+    # Reruns: the table keeps "K-3" selected while the editor picks another case in the Ficha.
+    last, moves = None, []
+    for selected in ["K-3", "K-3", "K-3", None, "K-3", "K-5"]:
+        moves.append(bandeja.inbox_pick(selected, last))
+        last = selected
+    assert moves == ["K-3", None, None, None, "K-3", "K-5"]
+
+
+def test_null_headline_is_never_the_one_shown(news):
+    # Real corpus: GDELT rows can come without titulo; the newest one must not blank the cluster.
+    holes = news.copy()
+    cluster = holes.loc[0, "cluster_id"]
+    newest = holes[holes["cluster_id"] == cluster].index
+    holes.loc[newest, "fecha_deteccion"] = pd.NaT
+    extra = holes.loc[[newest[0]]].assign(id_noticia="N-0000000000", titulo=None,
+                                          fecha_publicacion=pd.Timestamp("2030-01-01", tz="UTC"))
+    holes = pd.concat([holes, extra], ignore_index=True)
+    inbox = build_inbox(score_clusters(holes, now=NOW), holes, [])
+    row = inbox.set_index("cluster_id").loc[cluster]
+    assert pd.notna(row["titular"]) and row["id_titular"] != "N-0000000000"
+    assert bandeja.headline_label(None) == bandeja.headline_label(float("nan")) == "— (sin titular)"

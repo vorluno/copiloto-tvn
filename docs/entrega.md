@@ -15,6 +15,7 @@ que volver a correrla. Por eso el orden importa.
 | 14:00 | Corrida con Gemini: `make demo-cache` y PR `feat/J-12-cache-demo` ([guía](demo/corrida-llm.md)) | Levi → José mergea | `OFFLINE=1 make demo-cache` dice "Caché completa" |
 | 14:00 | Métricas: macro-F1 IA vs baseline (B-12) y `make eval` | Levi y José | `outputs/reports/` con numerador y denominador |
 | 18:00 | T01–T10 ejecutadas y registradas; 5+ fichas en Notion, una con evidencia insuficiente | Cristian | matriz completa en Notion |
+| 18:00 | QA de la interfaz en el navegador con las fichas de Gemini: `tools/qa_app.js` (escenarios `real` y `stub`, en una copia del repo) | Cristian | todo PASS |
 | 19:00 | Grabación de la demo con wifi apagado (C-18) | Cristian | video en Notion, sin secretos en pantalla |
 | 20:00 | **Congelamiento**: último merge, verificación final y tag `v1.0` | José | tag publicado |
 | 20:00–23:00 | Notion completo, 2 ensayos cronometrados del pitch | Todos | pitch de 10 min desde Notion |

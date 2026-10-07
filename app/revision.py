@@ -21,6 +21,13 @@ def panama_time(utc_text: str | None) -> str:
     return ts.tz_convert(PANAMA_TZ).strftime("%Y-%m-%d %H:%M") + " (Panamá)"
 
 
+def case_label(card: dict) -> str:
+    """Selector text for a case card. It must not include anything a review changes (the
+    state, the reviewer): Streamlit matches the selected option by its text, so a label
+    that changes after "Guardar decisión" silently jumps to another card."""
+    return ("🧪 " if card.get("sintetico") else "") + f"{card['id_caso']} · {card.get('titulo') or card.get('consulta') or '—'}"
+
+
 def case_history(records: list[dict], id_caso: str) -> list[dict]:
     """Every decision for one case, newest first. The log itself is never rewritten."""
     return [r for r in reversed(records) if r.get("id_caso") == id_caso]
