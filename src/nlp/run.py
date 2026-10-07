@@ -8,6 +8,7 @@ Reads data/processed/noticias.parquet (from `make news`), then:
 4. cluster_id (B-08)          -> data/processed/clusters.parquet
 5. baseline (B-09)            -> data/processed/baseline.parquet, same columns as the AI
 6. export (B-13)              -> data/processed/noticias.csv + fuentes.json
+7. official context (B-14)    -> data/processed/contexto.parquet
 
 and rewrites noticias.parquet with the four contract columns filled. No network once the
 embedding model is in the local cache.
@@ -15,11 +16,12 @@ embedding model is in the local cache.
 Usage: python -m src.nlp.run
 """
 
+import json
 from pathlib import Path
 
 import pandas as pd
 
-from src import export
+from src import context, export
 from src.ingest.common import finalize
 from src.nlp import baseline, classify, cluster, embed, provenance
 
@@ -54,13 +56,17 @@ def main() -> None:
     base.to_parquet(BASELINE_PATH, index=False)
     export.write_csv(enriched)
     export.write_sources(enriched)
+    indicators = pd.read_csv(context.INDICATORS_PATH) if context.INDICATORS_PATH.exists() else None
+    events = json.loads(context.EVENTS_PATH.read_text(encoding="utf-8")) if context.EVENTS_PATH.exists() else None
+    links = context.build_context(enriched, indicators, events)
+    links.to_parquet(context.OUTPUT_PATH, index=False)
 
     grouped = clusters[clusters["n_registros"] > 1]
     print(f"{len(enriched)} news -> {len(clusters)} clusters ({len(grouped)} with 2+ records, "
           f"largest {clusters['n_registros'].max()}); topics {enriched['tema'].value_counts().to_dict()}; "
           f"{enriched['procedencia_id'].nunique()} provenances")
     print(f"Baseline topics {base['tema'].value_counts().to_dict()}; "
-          f"{base['cluster_id'].nunique()} baseline clusters")
+          f"{base['cluster_id'].nunique()} baseline clusters; {len(links)} official context links")
 
 
 if __name__ == "__main__":

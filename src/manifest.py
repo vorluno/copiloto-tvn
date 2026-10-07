@@ -141,6 +141,13 @@ def entries(quality: dict) -> dict[str, dict]:
                                                "consultas": derived, "licencia": "—"},
         "data/processed/embeddings_modelo.json": {"descripcion": "Modelo y revisión usados para los embeddings.",
                                                   "consultas": derived, "licencia": "—"},
+        "data/processed/contexto.parquet": {
+            "descripcion": "Eventos relacionados con un indicador del Banco Mundial o un sismo del USGS por una regla escrita; sin relación sustentada, sin fila (B-14).",
+            "consultas": "Derivado de noticias.parquet, indicadores.csv y eventos.geojson.",
+            "licencia": "Banco Mundial CC BY 4.0; USGS dominio público.",
+            "transformaciones": ["regla en src/context.py: tema + menciona Panamá + menciona lo que mide el indicador",
+                                 "valor citado: último año con dato de Panamá (nunca nulo)",
+                                 "sismo solo si está a 72 h o menos del evento (catálogo 2024 vs noticias 2025-2026: 0 filas)"]},
         "data/processed/indicadores.csv": {
             "descripcion": "Banco Mundial: cuadrícula país x indicador x año con nulos explícitos (B-03).",
             "consultas": [{"indicador": i, "url": worldbank.query_url(i), "unidad": u} for i, u in worldbank.INDICATORS.items()],

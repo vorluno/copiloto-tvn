@@ -91,6 +91,24 @@ Mismas columnas que la IA para comparar en B-12: `id_noticia`, `tema`, `tema_con
 
 Matriz `float32` de N × 384, un vector normalizado (norma 1) por noticia, en el orden de `embeddings_ids.json`. `embeddings_modelo.json` guarda modelo, revisión, dimensión y texto de entrada. Si cambia el modelo, se recalculan todos.
 
+## `data/processed/contexto.parquet` (contexto oficial, B-14)
+
+Etapa 3 del reto: un evento se relaciona con un dato oficial **solo si la relación se sostiene**; si no, no hay fila. Regla en `src/context.py`.
+
+| Campo | Tipo | Valores | Reglas |
+| --- | --- | --- | --- |
+| `cluster_id` | texto | `K-` + 10 hex | El evento. |
+| `id_evidencia` | texto | `WB-PAN-<indicador>-<año>` o id del USGS | Se cita igual en el borrador. Nunca apunta a un valor nulo. |
+| `tipo` | texto | `indicador`, `sismo` | `src/score.py` lo usa para I y E. |
+| `regla` | texto | — | Qué condiciones se cumplieron (tema, palabras encontradas). |
+| `nota` | texto | — | Límites al citar: año del dato, "no mide la fecha de la noticia", caja del USGS. |
+
+**Indicadores (solo Panamá):** el tema mayoritario del evento lo permite (economía: PIB, inflación, desempleo, exportaciones; logística/Canal: exportaciones; servicios públicos: uso de internet), el texto menciona Panamá o una institución panameña, **y** nombra lo que mide el indicador (p. ej. "desempleo", "inflación", "exportaciones"). El tema solo no basta. Se cita el último año con dato.
+
+**Sismos:** solo para eventos naturales que mencionan un sismo y con un evento del USGS a 72 h o menos. El catálogo es de 2024 y las noticias de 2025-10 a 2026-09: hoy no hay filas de sismo, a propósito (un sismo de 2024 no respalda un titular de 2026).
+
+**Límite:** con solo titulares, un evento sobre empleo que no use esas palabras no recibe indicador; es preferible a forzar uno.
+
 ## `data/processed/indicadores.csv` (Banco Mundial, B-03)
 
 Cuadrícula completa: 6 países × 6 indicadores × 15 años = 540 filas.
@@ -128,4 +146,3 @@ FeatureCollection; `metadata` trae `fuente_url`, `fecha_extraccion`, `licencia` 
 ## Archivos de otros dueños que usan estos datos
 
 - `data/etiquetas_humanas.csv` (C, C-05): `id_noticia`, `tema_humano`, `cluster_humano`, `etiquetador`, `nota`, más columnas de lectura. Muestra de 60 con semilla fija (`src/nlp/label_sample.py`).
-- `data/processed/contexto.parquet` (B, B-14): pendiente.
