@@ -10,7 +10,6 @@ outputs/cache/ and the UI says so. UI text is Spanish (editors are the users).
 
 import json
 import os
-import re
 from pathlib import Path
 
 import pandas as pd
@@ -28,6 +27,7 @@ from app.borrador import (
     word_count,
 )
 from src.generate.drafts import official_index
+from src.generate.guard import injection_in
 from src.generate.query import answer_question
 from src.search import load_index
 from src.ingest.worldbank import read_indicators
@@ -59,12 +59,6 @@ REVIEW_STATES = [
     "descartado",
 ]
 
-# Placeholder heuristic so T07 cases are visible in the inbox; the real defense
-# lives in src/generate/guard.py (J-11).
-INJECTION_PATTERN = re.compile(
-    r"ignora (tus|las) (instrucciones|reglas)|revela|api key|configuraci[oó]n|system prompt",
-    re.IGNORECASE,
-)
 
 
 @st.cache_data
@@ -167,7 +161,7 @@ def flags(row: pd.Series) -> str:
         labels.append("🧪 sintético")
     if row.get("recirculada", False):
         labels.append("♻️ recirculada")
-    if INJECTION_PATTERN.search(str(row["titulo"])):
+    if injection_in(row["titulo"] if isinstance(row["titulo"], str) else ""):  # same rule as the guard (J-11)
         labels.append("⚠️ posible instrucción inyectada")
     return " · ".join(labels)
 

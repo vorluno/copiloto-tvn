@@ -145,6 +145,8 @@ Funciones públicas acordadas que la app puede importar:
   `make fichas` (o `OFFLINE=1 make fichas`) escribe `outputs/fichas.jsonl`.
 - `src.generate.guard.normalize(texto)`: forma de comparación del guard (sin mayúsculas, espacios
   ni entidades HTML). La app la usa para marcar una cita como encontrada igual que el guard.
+- `src.generate.guard.injection_in(texto)`: si un texto intenta dar instrucciones al modelo (ADR-046).
+  La app la usa para la marca ⚠️ de la bandeja; `answer_question` la aplica a la consulta.
 - `src.fichas.recommended_action(...)`: la regla de acción recomendada (ADR-022); la ficha ya la
   trae en `accion_recomendada`.
 - `src.search.load_index().search(pregunta)` → `SearchResult` con `hits` (id, campo, texto, score)
