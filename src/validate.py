@@ -31,7 +31,8 @@ REPORT_PATH = ROOT / "outputs" / "reports" / "calidad.md"
 
 REQUIRED = ["id_noticia", "titulo", "url", "medio", "dominio", "origen", "alcance_texto", "fecha_extraccion"]
 DATE_FIELDS = ["fecha_publicacion", "fecha_deteccion", "fecha_extraccion"]
-ALLOWED = {"origen": {"tvn_rss", "gdelt"}, "alcance_texto": {"titular/metadatos", "descripcion_rss"}}
+ALLOWED = {"origen": {"tvn_rss", "tvn_web", "gdelt"}, "alcance_texto": {"titular/metadatos", "descripcion_rss", "descripcion_web"}}
+NO_DETECTION_DATE = {"tvn_rss", "tvn_web"}  # only GDELT has a seendate
 BOOL_FIELDS = ["sintetico", "recirculada"]
 ID_PATTERN = re.compile(r"N-[0-9a-f]{10}")
 ISSUE_COLUMNS = ["fila", "id_noticia", "campo", "problema", "valor"]
@@ -119,8 +120,9 @@ def validate_news(df: pd.DataFrame) -> ValidationResult:
             value = clean.at[i, field] if field in clean else None
             if value is not None and value not in allowed:
                 flag(i, field, "valor fuera de lista")
-        if "fecha_deteccion" in parsed and clean.at[i, "origen"] == "tvn_rss" and parsed["fecha_deteccion"][-1] is not None:
-            flag(i, "fecha_deteccion", "fecha_deteccion en tvn_rss")
+        origin = clean.at[i, "origen"] if "origen" in clean else None
+        if "fecha_deteccion" in parsed and origin in NO_DETECTION_DATE and parsed["fecha_deteccion"][-1] is not None:
+            flag(i, "fecha_deteccion", f"fecha_deteccion en {origin}")
 
     for field, stamps in parsed.items():
         clean[field] = pd.to_datetime(pd.Series(stamps, index=clean.index, dtype=object), utc=True)

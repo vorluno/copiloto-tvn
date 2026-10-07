@@ -3,8 +3,9 @@
 - NEWS_COLUMNS: the noticias.parquet contract (CLAUDE.md §3) plus `sintetico`.
 - id_noticia: "N-" + first 10 hex chars of the SHA-1 of the normalized URL, stable
   across runs and sources.
-- Window: last WINDOW_DAYS days before the extraction (provisional rule from
-  docs/b-datos-ia.md while the organization answers alcance-y-datos.md §6.2).
+- Window: [WINDOW_START, WINDOW_END) = 2025-10-02 to 2026-09-30 in UTC, agreed on
+  6 oct (answers alcance-y-datos.md §6.2): it excludes [2024-01-01, 2025-10-01) and
+  the current, incomplete month. A news item without a date is excluded.
 - Until B-07/B-08, tema/tema_confianza/procedencia_id stay null and every item is its
   own provisional cluster ("K-" + its id hash), so scoring and the app keep working
   without inventing a topic or a grouping.
@@ -23,7 +24,9 @@ NEWS_COLUMNS = [
     "alcance_texto", "procedencia_id", "tema", "tema_confianza", "cluster_id", "sintetico",
 ]
 DATE_COLUMNS = ["fecha_publicacion", "fecha_deteccion", "fecha_extraccion"]
-WINDOW_DAYS = 30
+# Period agreed on 6 oct: 2025-10-02 to the last full month (September 2026), in UTC.
+WINDOW_START = pd.Timestamp("2025-10-02T00:00:00Z")
+WINDOW_END = pd.Timestamp("2026-10-01T00:00:00Z")  # exclusive
 TRACKING_PARAMS = re.compile(r"^(utm_\w+|fbclid|gclid|ocid|cmpid)$", re.IGNORECASE)
 TAG = re.compile(r"<[^>]+>")
 
@@ -56,10 +59,11 @@ def to_utc(values) -> pd.Series:
     return pd.to_datetime(pd.Series(values, dtype=object), utc=True)
 
 
-def in_window(df: pd.DataFrame, reference: pd.Timestamp, date_column: str) -> pd.Series:
-    """True when the date is within WINDOW_DAYS before the reference; a null date is kept."""
+def in_window(df: pd.DataFrame, date_column: str) -> pd.Series:
+    """True when the date falls in [WINDOW_START, WINDOW_END). A null date is excluded:
+    it cannot be shown to fall inside the period."""
     dates = df[date_column]
-    return dates.isna() | (dates >= reference - pd.Timedelta(days=WINDOW_DAYS))
+    return dates.notna() & (dates >= WINDOW_START) & (dates < WINDOW_END)
 
 
 def finalize(df: pd.DataFrame) -> pd.DataFrame:

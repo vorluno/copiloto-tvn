@@ -93,8 +93,7 @@ def load_snapshots(raw_dir: Path = RAW_DIR) -> pd.DataFrame:
         return finalize(pd.DataFrame())
     df = pd.concat(frames, ignore_index=True).sort_values("fecha_extraccion", kind="stable")
     df = df.drop_duplicates("id_noticia", keep="first")
-    latest = df["fecha_extraccion"].max()
-    return finalize(df[in_window(df, latest, "fecha_publicacion")])
+    return finalize(df[in_window(df, "fecha_publicacion")])
 
 
 def main() -> None:
