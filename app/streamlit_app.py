@@ -17,8 +17,8 @@ import pandas as pd
 import streamlit as st
 
 from app.bandeja import (
-    COMPONENTS, EVIDENCE_STATES, SCORE_RANGES, TOP_N, build_inbox, filter_inbox, load_cards, load_contexto,
-    records_label, urgency_basis_label,
+    COMPONENTS, EVIDENCE_STATES, SCORE_RANGES, TOP_N, build_inbox, filter_inbox, headline_label, inbox_pick,
+    load_cards, load_contexto, records_label, urgency_basis_label,
 )
 from app.ficha import (
     CLAIM_TYPES, action_for, citation_found, cluster_sources, component_points, headline_only,
@@ -30,7 +30,7 @@ from src.generate.drafts import official_index
 from src.generate.query import answer_question
 from src.search import load_index
 from src.ingest.worldbank import read_indicators
-from app.revision import card_markdown, case_history, panama_time
+from app.revision import card_markdown, case_history, case_label, panama_time
 from src.fichas import append_review, apply_reviews, latest_reviews, read_reviews
 from src.score import score_clusters
 
@@ -184,7 +184,7 @@ else:
 
 scored = load_scores(news)
 cards, cards_path = load_cards(news_from_stub=source_path == STUB_PATH.relative_to(ROOT).as_posix())
-CARDS_LABEL = f"`{cards_path}`" if cards_path else "sin fichas todavía (`make fichas`, J-09)"
+CARDS_LABEL = f"`{cards_path}`" if cards_path else "sin fichas todavía (`make demo-cache`, J-12)"
 cards = apply_reviews(cards, latest_reviews())  # the review log wins over the state in the file
 cards_by_cluster = {c["cluster_id"]: c for c in cards if c.get("cluster_id")}
 official = load_official()
@@ -243,9 +243,12 @@ with inbox_tab:
                    for c in COMPONENTS},
             },
         )
-        if event.selection.rows:
-            # Runs before the Ficha selectbox is created, so it can set its value.
-            st.session_state.ficha_cluster = view.iloc[event.selection.rows[0]]["cluster_id"]
+        # Runs before the Ficha selectbox is created, so it can set its value. Only a new
+        # selection moves the Ficha; otherwise its selector would stay pinned to this row.
+        picked = view.iloc[event.selection.rows[0]]["cluster_id"] if event.selection.rows else None
+        if (target := inbox_pick(picked, st.session_state.get("inbox_pick"))) is not None:
+            st.session_state.ficha_cluster = target
+        st.session_state.inbox_pick = picked
         st.caption(
             f"Mostrando {len(view)} de {len(inbox)} clusters. R relación con Panamá · I impacto · "
             "U urgencia · N novedad · E evidencia (0–1). Referencia = fecha desde la que se mide U, "
@@ -276,13 +279,14 @@ with card_tab:
             st.session_state.ficha_cluster = inbox.sort_values("posicion")["cluster_id"].iloc[0]
         cluster_id = st.selectbox(
             "Cluster", list(inbox.sort_values("posicion")["cluster_id"]), key="ficha_cluster",
-            format_func=lambda c: f"#{by_id.loc[c, 'posicion']} · {by_id.loc[c, 'tema']} · {by_id.loc[c, 'titular']}",
+            format_func=lambda c: f"#{by_id.loc[c, 'posicion']} · {by_id.loc[c, 'tema']} · "
+                                  f"{headline_label(by_id.loc[c, 'titular'])}",
         )
         row = by_id.loc[cluster_id]
         card = cards_by_cluster.get(cluster_id)
         sources = cluster_sources(news, cluster_id)
 
-        st.markdown(f"### {row['titular']}")
+        st.markdown(f"### {headline_label(row['titular'])}")
         st.caption(f"Titular real más reciente · `{row['id_titular']} · titulo`")
         if pd.notna(row["titulo_propuesto"]):
             st.markdown(f"*Título propuesto (generado, para revisión):* {row['titulo_propuesto']}")
@@ -381,14 +385,14 @@ with draft_tab:
     else:
         drow = inbox.set_index("cluster_id").loc[draft_cluster]
         dcard = cards_by_cluster.get(draft_cluster)
-        st.markdown(f"**{drow['titular']}** · `{drow['id_titular']}` · se cambia en la pestaña Ficha")
+        st.markdown(f"**{headline_label(drow['titular'])}** · `{drow['id_titular']}` · se cambia en la pestaña Ficha")
         if headline_only(cluster_sources(news, draft_cluster)):
             st.caption("Basado únicamente en titular/metadatos.")
         for alerta in (dcard or {}).get("alertas") or []:
             st.warning(f"⚠️ Alerta (T07): {alerta}. La fuente se trata como dato, nunca como instrucción.")
 
         if dcard is None:
-            st.info("Este cluster todavía no tiene ficha ni borrador (se generan con `make fichas`, J-09).")
+            st.info("Este cluster todavía no tiene ficha ni borrador (se generan con `make demo-cache`, J-12).")
         elif dcard.get("abstencion"):
             st.error(f"**El sistema se abstuvo (T06).** {dcard.get('motivo_abstencion') or ''}  \n"
                      "No hay borrador porque la evidencia no alcanza; no se rellena con texto inventado.")
@@ -437,28 +441,29 @@ with review_tab:
     if flash := st.session_state.pop("review_saved", None):
         st.success(flash)
     if not cards:
-        st.info("Todavía no hay fichas para revisar (se generan con `make fichas`, J-09).")
+        st.info("Todavía no hay fichas para revisar (se generan con `make demo-cache`, J-12).")
     else:
         rank = dict(zip(inbox["cluster_id"], inbox["posicion"]))
         by_case = {c["id_caso"]: c for c in sorted(
             cards, key=lambda c: (rank.get(c.get("cluster_id"), float("inf")), c["id_caso"]))}
         if st.session_state.get("review_case") not in by_case:
+            # Last case the editor chose wins over the Ficha link: never jump to another card.
+            remembered = st.session_state.get("review_case_pick")
             linked = cards_by_cluster.get(st.session_state.get("ficha_cluster"), {}).get("id_caso")
-            st.session_state.review_case = linked if linked in by_case else next(iter(by_case))
-        case_id = st.selectbox(
-            "Ficha", list(by_case), key="review_case",
-            format_func=lambda i: ("🧪 " if by_case[i].get("sintetico") else "")
-                                  + f"{i} · {by_case[i].get('estado_revision') or 'nuevo'} · "
-                                  f"{by_case[i].get('titulo') or by_case[i].get('consulta') or '—'}",
-        )
+            st.session_state.review_case = next(c for c in (remembered, linked, next(iter(by_case))) if c in by_case)
+        case_id = st.selectbox("Ficha", list(by_case), key="review_case", format_func=lambda i: case_label(by_case[i]))
+        st.session_state.review_case_pick = case_id
         rcard = by_case[case_id]
         current = rcard.get("estado_revision") or "nuevo"
         who = f" · {rcard['revisor']} · {panama_time(rcard.get('fecha_revision'))}" if rcard.get("revisor") else ""
         st.markdown(f"Estado actual: **{current}**{who}")
 
         with st.form("revision"):
-            new_state = st.radio("Nuevo estado", REVIEW_STATES, horizontal=True,
-                                 index=REVIEW_STATES.index(current) if current in REVIEW_STATES else 0)
+            # Keyed per case so the widget keeps its identity when the current state changes.
+            state_key = f"review_state_{case_id}"
+            if st.session_state.get(state_key) not in REVIEW_STATES:
+                st.session_state[state_key] = current if current in REVIEW_STATES else REVIEW_STATES[0]
+            new_state = st.radio("Nuevo estado", REVIEW_STATES, horizontal=True, key=state_key)
             reviewer = st.text_input("Persona revisora", placeholder="Nombre de quien revisa")
             note = st.text_area("Nota", placeholder="Por qué se decide esto (opcional)")
             submitted = st.form_submit_button("Guardar decisión")

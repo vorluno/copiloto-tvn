@@ -46,3 +46,13 @@ def test_markdown_uses_inbox_score_and_keeps_nulls():
     md = card_markdown(card, score={"P": 73.8, "rango": "alto", "version_reglas": "scoring_v1",
                                     "R": 1.0, "I": 0.48, "U": 0.7, "N": None, "E": 0.4})
     assert "73.8 (alto)" in md and "N —" in md  # a missing component is shown as missing, never 0
+
+
+def test_case_label_does_not_change_when_the_card_is_reviewed():
+    # Streamlit matches the selected option by its text: if the label carried the state, the
+    # selector would jump to another card after "Guardar decisión" (found in the browser QA).
+    from app.revision import case_label
+    card = {"id_caso": "F-K-1", "titulo": "Título", "estado_revision": "nuevo"}
+    reviewed = {**card, "estado_revision": "descartado", "revisor": "Ana", "fecha_revision": "2026-10-07T18:00:00Z"}
+    assert case_label(card) == case_label(reviewed) == "F-K-1 · Título"
+    assert case_label({"id_caso": "F-S-1", "consulta": "¿Algo?", "sintetico": True}) == "🧪 F-S-1 · ¿Algo?"
