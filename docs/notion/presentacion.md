@@ -67,7 +67,7 @@ Si algo falla en vivo: el video de respaldo (C-18).
 - **Ya medido:**
   - la búsqueda encuentra la evidencia esperada en el **88 %** del benchmark (43 de 49), después de corregir lo que el benchmark detectó: 71 % → 88 % (#48);
   - T01–T10: 40 pruebas en verde, con fallos documentados y corregidos (página 6);
-  - **Precision@5 exploratoria: 2/5 (40 %)**, medida el 7 oct con el corpus anterior (2,462 noticias). Acierta en el Canal y deja fuera deuda, El Niño, CSS y turismo. Un solo evaluador del equipo, no un editor real (página 6).
+  - **Precision@5 exploratoria: 2/5 (40 %)** con el corpus final, igual que con el corpus anterior. Acierta en el Canal y deja fuera deuda, El Niño, CSS y turismo. Un solo evaluador del equipo, no un editor real (página 6).
 
 ## 5 · Valor operativo (1 min, Cristian)
 
