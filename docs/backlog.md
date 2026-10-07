@@ -29,9 +29,9 @@ Parte del backlog del plan maestro (37 tareas) con los cambios de abajo. Estados
 | J-02 | Stub de 10 noticias sintéticas | Mar | J-01 | ✅ |
 | J-03 | Esqueleto Streamlit con 4 pestañas | Mar | J-02 | ✅ → la sigue Cristian (C-12) |
 | J-04 | Proveedor LLM y ADR-005 | Mar | — | ✅ OpenRouter + Gemini; precio de referencia en `.env.example` (ADR-033) |
-| J-05 | `score.py`: P y 5 componentes desde `scoring_v1.yaml` | Mié | B-08 (empieza con stub) | ✅ sobre el corpus real con `contexto.parquet` (#41: 19 s → 3,6 s) |
+| J-05 | `score.py`: P y 5 componentes desde `scoring_v1.yaml` | Mié | B-08 (empieza con stub) | ✅ sobre el corpus real con `contexto.parquet` (#41: 19 s → 3,6 s; #66: 22 s → 0,9 s con el corpus completo) |
 | J-06 | Búsqueda semántica: 10 fragmentos con ID y campo, o "sin evidencia" | Mié | B-07 | ✅ TF-IDF sobre el corpus real (#41); tokenizador, recall del benchmark 71 % → 88 % (#48, ADR-044) |
-| J-07 | Prompt, esquema Pydantic y `guard.py` | Mié | J-04 | ✅ #3 |
+| J-07 | Prompt, esquema Pydantic y `guard.py` | Mié | J-04 | ✅ #3; #63: `brief_v3`, el brief conserva 3 preguntas (ADR-045) |
 | J-08 | Brief, guion y copy con citas | Mié | J-07 | ✅ T09 automatizada (modelo de prueba); falta la corrida con Gemini |
 | J-09 | Exportar `fichas.jsonl` y leer `revisiones.jsonl` (solo backend; la interfaz es C-15) | Mié | J-08 | ✅ `make fichas`; las fichas reales salen de `make demo-cache` |
 | J-10 | Abstención y contradicciones (T05, T06) | Jue | J-08 | ✅ T05 y T06 activas |
@@ -47,17 +47,17 @@ Parte del backlog del plan maestro (37 tareas) con los cambios de abajo. Estados
 | ID | Tarea | Día · hora | Depende de | Estado |
 | --- | --- | --- | --- | --- |
 | B-01 | Ingesta TVN RSS (≥20 noticias, con `descripcion`) | Mar 20:00 | J-01 | ✅ #15, #29: 1,248 noticias de TVN (RSS + sitemaps) |
-| B-02 | Ingesta GDELT DOC 2.0 por fechas, dedupe por URL | Mar 20:00 | J-01 | 🟡 #21, #29: 1,214 noticias; 24 de 48 consultas (límite de GDELT) |
+| B-02 | Ingesta GDELT DOC 2.0 por fechas, dedupe por URL | Mar 20:00 | J-01 | ✅ #64: GDELT completo, 10,089 noticias (corpus: 11,337) |
 | B-03 | Banco Mundial: cuadrícula completa con nulos (6 países × 6 indicadores × 15 años) | Mar 20:00 | J-01 | ✅ #9 |
 | B-04 | USGS 2024, caja regional, M≥3 | Mar 20:00 | J-01 | ✅ #10 |
-| B-05 | Validación y reporte de calidad (T01) | Mar 20:00 | B-01..B-04 | ✅ #12 (T01 activa) |
+| B-05 | Validación y reporte de calidad (T01) | Mar 20:00 | B-01..B-04 | ✅ #12 (T01 activa); #64: títulos nulos separados (pandas 3) y ADR-032 |
 | B-06 | `procedencia_id`: agencias replicadas | Mié | B-05 | ✅ #32 |
 | B-07 | Embeddings y clasificación por tema | Mié | B-05 | ✅ #32 (MiniLM multilingüe, umbral 0.50) |
-| B-08 | Agrupación y conteo de procedencias (T02) | Mié 12:00 | B-06, B-07 | ✅ #32: 2,015 clusters; T02 activa |
+| B-08 | Agrupación y conteo de procedencias (T02) | Mié 12:00 | B-06, B-07 | ✅ #32; #64: regla de 2 palabras en común, 8,421 clusters (1,264 con 2+); T02 activa |
 | B-09 | Baseline: palabras clave + TF-IDF | Mié | B-05 | ✅ #32 |
 | B-10 | `manifest.json` con SHA-256 y `diccionario.md` | Mié 12:00 | B-05 | ✅ #33 |
 | B-11 | Recirculadas: conservar fecha original (T03) | Jue | B-08 | ✅ #38; T03 activa |
-| B-12 | Macro-F1 IA vs baseline sobre etiquetas humanas | Jue 14:00 | B-09, C-05 | 🟡 #40 en borrador: cálculo listo, faltan las etiquetas de C-05 |
+| B-12 | Macro-F1 IA vs baseline sobre etiquetas humanas | Jue 14:00 | B-09, C-05 | ✅ #40: macro-F1 IA 0.37 vs baseline 0.29 (mismos temas: 0.37 vs 0.34); umbral 0.45; eventos con versión ciega declarada |
 | **B-13** | **`noticias.csv` + `fuentes.json`** con los nombres del reto, desde el parquet | Mié 18:00 | B-05 | ✅ #34 |
 | **B-14** | **Contexto oficial** (`contexto.parquet`): relacionar clusters con indicadores del Banco Mundial y sismos del USGS con una regla escrita; sin relación sustentada, sin fila. Alimenta el I y la E del puntaje y T04 | Mié 18:00 | B-03, B-04, B-08 | ✅ #35: 6 eventos con indicador del Banco Mundial |
 | **B-15** | **Catálogo de datos en Notion** (antes C-04): una fila por fuente con los 8 campos del reto | Mié 18:00 | B-10 | ✅ #36 |
@@ -73,11 +73,11 @@ Parte del backlog del plan maestro (37 tareas) con los cambios de abajo. Estados
 | C-02 | Llevar Tareas y Decisiones en `docs/notion/*.csv` desde hoy e importarlas a "Plan y decisiones" cuando llegue Notion | Mar 18:00 | — | 🟡 CSV iniciales listos |
 | C-03 | Post diario en LinkedIn (3 marcas + hashtags) | Mar, Mié, Jue | — | ⬜ |
 | C-04 | Catálogo de datos | — | — | ↪ B-15 (Levi) |
-| C-05 | Etiquetar 60 noticias: tema y evento | Mié 12:00 | B-05 | 🟡 #26, #30: 60 noticias elegidas; faltan las etiquetas |
+| C-05 | Etiquetar 60 noticias: tema y evento | Mié 12:00 | B-05 | ✅ #59: 60 etiquetas; #62: 2 pares corregidos después de ver el sistema (declarado) |
 | C-06 | Benchmark de desarrollo: 40 consultas | Mié 18:00 | B-05 | ✅ #45: 40 consultas (20/7/7/6) |
 | C-07 | Página "Riesgos y ética" (con el aporte de Levi en B-16) | Mié 20:00 | B-16 | ⬜ |
 | C-08 | Ejecutar T01–T10 y registrar resultados | Jue 18:00 | J-12 | ⬜ |
-| C-09 | Precision@5 contra selección independiente | Jue | J-05 | ⬜ |
+| C-09 | Precision@5 contra selección independiente | Jue | J-05 | ✅ #61: 2/5 exploratoria (corrida sobre `81f8ff4`) |
 | C-10 | 5+ fichas en Notion, una con evidencia insuficiente | Jue | J-09 | ⬜ |
 | C-11 | Pitch en Notion y 2 ensayos cronometrados | Jue 22:00 | Todo | ⬜ |
 | **C-12** | **Bandeja priorizada (CU-01):** top 5 por P con rango, estado de evidencia, tema, "N registros · M procedencias", filtros; hora de Panamá. Lee `fichas_stub.jsonl` y luego `fichas.jsonl` | Mié 12:00 | J-15 | ✅ #7 |
