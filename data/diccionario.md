@@ -36,7 +36,7 @@ Una fila por noticia única (URL normalizada). Fuentes: TVN RSS, TVN web (sitema
 | `tema_confianza` | decimal | similitud coseno, −1 a 1 (en este corpus de −0,01 a 0,91) | B-07 | Similitud con la frase de tema más cercana. No es una probabilidad. Se guarda también cuando el tema es `otro` (la del tema más cercano). |
 | `cluster_id` | texto | `K-` + 10 hex | B-08 | Ver "Eventos". |
 | `sintetico` | booleano | — | calculado | Siempre `false` en el corpus real (regla 12). |
-| `recirculada` *(extra, B-11)* | booleano | — | calculado | `true` si `fecha_deteccion − fecha_publicacion ≥ 7 días`: nota anterior que vuelve a circular. Conserva su `fecha_publicacion` original; se agrupa y se puntúa por esa fecha (T03). Hoy ninguna fuente trae las dos fechas en la misma noticia, así que en el corpus real es `false` en todas. |
+| `recirculada` *(extra, B-11)* | booleano | — | calculado | `true` si `fecha_deteccion − fecha_publicacion ≥ 7 días`: nota anterior que vuelve a circular. Conserva su `fecha_publicacion` original; se agrupa y se puntúa por esa fecha (T03). Hoy ninguna noticia real trae las dos fechas (GDELT no indexa URLs de tvn-2.com, así que ADR-032 no tiene casos), así que en el corpus real es `false` en todas. |
 
 Una URL que aparece en TVN y en GDELT se queda con la fila de TVN (trae descripción); el conteo está en `calidad.md`.
 

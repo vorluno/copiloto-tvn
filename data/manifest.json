@@ -1,14 +1,14 @@
 {
   "version": "1.0",
-  "generado_UTC": "2026-10-07T13:11:31Z",
+  "generado_UTC": "2026-10-07T20:18:42Z",
   "fecha_corte_UTC": "2026-10-06T22:50:45Z",
   "fecha_corte_nota": "última fecha_extraccion del corpus de noticias; nada posterior se pidió a las fuentes",
   "reporte_calidad": {
     "ruta": "outputs/reports/calidad.md",
-    "filas_leidas": 2462,
+    "filas_leidas": 11356,
     "repetidas_entre_fuentes": 3,
-    "filas_separadas": 0,
-    "generado": "2026-10-06T22:57:44Z"
+    "filas_separadas": 19,
+    "generado": "2026-10-07T20:06:42Z"
   },
   "reproducir": [
     "make data (necesita internet)",
@@ -19,12 +19,12 @@
   "archivos": [
     {
       "ruta": "data/processed/noticias.parquet",
-      "sha256": "5e36ed06f1f5e63e43a6f50b37b755af85c22475251122032cf7711cbb5cbc78",
-      "bytes": 560150,
-      "filas": 2462,
+      "sha256": "7a7e750cc215d9012b7aede509eed140a3b903167bc2ba62d4ea8725dac3b600",
+      "bytes": 2002414,
+      "filas": 11337,
       "descripcion": "Noticias del período con tema, procedencia y evento (contrato noticias.parquet).",
       "por_origen": {
-        "gdelt": 1214,
+        "gdelt": 10089,
         "tvn_web": 1198,
         "tvn_rss": 50
       },
@@ -104,12 +104,12 @@
         "fuera_del_periodo_o_sin_fecha": "se descartan en la ingesta (sin fecha no se puede probar que esté en el período)",
         "repetidas_entre_fuentes": 3,
         "repetidas_motivo": "misma URL normalizada en dos fuentes: se conserva la fila de TVN (trae descripción)",
-        "separadas_por_validacion": 0,
+        "separadas_por_validacion": 19,
         "separadas_motivo": "fecha inválida, URL rota o campo obligatorio vacío (B-05, outputs/reports/calidad.md)"
       },
       "transformaciones": [
         "id_noticia = 'N-' + 10 primeros hex del SHA-1 de la URL normalizada",
-        "fechas a UTC; fecha_publicacion = la del medio; fecha_deteccion = seendate de GDELT; nunca se mezclan",
+        "fechas a UTC; fecha_publicacion = la del medio; fecha_deteccion = seendate de GDELT (en TVN, solo si GDELT vio la misma URL: ADR-032); nunca se mezclan",
         "HTML y entidades quitados de titulo y descripcion",
         "tema por similitud con sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2; bajo 0.5 -> 'otro' (B-07)",
         "procedencia_id: agencia > casi copia (TF-IDF >= 0.9, 48 h, otro dominio) > medio (B-06)",
@@ -118,9 +118,9 @@
     },
     {
       "ruta": "data/processed/noticias.csv",
-      "sha256": "0c2695ca40441c7364bd424edc852906981d3bfffe3ff730d617e349afdcb352",
-      "bytes": 1099022,
-      "filas": 2462,
+      "sha256": "bd1b9b2e78c05c33c88995469a110163093b277228efdd38e4abd3e494482314",
+      "bytes": 4318955,
+      "filas": 11337,
       "descripcion": "Entregable del reto (secc. 6–7): las mismas filas y columnas de noticias.parquet en CSV UTF-8 (B-13).",
       "consultas": "Las de noticias.parquet.",
       "licencia": "La de cada noticia (ver fuentes.json).",
@@ -132,8 +132,8 @@
     },
     {
       "ruta": "data/processed/fuentes.json",
-      "sha256": "fd2f4bc7c4aa28bd2fe35127d1711b675f98e895c0aadd6d816412f407d4ac02",
-      "bytes": 240259,
+      "sha256": "0d544d6622b1e7371ebce3e8abe20a00fb55434ef362e0524321f7813deaa0c4",
+      "bytes": 1050006,
       "filas": null,
       "descripcion": "Entregable del reto (secc. 6): consultas usadas y cada medio con origen, cantidad, fechas y condiciones de uso (B-13).",
       "consultas": "Las de noticias.parquet.",
@@ -144,9 +144,9 @@
     },
     {
       "ruta": "data/processed/clusters.parquet",
-      "sha256": "92d47b4bab9bbd97fb3e69a72a0e4f8530a359d417c47a09fc41cf2b155a67b6",
-      "bytes": 104399,
-      "filas": 2015,
+      "sha256": "29f71f2b4daee532455dade5b1e88c552c923fee7cf80d68ec1621f070033b37",
+      "bytes": 425109,
+      "filas": 8421,
       "descripcion": "Un evento por fila: noticias, registros, procedencias independientes, tema y fechas (B-08).",
       "consultas": "Derivado de noticias.parquet (sin consultas propias).",
       "licencia": "La de cada noticia (ver noticias.parquet).",
@@ -159,9 +159,9 @@
     },
     {
       "ruta": "data/processed/baseline.parquet",
-      "sha256": "f4c51a01c5521b407db81491fcb60c76fbeca5f924819ca3936cd5d1fef9cb5d",
-      "bytes": 72367,
-      "filas": 2462,
+      "sha256": "926d147b8ca8474c7b944dbc356ecd9f7f399a54d11038e47ef1a055bf5d2a8c",
+      "bytes": 327857,
+      "filas": 11337,
       "descripcion": "Tema, procedencia y cluster sin embeddings (palabras clave + TF-IDF), para comparar (B-09).",
       "consultas": "Derivado de noticias.parquet (sin consultas propias).",
       "licencia": "La de cada noticia (ver noticias.parquet).",
@@ -172,9 +172,9 @@
     },
     {
       "ruta": "data/processed/embeddings.npy",
-      "sha256": "08723b983f0704ee6e41611e1009d1597bf2c2c4a79a0773a02b8a7fb65954a1",
-      "bytes": 3781760,
-      "filas": 2462,
+      "sha256": "db5cb89948cdc74d2a5a6b74d98fdd894f60488e57424b7775498abb48377dae",
+      "bytes": 17413760,
+      "filas": 11337,
       "descripcion": "Vector normalizado por noticia, en el orden de embeddings_ids.json (B-07).",
       "consultas": "Derivado de noticias.parquet (sin consultas propias).",
       "licencia": "La de cada noticia; modelo bajo Apache 2.0.",
@@ -186,9 +186,9 @@
     },
     {
       "ruta": "data/processed/embeddings_ids.json",
-      "sha256": "9b07b0a50c6e6479e22aac05f95b3bd6ef7eb2f5f3d38abcb7d70fef0eff95f0",
-      "bytes": 39392,
-      "filas": 2462,
+      "sha256": "0a3b887d326e6d3dfdd8c22f417707bdef34a29cd133e0736635aebe5a53ae61",
+      "bytes": 181392,
+      "filas": 11337,
       "descripcion": "id_noticia de cada fila de embeddings.npy.",
       "consultas": "Derivado de noticias.parquet (sin consultas propias).",
       "licencia": "—"
@@ -204,9 +204,9 @@
     },
     {
       "ruta": "data/processed/contexto.parquet",
-      "sha256": "3952be85ddb12842ce75b57b5564e97e7cc5f03f24528a69c009838a2c27f980",
-      "bytes": 4657,
-      "filas": 6,
+      "sha256": "4e4d938e6bcb13163023626ac471ab74ec1c898819c16fd0ffc2c9a8ff0da574",
+      "bytes": 4974,
+      "filas": 17,
       "descripcion": "Eventos relacionados con un indicador del Banco Mundial o un sismo del USGS por una regla escrita; sin relación sustentada, sin fila (B-14).",
       "consultas": "Derivado de noticias.parquet, indicadores.csv y eventos.geojson.",
       "licencia": "Banco Mundial CC BY 4.0; USGS dominio público.",
