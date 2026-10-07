@@ -38,7 +38,7 @@ Parte del backlog del plan maestro (37 tareas) con los cambios de abajo. Estados
 | J-11 | Defensa anti-inyección (T07) | Jue | J-07 | ✅ T07 activa |
 | J-12 | Caché offline y modo sin internet (T10) | Jue | J-08 | 🟡 `make demo-cache` llena y comprueba la caché (ADR-033); falta la corrida de Levi con Gemini |
 | J-13 | Latencia mediana y p95, tokens y costo | Jue | J-08 | 🟡 `make eval` listo; falta el benchmark de C-06 y la corrida con Gemini |
-| J-14 | Tag v1.0, README final, acceso del jurado | Jue | Todo | ⬜ |
+| J-14 | Tag v1.0, README final, acceso del jurado | Jue | Todo | 🟡 README para el jurado, `docs/entrega.md` y prueba de cero secretos; tag `v1.0` al congelar (jueves 20:00) |
 | J-15 | `fichas_stub.jsonl` para que el frontend avance sin backend | Mar | J-02 | ✅ |
 | J-16 | `docs/alcance-y-datos.md`: modalidad, recorrido y para qué sirve cada fuente (base de "Diseño de solución") | Mar | — | ✅ |
 
