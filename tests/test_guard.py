@@ -6,12 +6,13 @@ caught in code before reaching the UI.
 """
 
 import json
+import re
 from pathlib import Path
 
 import pandas as pd
 import pytest
 
-from src.generate.guard import ONLY_HEADLINE, guard, word_count
+from src.generate.guard import ONLY_HEADLINE, SECRET_PATTERNS, guard, word_count
 from src.generate.schema import evidence_from_indicator, evidence_from_news
 
 STUB_PATH = Path(__file__).resolve().parents[1] / "data" / "stub" / "noticias_stub.parquet"
@@ -159,6 +160,14 @@ def test_api_key_leak_is_blocked(canal, monkeypatch):
 ])
 def test_prompt_or_key_shaped_leak_is_blocked(canal, draft):
     assert guard(brief_output([tvn_claim(canal)], draft=draft), canal["evidence"], "brief").report.blocked
+
+
+def test_key_shaped_url_slug_is_not_a_key():
+    # Real GDELT URL in the corpus (SK Gas): a path segment, not a key.
+    url = "https://oilreview.kiev.ua/2026/08/31/sk-gas-zaplatila-53-mln-za-prioritetnij-proekt/"
+    assert not any(re.search(p, url) for p in SECRET_PATTERNS)
+    fake_key = "sk-" + "proj-abcdefghijklmnopqrstuvwxyz"  # split so test_no_secrets does not flag this file
+    assert any(re.search(p, f"clave: {fake_key}") for p in SECRET_PATTERNS)
 
 
 def test_injected_source_gets_alert_and_cannot_be_cited(news, canal):

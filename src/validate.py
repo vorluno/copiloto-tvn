@@ -5,7 +5,8 @@ duplicate id, an empty required field or a value outside the contract lists. It 
 raises on bad data: valid rows go on and every problem is listed in
 outputs/reports/calidad.md. Nullable fields (descripcion, idioma, fecha_publicacion,
 fecha_deteccion and the NLP columns) stay null: a null is "no data", not an error,
-and is never filled with 0 or with another date.
+and is never filled with 0 or with another date. A TVN row only has fecha_deteccion
+when GDELT saw the same URL: then it is GDELT's seendate (ADR-032).
 
 Dates must be ISO 8601. A value with an offset is converted to UTC; a value without
 one is read as UTC (the contract stores every date in UTC). Day-first strings such as
@@ -32,7 +33,7 @@ REPORT_PATH = ROOT / "outputs" / "reports" / "calidad.md"
 REQUIRED = ["id_noticia", "titulo", "url", "medio", "dominio", "origen", "alcance_texto", "fecha_extraccion"]
 DATE_FIELDS = ["fecha_publicacion", "fecha_deteccion", "fecha_extraccion"]
 ALLOWED = {"origen": {"tvn_rss", "tvn_web", "gdelt"}, "alcance_texto": {"titular/metadatos", "descripcion_rss", "descripcion_web"}}
-NO_DETECTION_DATE = {"tvn_rss", "tvn_web"}  # only GDELT has a seendate
+NO_DETECTION_DATE = {"tvn_rss", "tvn_web"}  # only GDELT has a seendate; TVN borrows it for the same URL (ADR-032)
 BOOL_FIELDS = ["sintetico", "recirculada"]
 ID_PATTERN = re.compile(r"N-[0-9a-f]{10}")
 ISSUE_COLUMNS = ["fila", "id_noticia", "campo", "problema", "valor"]
@@ -79,14 +80,19 @@ def read_news_csv(path: Path) -> pd.DataFrame:
     return df
 
 
-def validate_news(df: pd.DataFrame) -> ValidationResult:
-    """Split rows with problems from valid rows; never raises on bad data."""
+def validate_news(df: pd.DataFrame, gdelt_seen: pd.Series | None = None) -> ValidationResult:
+    """Split rows with problems from valid rows; never raises on bad data.
+
+    gdelt_seen: GDELT's seendate by id_noticia (same normalized URL). A TVN row may carry
+    fecha_deteccion only when it equals that seendate (ADR-032); otherwise it is an error."""
     df = df.reset_index(drop=True)
     text_cols = [c for c in df.columns if c not in BOOL_FIELDS and not pd.api.types.is_numeric_dtype(df[c])]
     clean = df.copy()
     for col in text_cols:
         if not pd.api.types.is_datetime64_any_dtype(df[col]):
-            clean[col] = df[col].map(_blank_to_none).astype(object)
+            # Built as object, not with .map: on a pandas 3 string column .map turns the None
+            # back into NaN, and a missing titulo then passed the "is None" check (7 oct).
+            clean[col] = pd.Series([_blank_to_none(v) for v in df[col]], index=df.index, dtype=object)
 
     issues = []
 
@@ -121,8 +127,11 @@ def validate_news(df: pd.DataFrame) -> ValidationResult:
             if value is not None and value not in allowed:
                 flag(i, field, "valor fuera de lista")
         origin = clean.at[i, "origen"] if "origen" in clean else None
-        if "fecha_deteccion" in parsed and origin in NO_DETECTION_DATE and parsed["fecha_deteccion"][-1] is not None:
-            flag(i, "fecha_deteccion", f"fecha_deteccion en {origin}")
+        detected = parsed["fecha_deteccion"][-1] if "fecha_deteccion" in parsed else None
+        if origin in NO_DETECTION_DATE and detected is not None:
+            seen = gdelt_seen.get(news_id) if gdelt_seen is not None and news_id is not None else None
+            if seen is None or pd.Timestamp(seen) != detected:
+                flag(i, "fecha_deteccion", f"fecha_deteccion en {origin}")
 
     for field, stamps in parsed.items():
         clean[field] = pd.to_datetime(pd.Series(stamps, index=clean.index, dtype=object), utc=True)

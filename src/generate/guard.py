@@ -64,7 +64,9 @@ INJECTION_PATTERNS = [
     r"\byou are now\b",
     r"</?\s*(?:fuente|system|assistant|instrucciones)\b",
 ]
-SECRET_PATTERNS = [r"sk-or-v1-[A-Za-z0-9]{16,}", r"\bsk-[A-Za-z0-9_-]{20,}"]
+# The generic "sk-" pattern skips URL paths: GDELT has oilreview.kiev.ua/.../sk-gas-zaplatila-... (SK Gas),
+# a real headline slug that blocked any output citing it and failed test_no_secrets (7 oct, Levi).
+SECRET_PATTERNS = [r"sk-or-v1-[A-Za-z0-9]{16,}", r"(?<![/\w])sk-[A-Za-z0-9_-]{20,}"]
 # Distinctive lines of the system prompt; seeing them in an output means it leaked.
 SYSTEM_PROMPT_FINGERPRINTS = [
     "eres un asistente de investigación para la redacción de tvn",

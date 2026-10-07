@@ -27,7 +27,7 @@ Una fila por noticia única (URL normalizada). Fuentes: TVN RSS, TVN web (sitema
 | `dominio` | texto | — | URL | Sin `www.`. |
 | `idioma` | texto | ISO 639-1 (`es`, `en`...) | TVN: `es` · GDELT `language` | Nombre de GDELT pasado a código; si no está en la tabla, el nombre en minúsculas. |
 | `fecha_publicacion` | fecha UTC, nulo | ISO 8601 | RSS `pubDate` · JSON-LD `datePublished` | La del medio. GDELT no la da: nula. |
-| `fecha_deteccion` | fecha UTC, nulo | ISO 8601 | GDELT `seendate` | Cuándo GDELT vio la nota, no cuándo se publicó. En TVN siempre nula. |
+| `fecha_deteccion` | fecha UTC, nulo | ISO 8601 | GDELT `seendate` | Cuándo GDELT vio la nota, no cuándo se publicó. En TVN (`tvn_rss`, `tvn_web`) es nula salvo que GDELT haya visto **la misma URL normalizada** (mismo `id_noticia`): entonces lleva ese `seendate`, el más temprano si GDELT la vio varias veces (ADR-032). `validate.py` rechaza una fecha de detección en TVN que no sea esa. |
 | `fecha_extraccion` | fecha UTC | ISO 8601 | nuestra descarga | Hora de la descarga. |
 | `origen` | texto | `tvn_rss`, `tvn_web`, `gdelt` | calculado | `tvn_web`: artículos desde los sitemaps públicos de tvn-2.com, solo metadatos JSON-LD, respetando robots.txt. |
 | `alcance_texto` | texto | `titular/metadatos`, `descripcion_rss`, `descripcion_web` | calculado | De dónde salió el texto. Con `titular/metadatos` el borrador debe decir "basado únicamente en titular/metadatos". |
@@ -36,7 +36,7 @@ Una fila por noticia única (URL normalizada). Fuentes: TVN RSS, TVN web (sitema
 | `tema_confianza` | decimal | similitud coseno, −1 a 1 (en este corpus de −0,01 a 0,91) | B-07 | Similitud con la frase de tema más cercana. No es una probabilidad. Se guarda también cuando el tema es `otro` (la del tema más cercano). |
 | `cluster_id` | texto | `K-` + 10 hex | B-08 | Ver "Eventos". |
 | `sintetico` | booleano | — | calculado | Siempre `false` en el corpus real (regla 12). |
-| `recirculada` *(extra, B-11)* | booleano | — | calculado | `true` si `fecha_deteccion − fecha_publicacion ≥ 7 días`: nota anterior que vuelve a circular. Conserva su `fecha_publicacion` original; se agrupa y se puntúa por esa fecha (T03). Hoy ninguna fuente trae las dos fechas en la misma noticia, así que en el corpus real es `false` en todas. |
+| `recirculada` *(extra, B-11)* | booleano | — | calculado | `true` si `fecha_deteccion − fecha_publicacion ≥ 7 días`: nota anterior que vuelve a circular. Conserva su `fecha_publicacion` original; se agrupa y se puntúa por esa fecha (T03). Hoy ninguna noticia real trae las dos fechas (GDELT no indexa URLs de tvn-2.com, así que ADR-032 no tiene casos), así que en el corpus real es `false` en todas. |
 
 Una URL que aparece en TVN y en GDELT se queda con la fila de TVN (trae descripción); el conteo está en `calidad.md`.
 

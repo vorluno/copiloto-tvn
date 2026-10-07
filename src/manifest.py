@@ -98,7 +98,7 @@ def _news_entry(path: Path, quality: dict) -> dict:
         },
         "transformaciones": [
             "id_noticia = 'N-' + 10 primeros hex del SHA-1 de la URL normalizada",
-            "fechas a UTC; fecha_publicacion = la del medio; fecha_deteccion = seendate de GDELT; nunca se mezclan",
+            "fechas a UTC; fecha_publicacion = la del medio; fecha_deteccion = seendate de GDELT (en TVN, solo si GDELT vio la misma URL: ADR-032); nunca se mezclan",
             "HTML y entidades quitados de titulo y descripcion",
             f"tema por similitud con {embed.MODEL_NAME}; bajo {classify.THRESHOLD} -> 'otro' (B-07)",
             f"procedencia_id: agencia > casi copia (TF-IDF >= {provenance.NEAR_DUPLICATE}, 48 h, otro dominio) > medio (B-06)",

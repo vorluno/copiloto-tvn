@@ -40,7 +40,8 @@ def enrich(news: pd.DataFrame, vectors) -> pd.DataFrame:
     out["tema"] = topics["tema"].to_numpy()
     out["tema_confianza"] = topics["tema_confianza"].to_numpy()
     out["procedencia_id"] = provenance.assign_provenance(out).to_numpy()
-    labels = cluster.cluster_labels(vectors, provenance.reference_time(out))
+    words = [cluster.content_words(t) for t in embed.news_text(out)]
+    labels = cluster.cluster_labels(vectors, provenance.reference_time(out), words=words)
     out["cluster_id"] = cluster.cluster_ids(out["id_noticia"], labels).to_numpy()
     out = finalize(out)
     out["recirculada"] = recirculation.mark_recirculated(out)  # extra column (B-11), announced to José
