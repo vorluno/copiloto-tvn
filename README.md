@@ -81,7 +81,8 @@ Los resultados de cada corrida se registran en la matriz T01–T10 de Notion (Cr
 | `make stub` | Regenera los datos sintéticos (`noticias_stub.parquet`, `fichas_stub.jsonl`) | José |
 | `make data` | Descarga las fuentes y reconstruye y valida `noticias.parquet` (necesita internet) | Levi |
 | `make news` | Reconstruye `noticias.parquet` y el reporte de calidad desde las descargas guardadas, sin red | Levi |
-| `make nlp` | Embeddings, temas, procedencia, clusters y baseline | Levi |
+| `make nlp` | Embeddings, temas, procedencia, clusters, baseline, `noticias.csv`/`fuentes.json` y contexto oficial | Levi |
+| `make verify` | Recalcula los SHA-256 de `data/manifest.json` y los compara con los archivos (reproducibilidad para el jurado) | Levi |
 | `make demo` | Abre la app; `OFFLINE=1` usa solo caché | Cristian (app) · José (caché) |
 | `make test` | Corre T01–T10 y pruebas de contrato | Todos |
 | `make eval` | Corre `benchmark/benchmark_dev.jsonl` por búsqueda → respuesta → guard y escribe en `outputs/reports/` las métricas (con numerador y denominador), la latencia y la hoja de revisión de sustento; `OFFLINE=1` usa solo la caché | José y Levi |
