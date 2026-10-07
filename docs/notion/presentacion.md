@@ -60,7 +60,8 @@ Si algo falla en vivo: el video de respaldo (C-18).
   - latencia mediana y p95 **[pendiente]**.
 - **Ya medido:**
   - la búsqueda encuentra la evidencia esperada en el **88 %** del benchmark (43 de 49), después de corregir lo que el benchmark detectó: 71 % → 88 % (#48);
-  - T01–T10: 40 pruebas en verde, con fallos documentados y corregidos (página 6).
+  - T01–T10: 40 pruebas en verde, con fallos documentados y corregidos (página 6);
+  - **Precision@5 exploratoria: 2/5 (40 %).** Acierta en el Canal y deja fuera deuda, El Niño, CSS y turismo. Un solo evaluador del equipo, no un editor real (página 6).
 
 ## 5 · Valor operativo (1 min, Cristian)
 
