@@ -19,9 +19,10 @@ en [`docs/backlog.md`](docs/backlog.md); el alcance y el uso de cada fuente en
 [`docs/alcance-y-datos.md`](docs/alcance-y-datos.md); las reglas de trabajo en [`CLAUDE.md`](CLAUDE.md); cómo
 abrir un PR en [`CONTRIBUTING.md`](CONTRIBUTING.md); la entrega en [`docs/entrega.md`](docs/entrega.md).
 
-> **Estado (7 oct):** corpus real en `data/processed/`: 2,462 noticias del 02/10/2025 al
-> 30/09/2026 (1,248 de TVN y 1,214 de GDELT), 2,015 eventos, contexto oficial del Banco
-> Mundial y del USGS. Puntaje, búsqueda, guard, caché offline y fichas funcionan sobre él.
+> **Estado (7 oct):** corpus real y completo en `data/processed/`: 11,337 noticias del 02/10/2025
+> al 30/09/2026 (1,248 de TVN y 10,089 de GDELT), 8,421 eventos (1,264 con 2 o más registros) y
+> 17 vínculos de contexto oficial del Banco Mundial. Puntaje (menos de 1 s), búsqueda, guard,
+> caché offline y fichas funcionan sobre él.
 > Falta: correr Gemini para llenar la caché de la demo (`make demo-cache`, guía en `docs/demo/corrida-llm.md`)
 > y las métricas con las etiquetas humanas (B-12).
 
