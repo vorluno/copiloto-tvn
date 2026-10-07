@@ -1,7 +1,8 @@
 """Builds data/processed/noticias.parquet from the news sources (B-01, B-02). Owner: B.
 
 Reads the stored raw snapshots (no network), puts TVN first so an article that GDELT
-also lists keeps the TVN row (it has the description), validates with B-05 and writes
+also lists keeps the TVN row (it has the description) with GDELT's seendate as
+fecha_deteccion (ADR-032; fecha_publicacion stays TVN's), validates with B-05 and writes
 the valid rows plus outputs/reports/calidad.md. A repeat across sources is not a data
 error, so it is counted in the report instead of being listed as "ID duplicado".
 
@@ -20,14 +21,26 @@ ROOT = Path(__file__).resolve().parents[2]
 OUTPUT_PATH = ROOT / "data" / "processed" / "noticias.parquet"
 
 
+TVN_ORIGINS = {"tvn_rss", "tvn_web"}
+
+
+def gdelt_seen(news: pd.DataFrame) -> pd.Series:
+    """Earliest GDELT seendate per id_noticia (= per normalized URL)."""
+    gdelt_rows = news[(news["origen"] == "gdelt") & news["id_noticia"].notna() & news["fecha_deteccion"].notna()]
+    return gdelt_rows.groupby("id_noticia")["fecha_deteccion"].min()
+
+
 def build_news(frames: list[pd.DataFrame]) -> tuple[ValidationResult, int]:
     """(validation result, rows dropped because another source already had the URL)."""
     frames = [f for f in frames if not f.empty]
     combined = pd.concat(frames, ignore_index=True) if frames else pd.DataFrame()
     combined = finalize(combined)
+    seen = gdelt_seen(combined)
+    tvn = combined["origen"].isin(TVN_ORIGINS) & combined["id_noticia"].isin(seen.index)
+    combined.loc[tvn, "fecha_deteccion"] = combined.loc[tvn, "id_noticia"].map(seen).to_numpy()
     has_id = combined["id_noticia"].notna()
     repeated = has_id & combined.duplicated("id_noticia", keep="first")
-    result = validate_news(combined[~repeated])
+    result = validate_news(combined[~repeated], gdelt_seen=seen)
     result.valid = finalize(result.valid)
     return result, int(repeated.sum())
 

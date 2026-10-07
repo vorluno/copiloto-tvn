@@ -87,6 +87,25 @@ def test_tvn_web_never_has_a_detection_date():
     assert ("fecha_deteccion", "fecha_deteccion en tvn_web") in found
 
 
+def test_tvn_keeps_gdelt_seendate_only_for_the_same_url():
+    # ADR-032: same id_noticia = same normalized URL; the date must be GDELT's.
+    tvn = row(origen="tvn_web", alcance_texto="descripcion_web", fecha_deteccion="2026-10-05T15:00:00Z")
+    seen = pd.Series({"N-0000000001": pd.Timestamp("2026-10-05T15:00:00Z")})
+    assert validate_news(pd.DataFrame([tvn]), gdelt_seen=seen).issues.empty
+    other_date = pd.Series({"N-0000000001": pd.Timestamp("2026-10-01T00:00:00Z")})
+    assert len(validate_news(pd.DataFrame([tvn]), gdelt_seen=other_date).rejected) == 1
+    other_url = pd.Series({"N-0000000002": pd.Timestamp("2026-10-05T15:00:00Z")})
+    assert len(validate_news(pd.DataFrame([tvn]), gdelt_seen=other_url).rejected) == 1
+
+
+def test_missing_title_in_a_text_column_is_split_out():
+    # 7 oct: on a pandas string column with real titles, a NaN title passed validation.
+    df = pd.DataFrame([row(), row(id_noticia="N-0000000002", url="https://ejemplo.com/b", titulo=float("nan"))])
+    result = validate_news(df)
+    assert list(result.valid["id_noticia"]) == ["N-0000000001"]
+    assert ("titulo", "campo obligatorio vacío") in set(zip(result.issues["campo"], result.issues["problema"]))
+
+
 def test_rss_never_has_a_detection_date():
     found = problems(origen="tvn_rss", alcance_texto="descripcion_rss", fecha_deteccion="2026-10-05T15:00:00Z")
     assert ("fecha_deteccion", "fecha_deteccion en tvn_rss") in found

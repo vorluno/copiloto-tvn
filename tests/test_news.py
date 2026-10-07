@@ -28,6 +28,16 @@ def test_same_url_in_two_sources_keeps_the_tvn_row():
     assert len(result.valid) == 1
     assert result.valid.iloc[0]["origen"] == "tvn_rss"
     assert result.issues.empty  # a cross-source repeat is not a data error
+    # ADR-032: the TVN row takes GDELT's seendate; its own publication date stays.
+    assert result.valid.iloc[0]["fecha_deteccion"] == pd.Timestamp("2026-10-06T10:00:00Z")
+    assert result.valid.iloc[0]["fecha_publicacion"] == pd.Timestamp("2026-10-06T09:00:00Z")
+
+
+def test_tvn_without_the_url_in_gdelt_keeps_a_null_detection_date():
+    tvn = frame(origen="tvn_web", alcance_texto="descripcion_web", fecha_deteccion=None)
+    gdelt = frame(id_noticia="N-0000000002", url="https://otro.com/b")
+    result, _ = build_news([tvn, gdelt])
+    assert result.valid.set_index("id_noticia").loc["N-0000000001", "fecha_deteccion"] is pd.NaT
 
 
 def test_bad_rows_are_split_out_and_the_rest_goes_on():
