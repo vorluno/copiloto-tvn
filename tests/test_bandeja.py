@@ -123,3 +123,18 @@ def test_language_filter_on_an_empty_view_keeps_the_columns(inbox):
     # inbox (KeyError 'posicion'): an empty object mask selected columns instead of rows.
     view = filter_inbox(inbox, temas=["no existe"], idiomas=["es", "en"], top_n=None)
     assert view.empty and list(view.columns) == list(inbox.columns)
+
+
+def test_headline_prefers_spanish_over_a_newer_english_one(news):
+    # Real case #3: the Canal event's newest headline is English; TVN's editors get the Spanish one.
+    mixed = news.copy()
+    cluster = mixed.loc[0, "cluster_id"]
+    base = mixed[mixed["cluster_id"] == cluster].iloc[0]
+    english = base.copy()
+    english["id_noticia"], english["titulo"], english["idioma"] = "N-00000000e1", "Canal adds a daily slot", "en"
+    english["fecha_publicacion"] = pd.Timestamp("2030-01-01", tz="UTC")  # newer than every Spanish one
+    mixed = pd.concat([mixed, english.to_frame().T], ignore_index=True)
+    mixed["fecha_publicacion"] = pd.to_datetime(mixed["fecha_publicacion"], utc=True)
+    mixed["fecha_deteccion"] = pd.to_datetime(mixed["fecha_deteccion"], utc=True)
+    row = build_inbox(score_clusters(mixed, now=NOW), mixed, []).set_index("cluster_id").loc[cluster]
+    assert row["id_titular"] != "N-00000000e1"

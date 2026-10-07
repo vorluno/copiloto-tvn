@@ -67,10 +67,11 @@ def build_inbox(scored: pd.DataFrame, news: pd.DataFrame, cards: list[dict]) -> 
     by_cluster = {c["cluster_id"]: c for c in cards if c.get("cluster_id")}
     order = news["fecha_deteccion"].fillna(news["fecha_publicacion"])
     lang = news["idioma"] if "idioma" in news else pd.Series(None, index=news.index)
-    # Headline: a Spanish or English one if the cluster has it (the editors read those),
-    # then the most recent; other languages only when there is nothing else.
-    titled = news.assign(_order=order, _foreign=~lang.isin(HEADLINE_LANGUAGES))[news["titulo"].notna()]
-    latest = titled.sort_values(["_foreign", "_order"], ascending=[True, False]).drop_duplicates("cluster_id")
+    # Headline: Spanish first (TVN's newsroom), then English, then the most recent; other
+    # languages only when there is nothing else.
+    lang_rank = lang.map({code: i for i, code in enumerate(HEADLINE_LANGUAGES)}).fillna(len(HEADLINE_LANGUAGES))
+    titled = news.assign(_order=order, _lang=lang_rank)[news["titulo"].notna()]
+    latest = titled.sort_values(["_lang", "_order"], ascending=[True, False]).drop_duplicates("cluster_id")
     latest = latest.set_index("cluster_id")  # a null headline is never the one shown
     synthetic = news.groupby("cluster_id")["sintetico"].any() if "sintetico" in news else pd.Series(dtype=bool)
     languages = news.assign(_lang=lang).dropna(subset=["_lang"]).groupby("cluster_id")["_lang"].agg(
