@@ -229,12 +229,13 @@ def test_word_limits(canal, task, words, ok):
     assert (result.output.borrador is not None) is ok
 
 
-@pytest.mark.parametrize("questions", [2, 4])
-def test_brief_needs_exactly_three_questions(canal, questions):
+@pytest.mark.parametrize("questions, shown, violation", [(2, 2, True), (3, 3, False), (4, 3, False)])
+def test_brief_shows_three_questions(canal, questions, shown, violation):
+    # ADR-045: more than 3 are trimmed to the first 3 (a fix); fewer than 3 is a violation.
     raw = brief_output([tvn_claim(canal)], draft=f"{ONLY_HEADLINE} x", questions=questions)
     result = guard(raw, canal["evidence"], "brief")
-    assert result.output.preguntas_investigacion == []
-    assert any("preguntas" in v for v in result.report.violations)
+    assert len(result.output.preguntas_investigacion) == shown
+    assert any("preguntas" in v for v in result.report.violations) is violation
 
 
 
@@ -250,3 +251,27 @@ def test_accusations_are_never_facts(canal, text, expected):
              "citas": [cite(canal["tvn"], "titulo", "límite de calado")]}
     result = guard(brief_output([claim], draft=f"{ONLY_HEADLINE} x"), canal["evidence"], "brief")
     assert result.output.afirmaciones[0].tipo == expected
+
+
+# --- research questions (brief) --------------------------------------------------
+
+def test_extra_questions_keep_the_first_three_without_a_violation(canal):
+    # Real Gemini run (Levi, 7 Oct): 5 questions made the whole brief fail and dropped all of them.
+    raw = brief_output([tvn_claim(canal)], draft=f"{ONLY_HEADLINE} Texto.", questions=5)
+    result = guard(raw, canal["evidence"], "brief")
+    assert result.report.ok
+    assert result.output.preguntas_investigacion == ["¿Pregunta 0?", "¿Pregunta 1?", "¿Pregunta 2?"]
+    assert any("se conservan las 3 primeras" in fix for fix in result.report.fixes)
+
+
+def test_too_few_questions_is_still_a_violation_and_keeps_them(canal):
+    raw = brief_output([tvn_claim(canal)], draft=f"{ONLY_HEADLINE} Texto.", questions=2)
+    result = guard(raw, canal["evidence"], "brief")
+    assert not result.report.ok
+    assert "brief: 2 preguntas, se exigen 3" in result.report.violations
+    assert len(result.output.preguntas_investigacion) == 2  # nothing invented, nothing thrown away
+
+
+def test_prompt_asks_for_exactly_three_questions():
+    from src.generate.generate import PROMPT_PATH
+    assert "exactamente 3 preguntas" in PROMPT_PATH.read_text(encoding="utf-8")

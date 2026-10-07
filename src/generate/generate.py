@@ -33,7 +33,7 @@ from src.generate.schema import Evidence, SalidaLLM, Task
 
 ROOT = Path(__file__).resolve().parents[2]
 CACHE_DIR = ROOT / "outputs" / "cache"
-PROMPT_VERSION = "brief_v2"  # v1 kept for history; v2 adds rules 9-10 (J-10)
+PROMPT_VERSION = "brief_v3"  # v1, v2 kept for history; v2 adds rules 9-10 (J-10), v3 rule 11 (3 questions)
 PROMPT_PATH = Path(__file__).with_name("prompts") / f"{PROMPT_VERSION}.txt"
 DEFAULT_MODEL = "google/gemini-2.5-flash"
 DEFAULT_BASE_URL = "https://openrouter.ai/api/v1"

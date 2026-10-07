@@ -352,10 +352,13 @@ def guard(raw: str | dict, evidence: list[Evidence], task: Task) -> GuardResult:
             report.violations.append(f"{task}: {words} palabras, fuera de [{low}, {high}]")
             draft = None
 
-    questions = output.preguntas_investigacion
-    if task == "brief" and len(questions) != QUESTIONS_FOR_BRIEF:
+    questions = list(output.preguntas_investigacion)
+    if task == "brief" and len(questions) > QUESTIONS_FOR_BRIEF:
+        # Extra questions are not a fault worth a paid retry: keep the first three, say so.
+        report.fixes.append(f"brief: {len(questions)} preguntas; se conservan las {QUESTIONS_FOR_BRIEF} primeras")
+        questions = questions[:QUESTIONS_FOR_BRIEF]
+    elif task == "brief" and len(questions) < QUESTIONS_FOR_BRIEF:
         report.violations.append(f"brief: {len(questions)} preguntas, se exigen {QUESTIONS_FOR_BRIEF}")
-        questions = []
 
     result = output.model_copy(update={
         "afirmaciones": claims,
