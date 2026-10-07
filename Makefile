@@ -12,14 +12,18 @@ ifeq ($(OFFLINE),1)
 DEMO_ENV += HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1
 endif
 
-.PHONY: setup stub data news nlp verify demo test eval llm-check fichas
+.PHONY: setup model stub data news nlp verify demo test eval llm-check fichas
 
 setup: ## Create .venv and install pinned requirements
 	python3.11 -m venv $(VENV)
 	$(PIP) install --upgrade pip
 	$(PIP) install -r requirements.txt
 	@test -f .env || cp .env.example .env
+	$(MAKE) model
 	@echo "Done. Next: make demo"
+
+model: ## Download the embedding model once to the Hugging Face cache (T02/T03 and make nlp then work offline)
+	$(PY) -c "from src.nlp.embed import load_model, MODEL_NAME; load_model(); print('Model ready:', MODEL_NAME)"
 
 stub: ## Rebuild the synthetic stubs: news (J-02) and case cards for the UI
 	$(PY) data/stub/make_stub.py
@@ -41,7 +45,7 @@ nlp: ## Embeddings, topics, provenance, clusters and baseline (B-06..B-09) on no
 verify: ## Recompute every SHA-256 in data/manifest.json and compare (B-17); exit 1 on a mismatch
 	$(PY) -m src.manifest --verify
 
-demo: ## Open the Streamlit app on the local snapshot (stub until B delivers)
+demo: ## Open the Streamlit app on data/processed/ (falls back to the stub if it is missing)
 	@test -f data/stub/noticias_stub.parquet || $(PY) data/stub/make_stub.py
 	$(DEMO_ENV) $(PY) -m streamlit run app/streamlit_app.py
 

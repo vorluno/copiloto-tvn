@@ -97,7 +97,8 @@ Definiciones que todos usan igual:
   replican a EFE comparten la misma procedencia y cuentan como una sola.
 - **fecha_publicacion vs fecha_deteccion**: la primera es la del medio; la
   segunda es el `seendate` de GDELT. Nunca se mezclan. En `tvn_rss` y `tvn_web`
-  `fecha_deteccion` es nula (no hay `seendate`); la hora de descarga va en
+  `fecha_deteccion` es nula salvo que GDELT haya visto **la misma URL**: entonces lleva
+  ese `seendate` *(7 oct, ADR-032)*; `fecha_publicacion` sigue siendo la de TVN. La hora de descarga va en
   `fecha_extraccion` *(6 oct)*.
 - **origen** *(6 oct)*: `tvn_rss` (feed RSS de TVN), `tvn_web` (artículos de TVN desde los
   sitemaps públicos de tvn-2.com: solo metadatos del JSON-LD, nunca el cuerpo, respetando

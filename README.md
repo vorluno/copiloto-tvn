@@ -19,8 +19,10 @@ en [`docs/backlog.md`](docs/backlog.md); el alcance y el uso de cada fuente en
 [`docs/alcance-y-datos.md`](docs/alcance-y-datos.md); las reglas de trabajo en [`CLAUDE.md`](CLAUDE.md); cómo
 abrir un PR en [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
-> **Estado (6 oct):** esqueleto. La app corre sobre datos **sintéticos** (`data/stub/`:
-> 10 noticias y 4 fichas); ingesta, IA, puntaje y generación llegan en las tareas B-xx y J-05+.
+> **Estado (7 oct):** corpus real en `data/processed/`: 2,462 noticias del 02/10/2025 al
+> 30/09/2026 (1,248 de TVN y 1,214 de GDELT), 2,015 clusters, contexto oficial del Banco
+> Mundial y del USGS. Puntaje, búsqueda, guard, caché offline y fichas funcionan sobre él.
+> Falta: correr Gemini para llenar la caché de la demo (T09) y las métricas con las etiquetas humanas (B-12).
 
 ## Instalación
 
@@ -77,7 +79,7 @@ Los resultados de cada corrida se registran en la matriz T01–T10 de Notion (Cr
 
 | Comando | Hace | Dueño |
 | --- | --- | --- |
-| `make setup` | Crea `.venv` e instala `requirements.txt` | José |
+| `make setup` | Crea `.venv` e instala `requirements.txt` y descarga una vez el modelo de embeddings (`make model`) | José |
 | `make stub` | Regenera los datos sintéticos (`noticias_stub.parquet`, `fichas_stub.jsonl`) | José |
 | `make data` | Descarga las fuentes y reconstruye y valida `noticias.parquet` (necesita internet) | Levi |
 | `make news` | Reconstruye `noticias.parquet` y el reporte de calidad desde las descargas guardadas, sin red | Levi |

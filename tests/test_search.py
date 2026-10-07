@@ -107,3 +107,13 @@ def test_sin_evidencia_never_reaches_the_model(index, tmp_path):
     result = index.search("receta de pizza napolitana")
     out = answer_question(result.query, result.evidence, client=NoNetwork(), offline=False, cache_dir=tmp_path)
     assert out.output.abstencion and out.source == "sin_evidencia"
+
+
+def test_null_title_is_skipped_not_a_crash(news):
+    # The real corpus has GDELT rows with a null titulo: nothing to index or cite there.
+    holes = news.copy()
+    holes.loc[0, "titulo"] = None
+    holes.loc[1, "medio"] = None
+    index = SearchIndex.build(holes)
+    assert all(p.text for p in index.passages)
+    assert not any(p.evidence.id == holes.loc[0, "id_noticia"] and p.field == "titulo" for p in index.passages)
