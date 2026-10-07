@@ -10,6 +10,7 @@ fechado en git, y se importa tal cual (Notion → Importar → CSV crea una base
 | `catalogo.csv` | Catálogo de datos (Fuente, URL, Fecha de extracción, Cobertura, Campos, Licencia / condiciones, Transformaciones, SHA-256, Archivo, Filas). Lo genera `python -m src.catalog` desde los datos y el manifest (Levi, B-15): no editar a mano | 3 · Catálogo de datos |
 | `pruebas.csv` | Matriz T01–T10 (ID, Prueba, Entrada preparada, Resultado esperado, Arregla, Observado, Evidencia, Corrección). Cristian la actualiza en cada corrida (C-08); una prueba que falla no se borra: se anota la corrección y su commit | 6 · Pruebas y métricas |
 | `precision-at-5.md` | — (texto) | 6 · Pruebas y métricas: Precision@5 exploratoria (C-09), debajo de la matriz |
+| `valor-operativo.md` | — (texto) | 6 · Pruebas y métricas: valor operativo como hipótesis de valor (C-17) |
 | `riesgos-y-etica.md` | — (texto) | 7 · Riesgos y ética: la página completa (C-07), que integra el aporte de Levi |
 | `riesgos-datos.md` | — (texto) | 7 · Riesgos y ética: aporte de datos de Levi (B-16), con las cifras de sesgo y cobertura |
 | `presentacion.md` | — (texto) | 8 · Presentación al jurado: guion del pitch de 10 min con dueños y tiempos (C-11) |

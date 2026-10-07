@@ -65,8 +65,9 @@ Si algo falla en vivo: el video de respaldo (C-18).
 
 ## 5 · Valor operativo (1 min, Cristian)
 
-- **Tiempo manual contra asistido** en la misma tarea ("¿qué 5 temas reviso hoy y con qué evidencia?"): **[pendiente C-17]**, con el número de pruebas.
-- Si no se mide con al menos 3 pruebas, se dice así: **"hipótesis de valor"**, no un ahorro demostrado.
+- **Decirlo así: "hipótesis de valor".** No medimos el ahorro de tiempo de forma válida: en 6 pruebas exploratorias (3 tareas × a mano / con la app, un evaluador del equipo), ninguna tarea se completó dentro del cronómetro. No damos un "X % más rápido".
+- **Lo que sí vimos:** en la tarea del Canal, la app encontró **7 noticias de 7 medios** y la búsqueda a mano **3 de 3**: más corroboración, no solo velocidad.
+- **Y una falla que la prueba destapó:** la app no mostraba la unidad del dato del Banco Mundial (regla 9). Detalle en `valor-operativo.md` (página 6).
 
 ## 6 · Riesgos, límites y próximos pasos (1 min, Cristian)
 
