@@ -15,7 +15,9 @@ hit left the result is "sin evidencia", so the caller abstains (T06).
 Backend: TF-IDF over crude Spanish stems (first 5 letters: "inflación" and
 "inflacionaria" -> "infla"), numbers left out so rows that differ only by year tie
 exactly and the most recent wins ("inflación de Panamá" -> 2024 first). A year in the
-query boosts passages with that year ("PIB de Panamá en 2023" -> 2023). Fully offline;
+query boosts passages with that year ("PIB de Panamá en 2023" -> 2023). Words are split on
+any non-letter ("Minsa–CSS" -> minsa, css; GDELT's "S & P" and "S&P" -> sp), and how a question
+is phrased ("qué decidió", "cuánto", "dijo") is not content. Fully offline;
 the B-07 embeddings can replace the ranking through `vectorizer`, the gates stay.
 Known limit: lexical matching, so a stray shared word can still pass the gates
 ("resultado del Super Bowl" finds a local football result); the guard and the model
@@ -25,6 +27,7 @@ CLI: python -m src.search "¿qué pasa con el Canal?"
 """
 
 import json
+import re
 import sys
 import unicodedata
 from dataclasses import dataclass, field
@@ -56,6 +59,10 @@ COUNTRY_NAMES = {"PAN": "Panamá", "CRI": "Costa Rica", "COL": "Colombia", "DOM"
                  "MEX": "México", "GTM": "Guatemala"}
 STOPWORDS = {"el", "la", "los", "las", "de", "del", "en", "y", "a", "que", "por", "con", "para", "un", "una",
              "se", "su", "al", "lo", "es", "qué", "cuál", "cómo", "cuántos", "cuántas", "hay", "sobre"}
+# How an editor phrases a question, not what it is about: kept out of coverage and ranking.
+QUESTION_WORDS = {"cuánto", "cuánta", "cuáles", "dónde", "cuándo", "quién", "quiénes", "pasa", "pasó", "sabe",
+                  "dijo", "dice", "dicen", "reporta", "reportan", "anunció", "decidió", "hubo", "tendrá",
+                  "tuvo", "fue", "son", "está", "están", "ya", "actual", "entre", "tras"}
 
 
 def _plain(word: str) -> str:
@@ -63,7 +70,7 @@ def _plain(word: str) -> str:
     return "".join(c for c in decomposed if not unicodedata.combining(c)).strip("¿?¡!.,;:()\"'|«»“”")
 
 
-STOP = {_plain(w) for w in STOPWORDS}
+STOP = {_plain(w) for w in STOPWORDS | QUESTION_WORDS}
 
 
 def words_only(text: str) -> list[str]:
@@ -75,10 +82,14 @@ def years(text: str) -> set[str]:
     return {s for s in stems(text) if len(s) == 4 and s.isdigit() and s.startswith(("19", "20"))}
 
 
+AMPERSAND = re.compile(r"\b(\w)\s*&\s*(\w)\b")  # "S&P" and GDELT's "S & P" -> "sp"
+TOKEN = re.compile(r"[^\W_]+")  # letters and digits; dashes, slashes and "|" split words
+
+
 def stems(text: str) -> list[str]:
     """Content words of a Spanish text, accent-free and cut to 5 letters; numbers kept whole."""
     out = []
-    for raw in text.split():
+    for raw in TOKEN.findall(AMPERSAND.sub(r"\1\2", text)):
         word = _plain(raw)
         if len(word) < 2 or word in STOP:
             continue

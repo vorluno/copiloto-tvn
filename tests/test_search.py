@@ -117,3 +117,27 @@ def test_null_title_is_skipped_not_a_crash(news):
     index = SearchIndex.build(holes)
     assert all(p.text for p in index.passages)
     assert not any(p.evidence.id == holes.loc[0, "id_noticia"] and p.field == "titulo" for p in index.passages)
+
+
+def test_tokenizer_splits_dashes_and_joins_ampersand_acronyms():
+    from src.search import stems
+    assert stems("Gobierno activa la integración Minsa–CSS") == ["gobie", "activ", "integ", "minsa", "css"]
+    assert stems("S & P ratifica") == stems("S&P ratifica") == ["sp", "ratif"]
+    assert stems("Panamá América | La pobreza") == ["panam", "ameri", "pobre"]
+
+
+def test_question_phrasing_is_not_content():
+    # "¿Qué decidió…?" must not lower coverage: the editor's verb is not what the news says.
+    from src.search import stems
+    assert stems("¿Qué decidió S&P sobre la calificación de riesgo de Panamá?") == ["sp", "calif", "riesg", "panam"]
+    assert stems("¿Cuánto dijo que hubo?") == []
+
+
+def test_spaced_acronym_in_a_gdelt_title_is_found():
+    news = pd.DataFrame([{
+        "id_noticia": "N-5000000001", "titulo": "La calificadora S & P ratifica a Panamá el grado de inversión",
+        "descripcion": None, "medio": "ejemplo.invalid", "alcance_texto": "titular/metadatos",
+        "fecha_publicacion": pd.NaT, "fecha_deteccion": pd.Timestamp("2026-09-01", tz="UTC"),
+    }])  # sintético: shape of a GDELT row
+    hits = SearchIndex.build(news).search("¿Qué decidió S&P sobre la calificación de riesgo de Panamá?").hits
+    assert [h.id_evidencia for h in hits] == ["N-5000000001"]
