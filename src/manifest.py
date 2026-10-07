@@ -114,6 +114,14 @@ def entries(quality: dict) -> dict[str, dict]:
     derived = "Derivado de noticias.parquet (sin consultas propias)."
     return {
         "data/processed/noticias.parquet": _news_entry(PROCESSED / "noticias.parquet", quality),
+        "data/processed/noticias.csv": {
+            "descripcion": "Entregable del reto (secc. 6–7): las mismas filas y columnas de noticias.parquet en CSV UTF-8 (B-13).",
+            "consultas": "Las de noticias.parquet.", "licencia": "La de cada noticia (ver fuentes.json).",
+            "transformaciones": ["fechas como texto ISO 8601 UTC (Z)", "nulos como celda vacía, nunca 0", "fin de línea LF"]},
+        "data/processed/fuentes.json": {
+            "descripcion": "Entregable del reto (secc. 6): consultas usadas y cada medio con origen, cantidad, fechas y condiciones de uso (B-13).",
+            "consultas": "Las de noticias.parquet.", "licencia": "Condiciones por medio dentro del archivo.",
+            "transformaciones": ["un registro por (origen, dominio)"]},
         "data/processed/clusters.parquet": {
             "descripcion": "Un evento por fila: noticias, registros, procedencias independientes, tema y fechas (B-08).",
             "consultas": derived, "licencia": "La de cada noticia (ver noticias.parquet).",

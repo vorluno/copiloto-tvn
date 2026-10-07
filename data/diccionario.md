@@ -57,6 +57,17 @@ Modelo `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2` (CPU, revis
 
 Clustering aglomerativo con enlace completo sobre distancia coseno de los embeddings, umbral **0,30**, y solo entre noticias a 72 h o menos (fecha del medio o, si no hay, de detección; sin ninguna de las dos, la noticia queda sola). Con enlace completo, todas las noticias de un cluster están a ≤ 0,30 entre sí y a ≤ 72 h entre sí. Una noticia sola conserva `K-` + su hash; un grupo es `K-` + 10 hex del SHA-1 de sus `id_noticia` ordenados (estable entre corridas). **Límite:** notas de formato repetido (clima del día, cotización del dólar) a veces quedan juntas; B-12 lo mide contra `cluster_humano`.
 
+## `data/processed/noticias.csv` y `data/processed/fuentes.json` (entregables del reto, B-13)
+
+Nombres que exige el reto (secc. 6–7). Se generan al final de `make nlp` (`python -m src.export`).
+
+- **`noticias.csv`**: las mismas filas y columnas que `noticias.parquet` (incluye los campos mínimos del reto: `id_noticia`, `titulo`, `url`, `medio`, `idioma`, `fecha_publicacion`, `fecha_deteccion`, `fecha_extraccion`, `tema`, `origen`, `alcance_texto`). UTF-8 sin BOM, separador coma, fin de línea LF. Fechas como texto ISO 8601 UTC (`2026-09-30T14:05:00Z`). Nulo = celda vacía, nunca 0.
+- **`fuentes.json`**:
+  - `periodo_UTC`, `n_noticias`.
+  - `consultas`: las tres vías de entrada (`tvn_rss`, `tvn_web`, `gdelt`) con URL, consultas de GDELT, cantidad de noticias y `condiciones_uso`.
+  - `medios`: una entrada por (`origen`, `dominio`) con `medio`, `n_noticias`, `fecha_primera_UTC`, `fecha_ultima_UTC` (fecha del medio o, si no hay, de detección) y `condiciones_uso`. Ordenados de más a menos noticias.
+  - Condiciones: ni TVN ni GDELT dan derechos sobre los artículos enlazados; se entregan solo titular, URL y metadatos (y la descripción de TVN). Para leer la nota, ir a la URL del medio.
+
 ## `data/processed/clusters.parquet`
 
 Una fila por `cluster_id` de `noticias.parquet`.
