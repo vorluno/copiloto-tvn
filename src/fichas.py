@@ -119,7 +119,7 @@ def card_from_package(package: EditorialPackage, scored_row: pd.Series, syntheti
         "generacion": {task: {"origen": d.result.source, "intentos": d.attempts,
                               "afirmaciones": [d.result.report.claims_kept, d.result.report.claims_received],
                               "citas": [d.result.report.citations_kept, d.result.report.citations_received],
-                              "latencia_s": d.result.latency_s}
+                              "latencia_s": d.result.latency_s, "tokens": d.result.usage or {}}
                        for task, d in drafts.items()},
         "estado_revision": review.get("estado_revision", "nuevo"),
         "revisor": review.get("revisor"),

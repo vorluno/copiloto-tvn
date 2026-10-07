@@ -12,7 +12,7 @@ ifeq ($(OFFLINE),1)
 DEMO_ENV += HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1
 endif
 
-.PHONY: setup model stub data news nlp verify demo test eval llm-check fichas
+.PHONY: setup model stub data news nlp verify demo test eval llm-check fichas demo-cache
 
 setup: ## Create .venv and install pinned requirements
 	python3.11 -m venv $(VENV)
@@ -60,3 +60,6 @@ llm-check: ## One real LLM call on the stub (needs LLM_API_KEY in .env); result 
 
 fichas: ## Build outputs/fichas.jsonl for the top clusters (J-09); OFFLINE=1 uses only the cache
 	OFFLINE=$(OFFLINE) $(PY) -m src.fichas --top $(or $(TOP),10)
+
+demo-cache: ## Fill outputs/cache/ for the demo: top cards + docs/demo/consultas_demo.txt (needs LLM_API_KEY); OFFLINE=1 checks it
+	OFFLINE=$(OFFLINE) $(PY) -m src.demo_cache --top $(or $(TOP),10)

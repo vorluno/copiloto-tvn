@@ -22,7 +22,8 @@ abrir un PR en [`CONTRIBUTING.md`](CONTRIBUTING.md).
 > **Estado (7 oct):** corpus real en `data/processed/`: 2,462 noticias del 02/10/2025 al
 > 30/09/2026 (1,248 de TVN y 1,214 de GDELT), 2,015 clusters, contexto oficial del Banco
 > Mundial y del USGS. Puntaje, búsqueda, guard, caché offline y fichas funcionan sobre él.
-> Falta: correr Gemini para llenar la caché de la demo (T09) y las métricas con las etiquetas humanas (B-12).
+> Falta: correr Gemini para llenar la caché de la demo (`make demo-cache`, guía en `docs/demo/corrida-llm.md`)
+> y las métricas con las etiquetas humanas (B-12).
 
 ## Instalación
 
@@ -68,8 +69,8 @@ make test             # pytest tests/ -v
 ```
 
 - `tests/test_t01.py` … `test_t10.py`: las 10 pruebas del reto (T01–T10). Cada archivo
-  dice la entrada preparada, el resultado esperado y su dueño. Están en `skip` hasta
-  que se implemente su tarea.
+  dice la entrada preparada, el resultado esperado y su dueño. Las 10 están activas; la parte
+  de T09 que revisa los briefs reales de Gemini queda en `skip` hasta la corrida de `make demo-cache`.
 - `tests/test_stub_contract.py` y `tests/test_fichas_stub_contract.py`: verifican que los
   datos sintéticos cumplen los contratos y traen los casos de T02, T03, T06, T07 y T08.
 
@@ -90,6 +91,7 @@ Los resultados de cada corrida se registran en la matriz T01–T10 de Notion (Cr
 | `make eval` | Corre `benchmark/benchmark_dev.jsonl` por búsqueda → respuesta → guard y escribe en `outputs/reports/` las métricas (con numerador y denominador), la latencia y la hoja de revisión de sustento; `OFFLINE=1` usa solo la caché | José y Levi |
 | `make fichas` | Genera `outputs/fichas.jsonl` para los 10 clusters de mayor P (`TOP=5` para cambiarlo; con `OFFLINE=1` solo usa la caché) | José |
 | `make llm-check` | Una llamada real al LLM sobre el stub (necesita `LLM_API_KEY` en `.env`); queda en caché | José |
+| `make demo-cache` | Llena `outputs/cache/` para la demo: fichas del top 10 y las consultas de `docs/demo/consultas_demo.txt`; escribe `outputs/reports/corrida_llm.md`. Con `OFFLINE=1` comprueba sin red que no falte nada. Guía: [`docs/demo/corrida-llm.md`](docs/demo/corrida-llm.md) | José (corre Levi) |
 
 ## Estructura del repo
 
@@ -127,7 +129,7 @@ copiloto-tvn/
 ├── outputs/
 │   ├── fichas.jsonl          # José → Cristian
 │   ├── revisiones.jsonl      # Cristian (app) · estados de revisión con persona y hora
-│   ├── cache/                # José · salidas del LLM por hash (modo offline; no se sube)
+│   ├── cache/                # José · salidas del LLM por hash para la demo sin internet (se sube, ADR-033)
 │   └── reports/              # Levi y José · calidad, F1, benchmark, latencia
 └── tests/                    # test_t01.py … test_t10.py · dueño indicado en cada archivo
 ```
