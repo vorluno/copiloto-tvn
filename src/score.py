@@ -26,8 +26,10 @@ Decisions not spelled out in the YAML (ADR-013):
 
 import re
 import unicodedata
+from collections import Counter
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 import yaml
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -98,10 +100,11 @@ def evidence_state(provenances: int, official: bool) -> str:
 
 
 def _relates_to_panama(group: pd.DataFrame) -> bool:
-    if group["origen"].isin(TVN_ORIGINS).any():
+    # Plain lists, not per-row pandas: this runs once per cluster (~2,000 on the real corpus).
+    if any(origin in TVN_ORIGINS for origin in group["origen"].tolist()):
         return True
-    text_cols = [c for c in ("titulo", "descripcion") if c in group]
-    text = _fold(" ".join(group[text_cols].fillna("").astype(str).agg(" ".join, axis=1)))
+    parts = [value for c in ("titulo", "descripcion") if c in group for value in group[c].tolist() if isinstance(value, str)]
+    text = _fold(" ".join(parts))
     return any(re.search(rf"\b(?:{pattern})\b", text) for pattern in PANAMA_PATTERNS)
 
 
@@ -117,11 +120,11 @@ def _urgency(hours: float, rules: dict) -> float:
 
 
 def _majority_topic(topics: pd.Series) -> str:
-    counts = topics.dropna().value_counts()
-    if counts.empty:
+    counts = Counter(topic for topic in topics.tolist() if isinstance(topic, str))
+    if not counts:
         return "otro"
-    best = counts.max()
-    return sorted(counts[counts == best].index)[0]
+    best = max(counts.values())
+    return min(topic for topic, n in counts.items() if n == best)
 
 
 def _novelty(clusters: pd.DataFrame) -> pd.Series:
@@ -130,13 +133,13 @@ def _novelty(clusters: pd.DataFrame) -> pd.Series:
         return pd.Series(1.0, index=clusters.index)
     matrix = TfidfVectorizer(strip_accents="unicode", lowercase=True).fit_transform(clusters["_text"])
     sims = cosine_similarity(matrix)
-    first_seen = clusters["fecha_primera"].tolist()
-    novelty = []
-    for i, start in enumerate(first_seen):
-        prior = [j for j, other in enumerate(first_seen)
-                 if j != i and pd.notna(start) and pd.notna(other) and start - NOVELTY_WINDOW <= other < start]
-        novelty.append(1.0 - max((float(sims[i, j]) for j in prior), default=0.0))
-    return pd.Series(novelty, index=clusters.index).clip(0.0, 1.0)
+    # prior[i, j]: cluster j was first seen in the 7 days before cluster i (a null date is never prior).
+    start = pd.to_datetime(clusters["fecha_primera"], utc=True).to_numpy(dtype="datetime64[ns]")
+    known = ~np.isnat(start)
+    delta = start[:, None] - start[None, :]
+    prior = known[:, None] & known[None, :] & (delta > np.timedelta64(0, "ns")) & (delta <= NOVELTY_WINDOW.to_timedelta64())
+    best = np.where(prior, sims, 0.0).max(axis=1)
+    return pd.Series(1.0 - best, index=clusters.index).clip(0.0, 1.0)
 
 
 def corpus_reference_time(news: pd.DataFrame) -> pd.Timestamp:

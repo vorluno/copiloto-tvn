@@ -79,9 +79,7 @@ def _iso(value: Any) -> str | None:
 
 def evidence_from_news(row: pd.Series) -> Evidence:
     """News item from noticias.parquet. Null fields are not sent, so they cannot be cited."""
-    fields = {"titulo": row["titulo"], "medio": row["medio"]}
-    if "descripcion" in row and pd.notna(row["descripcion"]):
-        fields["descripcion"] = row["descripcion"]
+    fields = {name: row[name] for name in ("titulo", "medio", "descripcion") if name in row and pd.notna(row[name])}
     if (published := _iso(row.get("fecha_publicacion"))) is not None:
         fields["fecha_publicacion"] = published
     return Evidence(id=row["id_noticia"], kind="noticia", fields=fields, scope=row["alcance_texto"])

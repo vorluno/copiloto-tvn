@@ -46,13 +46,35 @@ class HeadlineModel:
         }, ensure_ascii=False), {"prompt_tokens": 1, "completion_tokens": 1}
 
 
+LOOPBACK = {"127.0.0.1", "::1", "localhost"}
+
+
+def _is_loopback(address) -> bool:
+    """Wifi off still leaves the machine's own loopback: asyncio on Windows opens a
+    socket pair over 127.0.0.1, and that never leaves the computer."""
+    return isinstance(address, tuple) and str(address[0]) in LOOPBACK
+
+
 @pytest.fixture
 def no_network(monkeypatch):
-    """Wifi off: every outbound connection raises."""
-    def refuse(*args, **kwargs):
+    """Wifi off: every connection that would leave the machine raises."""
+    real_connect, real_create = socket.socket.connect, socket.create_connection
+
+    def connect(sock, address, *args, **kwargs):
+        if _is_loopback(address) or sock.family == getattr(socket, "AF_UNIX", None):
+            return real_connect(sock, address, *args, **kwargs)
         raise AssertionError("T10: network access attempted while offline")
-    monkeypatch.setattr(socket.socket, "connect", refuse)
-    monkeypatch.setattr(socket, "create_connection", refuse)
+
+    def create_connection(address, *args, **kwargs):
+        if _is_loopback(address):
+            return real_create(address, *args, **kwargs)
+        raise AssertionError("T10: network access attempted while offline")
+
+    monkeypatch.setattr(socket.socket, "connect", connect)
+    monkeypatch.setattr(socket, "create_connection", create_connection)
+    # A proxy listening on loopback would relay to the internet: wifi off means no proxy either.
+    for name in ("HTTP_PROXY", "HTTPS_PROXY", "ALL_PROXY", "http_proxy", "https_proxy", "all_proxy"):
+        monkeypatch.delenv(name, raising=False)
     monkeypatch.setenv("OFFLINE", "1")
     monkeypatch.setenv("HF_HUB_OFFLINE", "1")
 
@@ -110,3 +132,18 @@ def test_t10_network_is_really_cut(no_network):
     import requests
     with pytest.raises(AssertionError, match="network access attempted"):
         requests.get("https://example.com", timeout=5)
+
+
+def test_t10_loopback_is_not_network(no_network):
+    # Windows: asyncio's socketpair connects to 127.0.0.1; that is not the internet.
+    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server.bind(("127.0.0.1", 0))
+    server.listen(1)
+    client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        client.connect(server.getsockname())
+    finally:
+        client.close()
+        server.close()
+    with pytest.raises(AssertionError, match="network access attempted"):
+        socket.create_connection(("93.184.216.34", 443), timeout=5)
