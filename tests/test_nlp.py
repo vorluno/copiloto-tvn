@@ -85,6 +85,22 @@ def test_undated_items_stay_alone():
     assert labels[0] != labels[1]
 
 
+def test_close_vectors_without_two_shared_words_are_not_one_event():
+    # 7 oct (#40): cosine alone joined "Panamá + economía" notes about different events.
+    vectors = np.stack([unit(1, 0, 0), unit(1, 0.05, 0), unit(1, 0, 0.05)])
+    when = pd.Series([T0] * 3)
+    texts = ["Canal de Panamá suma 33 tránsitos diarios", "Canal de Panamá llega a 33 tránsitos por día",
+             "Panamá exporta más servicios, dice la economía"]
+    labels = cluster.cluster_labels(vectors, when, words=[cluster.content_words(t) for t in texts])
+    assert labels[0] == labels[1]  # share "canal" and "trans"
+    assert labels[2] != labels[0]  # only "panam", which never counts
+
+
+def test_corpus_wide_and_foreign_function_words_do_not_count():
+    assert cluster.content_words("The Panama Canal and the economy") == {"canal", "econo"}
+    assert cluster.content_words(None) == frozenset()
+
+
 def test_cluster_ids_are_stable_and_singletons_keep_the_provisional_id():
     ids = pd.Series(["N-00000000bb", "N-00000000aa", "N-00000000cc"])
     first = cluster.cluster_ids(ids, np.array([0, 0, 1]))
