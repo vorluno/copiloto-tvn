@@ -36,6 +36,7 @@ Una fila por noticia única (URL normalizada). Fuentes: TVN RSS, TVN web (sitema
 | `tema_confianza` | decimal | similitud coseno, −1 a 1 (en este corpus de −0,01 a 0,91) | B-07 | Similitud con la frase de tema más cercana. No es una probabilidad. Se guarda también cuando el tema es `otro` (la del tema más cercano). |
 | `cluster_id` | texto | `K-` + 10 hex | B-08 | Ver "Eventos". |
 | `sintetico` | booleano | — | calculado | Siempre `false` en el corpus real (regla 12). |
+| `recirculada` *(extra, B-11)* | booleano | — | calculado | `true` si `fecha_deteccion − fecha_publicacion ≥ 7 días`: nota anterior que vuelve a circular. Conserva su `fecha_publicacion` original; se agrupa y se puntúa por esa fecha (T03). Hoy ninguna fuente trae las dos fechas en la misma noticia, así que en el corpus real es `false` en todas. |
 
 Una URL que aparece en TVN y en GDELT se queda con la fila de TVN (trae descripción); el conteo está en `calidad.md`.
 
@@ -82,6 +83,7 @@ Una fila por `cluster_id` de `noticias.parquet`.
 | `fecha_primera` / `fecha_ultima` | fecha UTC | ISO 8601 | Menor y mayor fecha de referencia (del medio o, si no hay, de detección). Resumen del evento: no reemplaza las fechas de cada noticia. |
 | `n_medios` *(extra)* | entero | medios | `medio` únicos: ninguna fuente se pierde al agrupar (T02). |
 | `medios` *(extra)* | lista de texto | — | Los medios del evento. |
+| `recirculada` *(extra)* | booleano | — | `true` si alguna noticia del evento es recirculada (B-11). |
 
 ## `data/processed/baseline.parquet`
 

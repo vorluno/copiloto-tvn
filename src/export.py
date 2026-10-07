@@ -1,6 +1,6 @@
 """Deliverables with the challenge's file names (B-13): noticias.csv + fuentes.json. Owner: B.
 
-- data/processed/noticias.csv: every column of noticias.parquet (a superset of the
+- data/processed/noticias.csv: every column of noticias.parquet, recirculada included (a superset of the
   challenge's minimum fields, section 7), UTF-8 without BOM, LF line ends, dates as
   ISO 8601 UTC ("2026-09-30T14:05:00Z"), nulls as empty cells (never 0).
 - data/processed/fuentes.json: the three ways news entered the corpus (TVN RSS, TVN web,
@@ -46,8 +46,11 @@ def _iso(series: pd.Series) -> pd.Series:
     return series.dt.tz_convert("UTC").dt.strftime(ISO).where(series.notna(), None)
 
 
+EXTRA_COLUMNS = ["recirculada"]  # announced extras (B-11), kept when present
+
+
 def news_csv(news: pd.DataFrame) -> pd.DataFrame:
-    out = news.reindex(columns=NEWS_COLUMNS).copy()
+    out = news.reindex(columns=NEWS_COLUMNS + [c for c in EXTRA_COLUMNS if c in news]).copy()
     for col in DATE_COLUMNS:
         out[col] = _iso(pd.to_datetime(out[col], utc=True))
     return out

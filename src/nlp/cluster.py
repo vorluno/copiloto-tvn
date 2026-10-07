@@ -30,7 +30,7 @@ WINDOW = pd.Timedelta(hours=72)
 DISTANCE_THRESHOLD = 0.30  # cosine distance; 0.35 merged same-topic stories on 7 oct. B-12 measures it on cluster_humano
 FAR = 2.0  # maximum cosine distance, used for pairs outside the window or without a date
 CLUSTER_COLUMNS = ["cluster_id", "ids_noticia", "n_registros", "n_procedencias_independientes", "tema",
-                   "fecha_primera", "fecha_ultima", "n_medios", "medios"]
+                   "fecha_primera", "fecha_ultima", "n_medios", "medios", "recirculada"]
 
 
 def _close_pairs(vectors: np.ndarray, when: pd.Series, threshold: float, window: pd.Timedelta):
@@ -116,6 +116,8 @@ def build_clusters(news: pd.DataFrame) -> pd.DataFrame:
             "fecha_ultima": group["_when"].max(),
             "n_medios": len(outlets),
             "medios": outlets,
+            # B-11: any recirculated item marks the event; it keeps its original dates.
+            "recirculada": bool(group["recirculada"].any()) if "recirculada" in group else False,
         })
     out = pd.DataFrame(rows, columns=CLUSTER_COLUMNS)
     for col in ("fecha_primera", "fecha_ultima"):
