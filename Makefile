@@ -35,8 +35,8 @@ data: ## Download every source, then build and validate noticias.parquet (B-01..
 news: ## Rebuild noticias.parquet + quality report from the stored raw snapshots (no network)
 	$(PY) -m src.ingest.news
 
-nlp: ## Embeddings, topics, provenance, clusters and baseline (B-06..B-09, B-11)
-	@echo "Pending B-06..B-09: src/nlp/*.py have no entry point yet."
+nlp: ## Embeddings, topics, provenance, clusters and baseline (B-06..B-09) on noticias.parquet
+	$(PY) -m src.nlp.run
 
 demo: ## Open the Streamlit app on the local snapshot (stub until B delivers)
 	@test -f data/stub/noticias_stub.parquet || $(PY) data/stub/make_stub.py

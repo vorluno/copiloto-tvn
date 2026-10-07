@@ -1,0 +1,7 @@
+{
+  "modelo": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+  "revision": "e8f8c211226b894fcb81acc59f3b34ba3efd5f42",
+  "dimension": 384,
+  "texto": "titulo + descripcion (si existe)",
+  "normalizado": true
+}
