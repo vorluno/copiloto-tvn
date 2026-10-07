@@ -87,6 +87,27 @@ def check_brief_card(card: dict) -> None:
         assert claim["citas"] and all(c["id_fuente"] in card["ids_fuente"] and c["campo"] for c in claim["citas"])
 
 
+PLACEHOLDER_TITLES = {"título propuesto", "titulo propuesto", "título", "sin título"}
+MIN_DISTINCT_WORDS = 0.35  # share of distinct words; filler like "palabra palabra palabra…" is near 0
+
+
+def check_not_filler(card: dict) -> None:
+    """A real brief, not test-model filler (C-08 found such cards in main once: ed04499, #54)."""
+    assert card["titulo"].strip().lower() not in PLACEHOLDER_TITLES, f"{card['id_caso']}: placeholder title"
+    words = [w.lower() for w in card["borrador"]["brief"].split()]
+    assert len(set(words)) / len(words) >= MIN_DISTINCT_WORDS, f"{card['id_caso']}: repetitive brief (filler)"
+
+
+def test_t09_rejects_test_model_filler():
+    # The exact shape of the cards that once reached main: placeholder title, "palabra" x 100.
+    filler = {"id_caso": "F-K-relleno", "titulo": "Título propuesto",
+              "borrador": {"brief": "Basado únicamente en titular/metadatos. " + "palabra " * 94}}
+    with pytest.raises(AssertionError, match="placeholder title"):
+        check_not_filler(filler)
+    with pytest.raises(AssertionError, match="repetitive brief"):
+        check_not_filler({**filler, "titulo": "Exportaciones de banano"})
+
+
 def test_t09(tmp_path):
     news = pd.read_parquet(STUB)
     official = official_index(pd.DataFrame([CELL]))
@@ -119,3 +140,4 @@ def test_t09_real_brief():
         pytest.skip("T09 real: pending `make demo-cache` with Gemini (no economy brief in outputs/fichas.jsonl yet)")
     for card in real:
         check_brief_card(card)
+        check_not_filler(card)
