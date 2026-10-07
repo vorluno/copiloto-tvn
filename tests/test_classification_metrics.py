@@ -5,7 +5,7 @@ Hand-made labels; exact numbers.
 
 import pandas as pd
 
-from src.eval.classification import LABELS, calibrate, load_labels, predict, split_halves
+from src.eval.classification import LABELS, blind_events, calibrate, load_labels, predict, split_halves
 from src.eval.metrics import pairwise, topic_f1
 
 
@@ -57,3 +57,12 @@ def test_threshold_calibration_picks_the_best_macro_f1():
     threshold, table = calibrate(scores, truth)
     assert predict(scores, threshold).tolist() == truth.tolist()
     assert 0.45 <= threshold <= 0.55
+
+
+def test_labels_corrected_after_seeing_the_system_go_back_to_their_own_event():
+    labeled = pd.DataFrame({"cluster_humano": ["9", "9", "3", "3"],
+                            "nota": ["corregido después de comparar con el sistema", "Corregido tras comparar con el sistema",
+                                     "", "duda"]}, index=["a", "b", "c", "d"])
+    blind = blind_events(labeled)
+    assert blind["a"] != blind["b"]  # both corrected: separate again, as in the blind delivery
+    assert blind["c"] == blind["d"] == "3"

@@ -7,9 +7,12 @@ Reads data/etiquetas_humanas.csv (C-05) and writes outputs/reports/clasificacion
   id_noticia): the topic threshold is calibrated on the first half and every number is
   reported on the second, so the threshold never sees the news it is scored on.
 - Events: pairwise precision and recall of cluster_id (AI) and of the TF-IDF duplicates
-  (baseline) against cluster_humano, on every labeled item. The clustering threshold was
-  fixed before the labels existed (0.30, 7 oct) and is not tuned here: a split would
-  separate most labeled pairs. A sensitivity table is shown as exploratory.
+  (baseline) against cluster_humano, on every labeled item. The clustering rule was
+  fixed before the labels were read (0.30 + 2 shared content stems, 7 oct) and is not
+  tuned here: a split would separate most labeled pairs. A sensitivity table over the
+  distance (same word rule) is shown as exploratory. Rows whose `nota` says they were
+  corrected after comparing with the system (#62) are also scored "blind": each one back
+  to an event of its own, as in the blind delivery, so the reader sees both numbers.
 
 Every metric comes with numerator and denominator, and the errors are listed.
 
@@ -24,7 +27,7 @@ import numpy as np
 import pandas as pd
 
 from src.eval.metrics import pairwise, topic_f1
-from src.nlp import classify, cluster
+from src.nlp import classify, cluster, embed
 from src.nlp.provenance import reference_time
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -50,6 +53,15 @@ def load_labels(path: Path = LABELS_PATH) -> tuple[pd.DataFrame, list[str]]:
         rows.append({"id_noticia": r["id_noticia"], "tema_humano": topic, "cluster_humano": event,
                      "etiquetador": r.get("etiquetador", "").strip(), "nota": r.get("nota", "").strip()})
     return pd.DataFrame(rows), problems
+
+
+SEEN_SYSTEM = "comparar con el sistema"  # C-05 (#62): marks a label corrected after seeing cluster_id
+
+
+def blind_events(labeled: pd.DataFrame) -> pd.Series:
+    """cluster_humano with every row corrected after seeing the system back to an event of its own."""
+    seen = labeled["nota"].str.contains(SEEN_SYSTEM, case=False, regex=False)
+    return labeled["cluster_humano"].where(~seen, "ciega-" + labeled.index.to_series().astype(str))
 
 
 def split_halves(ids: pd.Series) -> pd.Series:
@@ -85,9 +97,10 @@ def cluster_sensitivity(news: pd.DataFrame, labeled: pd.DataFrame) -> list[tuple
     position = {nid: k for k, nid in enumerate(stored)}
     v = vectors[[position[i] for i in news["id_noticia"]]]
     when = reference_time(news)
+    words = [cluster.content_words(t) for t in embed.news_text(news)]
     out = []
     for d in DISTANCES:
-        labels = pd.Series(cluster.cluster_labels(v, when, d), index=news["id_noticia"])
+        labels = pd.Series(cluster.cluster_labels(v, when, d, words=words), index=news["id_noticia"])
         p, r = pairwise(labeled["cluster_humano"].tolist(), labels.loc[labeled["id_noticia"]].tolist(),
                         labeled["id_noticia"].tolist())
         out.append((d, p.describe(), r.describe()))
@@ -114,6 +127,9 @@ def build_report(labeled: pd.DataFrame, problems: list[str], news: pd.DataFrame,
     all_ids = labeled.index.tolist()
     p_ai, r_ai = pairwise(labeled["cluster_humano"].tolist(), by_id.loc[all_ids, "cluster_id"].tolist(), all_ids)
     p_bl, r_bl = pairwise(labeled["cluster_humano"].tolist(), base.set_index("id_noticia").loc[all_ids, "cluster_id"].tolist(), all_ids)
+    blind = blind_events(labeled)
+    n_seen = int((blind != labeled["cluster_humano"]).sum())
+    p_ai_b, r_ai_b = pairwise(blind.tolist(), by_id.loc[all_ids, "cluster_id"].tolist(), all_ids)
 
     labelers = ", ".join(sorted(set(labeled["etiquetador"]) - {""})) or "sin nombre"
     lines = [
@@ -125,9 +141,10 @@ def build_report(labeled: pd.DataFrame, problems: list[str], news: pd.DataFrame,
         "(la más parecida dentro de ±72 h), para que haya pares del mismo evento. Etiquetado por una persona que no "
         "construyó el modelo, solo con titular y descripción.",
         f"- **Temas:** el umbral se calibra con una mitad fija ({len(cal_ids)} noticias) y todo se reporta con la otra "
-        f"({len(test_ids)}). Umbral elegido: **{threshold:.2f}** (antes {classify.THRESHOLD:.2f}).",
+        f"({len(test_ids)}). Umbral elegido: **{threshold:.2f}** (en uso en `classify.THRESHOLD`: {classify.THRESHOLD:.2f}).",
         f"- **Eventos:** precisión y recall por pares sobre las {len(all_ids)} etiquetadas; distancia de cluster "
-        f"{cluster.DISTANCE_THRESHOLD:.2f} fijada antes de tener etiquetas.",
+        f"{cluster.DISTANCE_THRESHOLD:.2f} + {cluster.MIN_SHARED_WORDS} raíces de contenido en común, regla fijada con "
+        "9 grupos revisados a mano por José antes de leer estas etiquetas (no se ajusta aquí).",
         "- Muestra chica: una noticia cambia el F1 de un tema varios puntos. Los resultados son indicativos.", "",
         "## Temas: IA vs baseline (mitad de reporte)", "",
         "| Sistema | Macro-F1 | Temas medidos | n |", "| --- | --- | --- | --- |",
@@ -153,8 +170,12 @@ def build_report(labeled: pd.DataFrame, problems: list[str], news: pd.DataFrame,
 
     lines += ["", "## Eventos: precisión y recall por pares (todas las etiquetadas)", "",
               "| Sistema | Precisión | Recall |", "| --- | --- | --- |",
-              f"| IA (embeddings, distancia {cluster.DISTANCE_THRESHOLD:.2f}, 72 h) | {p_ai.describe()} | {r_ai.describe()} |",
+              f"| IA (embeddings, distancia {cluster.DISTANCE_THRESHOLD:.2f} + {cluster.MIN_SHARED_WORDS} palabras, 72 h) | {p_ai.describe()} | {r_ai.describe()} |",
               f"| Baseline (TF-IDF ≥ 0.9, 72 h) | {p_bl.describe()} | {r_bl.describe()} |", ""]
+    if n_seen:
+        lines += [f"**{n_seen} etiquetas de evento se corrigieron después de comparar con el sistema** (columna `nota`, "
+                  "#62): no son ciegas. Con la entrega ciega (cada una como evento propio) la IA da precisión "
+                  f"{p_ai_b.describe()} y recall {r_ai_b.describe()}. Se reportan las dos: con 3 pares, ninguna es concluyente.", ""]
     if sensitivity:
         lines += ["Sensibilidad a la distancia (exploratoria: se mira con las mismas etiquetas):", "",
                   "| Distancia | Precisión | Recall |", "| --- | --- | --- |"]
