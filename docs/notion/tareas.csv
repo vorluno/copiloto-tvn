@@ -36,17 +36,17 @@ B-18,"Pitch, bloque 4 (2 min: IA, baseline y métricas): sección en la página 
 C-01,Armar las 8 páginas en el espacio Notion Business provisto; José y Levi como editores; acceso del jurado verificado,Cristian,Bloqueada,Al recibirlo,,
 C-02,Llevar Tareas y Decisiones en docs/notion/*.csv desde hoy e importarlas a Plan y decisiones cuando llegue Notion,Cristian,En curso,Mar,,
 C-03,Post diario en LinkedIn (3 marcas + hashtags),Cristian,Por hacer,"Mar, Mié, Jue",,
-C-05,Etiquetar 60 noticias: tema y evento,Cristian,En curso,Mié,,"96dd09e (#30, CSV de 60 noticias); faltan las etiquetas"
-C-06,Benchmark de desarrollo: 40 consultas,Cristian,En curso,Mié,,"#45 (40 consultas, en revisión)"
-C-07,"Página ""Riesgos y ética"" (con el aporte de Levi en B-16)",Cristian,Por hacer,Mié,,
-C-08,Ejecutar T01–T10 y registrar resultados,Cristian,Por hacer,Jue,,
-C-09,Precision@5 contra selección independiente,Cristian,Por hacer,Jue,,
+C-05,Etiquetar 60 noticias: tema y evento,Cristian,Hecha,Mié,2026-10-07,"c2a098e (#59, entrega ciega); 8790e13 (#62, 2 pares corregidos y declarados)"
+C-06,Benchmark de desarrollo: 40 consultas,Cristian,Hecha,Mié,2026-10-07,2c9b355 (#45)
+C-07,"Página ""Riesgos y ética"" (con el aporte de Levi en B-16)",Cristian,Hecha,Mié,2026-10-07,66e965f (#53)
+C-08,Ejecutar T01–T10 y registrar resultados,Cristian,En curso,Jue,,"122e005 (#52, primera corrida); falta la corrida final con la caché de Gemini"
+C-09,Precision@5 contra selección independiente,Cristian,Hecha,Jue,2026-10-07,"d733600 (#61, exploratoria, corpus del 7 oct); fechada en #71"
 C-10,"5+ fichas en Notion, una con evidencia insuficiente",Cristian,Por hacer,Jue,,
-C-11,Pitch en Notion y 2 ensayos cronometrados,Cristian,Por hacer,Jue,,
+C-11,Pitch en Notion y 2 ensayos cronometrados,Cristian,En curso,Jue,,c2d8c9e (#55); #71 cifras finales en revisión; faltan los 2 ensayos
 C-12,"Bandeja priorizada (CU-01): top 5 por P con rango, estado de evidencia, tema, ""N registros · M procedencias"", filtros; hora de Panamá. Lee fichas_stub.jsonl y luego fichas.jsonl",Cristian,Hecha,Mié,2026-10-06,ab98513 (#7); 1dd3205 (#44); #46 filtro de idioma en revisión
 C-13,"Ficha (etapa 5): qué se reporta, quién, qué está respaldado, qué falta y acción recomendada; 5 componentes en barras + versión de reglas; cada cita muestra ID, campo y pasaje",Cristian,Hecha,Mié,2026-10-06,1342a29 (#16)
 C-14,"Borrador y consulta: brief, guion y copy con contador de palabras; afirmaciones con su tipo (hecho / declaración / inferencia / hipótesis) diferenciado; contradicciones lado a lado (T05); abstención visible (T06); alertas (T07); aviso ""basado únicamente en titular/metadatos""; caja de consulta en español (CU-04)",Cristian,Hecha,Mié,2026-10-06,137e8ee (#20)
 C-15,"Revisión: 5 estados + persona revisora + nota → outputs/revisiones.jsonl; botón ""copiar para Notion"" con la ficha en Markdown (ADR-008)",Cristian,Hecha,Mié,2026-10-06,b51e918 (#24); f52b3a9 (#28); 1dd3205 (#44)
-C-16,"Pantalla ""Datos y calidad"": reporte de calidad, manifest y licencias; aviso de modo sin internet (T10)",Cristian,Por hacer,Jue,,
-C-17,"Valor operativo: tiempo manual vs asistido en la misma tarea, ≥3 pruebas, para el bloque 5 del pitch. Si no se mide, se dice ""hipótesis de valor""",Cristian,Por hacer,Jue,,
+C-16,"Pantalla ""Datos y calidad"": reporte de calidad, manifest y licencias; aviso de modo sin internet (T10)",Cristian,Hecha,Jue,2026-10-07,5928151 (#51)
+C-17,"Valor operativo: tiempo manual vs asistido en la misma tarea, ≥3 pruebas, para el bloque 5 del pitch. Si no se mide, se dice ""hipótesis de valor""",Cristian,En curso,Jue,,#69 en revisión (hipótesis de valor)
 C-18,Respaldo de la demo: grabación del recorrido con wifi apagado y capturas sin secretos en Notion (evidencia de T10),Cristian,Por hacer,Jue,,
