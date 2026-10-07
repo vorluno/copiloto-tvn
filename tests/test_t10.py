@@ -129,9 +129,11 @@ def test_t10_app_runs_offline_and_says_so(no_network):
 
 def test_t10_network_is_really_cut(no_network):
     # Guards the guard: if this passed with the network on, T10 would prove nothing.
+    # An IP literal, not a hostname: with the wifi really off DNS fails first (gaierror) and the
+    # test would never reach the cut it is checking.
     import requests
     with pytest.raises(AssertionError, match="network access attempted"):
-        requests.get("https://example.com", timeout=5)
+        requests.get("https://93.184.216.34", timeout=5)
 
 
 def test_t10_loopback_is_not_network(no_network):
