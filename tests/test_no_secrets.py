@@ -39,5 +39,7 @@ def test_no_key_in_any_tracked_file():
 def test_env_is_never_tracked_and_example_has_no_key():
     names = {p.relative_to(ROOT).as_posix() for p in tracked_files()}
     assert ".env" not in names
+    # A tracked .venv (even a symlink) makes `git pull` replace everyone's virtualenv.
+    assert not any(n == ".venv" or n.startswith(".venv/") for n in names)
     example = (ROOT / ".env.example").read_text(encoding="utf-8")
     assert re.search(r"^LLM_API_KEY=\s*$", example, re.MULTILINE)
