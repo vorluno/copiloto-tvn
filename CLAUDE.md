@@ -17,7 +17,7 @@ Entrega: **jueves 8 de octubre de 2026, 23:59**. Congelamos código a las 20:00.
 
 Backlog vigente con dueños y fechas: `docs/backlog.md`. Cómo abrir un PR: `CONTRIBUTING.md`.
 LLM: OpenRouter con `google/gemini-2.5-flash`, temperatura 0 (ADR-005).
-Documentación: sin Notion (la organización no lo entrega, 8 oct); las 8 páginas del reto están en `docs/notion/` (ADR-047).
+Documentación: espacio del equipo en Notion (ADR-048) con documentación técnica, funcional y presentación; las 8 páginas del reto siguen en `docs/notion/`.
 Modalidad: **TVN · principal** (editor/a y periodista); para qué sirve cada fuente, incluido el
 Banco Mundial: `docs/alcance-y-datos.md`.
 
