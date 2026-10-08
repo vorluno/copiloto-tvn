@@ -20,6 +20,7 @@ en [`docs/backlog.md`](docs/backlog.md); el alcance y el uso de cada fuente en
 abrir un PR en [`CONTRIBUTING.md`](CONTRIBUTING.md); la entrega en [`docs/entrega.md`](docs/entrega.md).
 
 **Documentación del proyecto (las 8 páginas del reto):** [`docs/notion/`](docs/notion/README.md).
+**Video de la demo sin internet (3 min):** [`docs/demo/copiloto-tvn-demo-respaldo.mp4`](docs/demo/copiloto-tvn-demo-respaldo.mp4).
 
 > **Estado (7 oct):** corpus real y completo en `data/processed/`: 11,337 noticias del 02/10/2025
 > al 30/09/2026 (1,248 de TVN y 10,089 de GDELT), 8,421 eventos (1,264 con 2 o más registros) y
