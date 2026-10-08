@@ -31,3 +31,14 @@ def test_goal_needs_ninety_percent_over_thirty_claims():
 
 def test_empty_review_says_so():
     assert "sin revisar todavía" in sustento.report(sustento.tally([row("BQ-1", "a", "", "")]))
+
+
+def test_pre_review_is_shown_apart_and_only_counts_once_a_person_confirms_it():
+    rows = [dict(row("BQ-1", "a", "", ""), prevalidacion_ia="sí"), dict(row("BQ-2", "b", "", ""), prevalidacion_ia="no")]
+    before = sustento.report(sustento.tally(rows))
+    assert "sin revisar todavía" in before and "Pre-revisión automática" in before and "1/2" in before
+    assert sustento.confirm(rows, "José") == 2
+    after = sustento.tally(rows)
+    assert (after["reviewed"], after["supported"], after["reviewers"]) == (2, 1, ["José"])
+    assert after["confirmed"] and "adoptó como suya" in sustento.report(after)
+    assert sustento.confirm(rows, "Otra") == 0  # never overwrites a human mark
