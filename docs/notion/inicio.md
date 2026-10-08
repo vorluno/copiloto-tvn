@@ -59,5 +59,5 @@ indebida 15/20 (página 6).
 
 - Repositorio (público): https://github.com/vorluno/copiloto-tvn · versión de entrega: tag `v1.0`.
 - Cómo probarlo en 5 minutos: sección "Para el jurado" del [README](../../README.md).
-- Video de la demo sin internet (3 min, grabado con `OFFLINE=1` en el orden del pitch): [`docs/demo/copiloto-tvn-demo-respaldo.mp4`](https://github.com/vorluno/copiloto-tvn/blob/main/docs/demo/copiloto-tvn-demo-respaldo.mp4).
+- Video de la demo sin internet (1 min 45 s, interfaz v1.1, grabado con `OFFLINE=1` en el orden del pitch): [`docs/demo/copiloto-tvn-demo-respaldo.mp4`](https://github.com/vorluno/copiloto-tvn/blob/main/docs/demo/copiloto-tvn-demo-respaldo.mp4).
 - Las 8 secciones: [índice](README.md).
