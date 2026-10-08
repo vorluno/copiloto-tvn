@@ -19,7 +19,8 @@ setup: ## Create .venv and install pinned requirements
 	$(PIP) install --upgrade pip
 	$(PIP) install -r requirements.txt
 	@test -f .env || cp .env.example .env
-	$(MAKE) model
+	@$(MAKE) model || echo "Warning: the embedding model did not download (needs internet to huggingface.co). \
+The demo and most tests work without it; T02, T03 and make nlp need it: run make model later."
 	@echo "Done. Next: make demo"
 
 model: ## Download the embedding model once to the Hugging Face cache (T02/T03 and make nlp then work offline)

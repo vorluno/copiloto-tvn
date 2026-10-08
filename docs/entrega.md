@@ -38,7 +38,8 @@ make test                    # todo en verde; ninguna clave en archivos versiona
 make verify                  # SHA-256 de los datos = data/manifest.json
 OFFLINE=1 make demo-cache    # "Caché completa para la demo sin internet."
 OFFLINE=1 make demo          # con wifi apagado: bandeja, ficha, borrador, consulta y revisión
-git log --all -p | grep -E "sk-or-v1-[A-Za-z0-9]{16,}" || echo "historial sin claves"
+git log --all -p | grep -E "sk-or-v1-[A-Za-z0-9]{16,}" | grep -vE "abcdefghijklmnop|0{16}" || echo "historial sin claves"
+                             # las dos excluidas son claves falsas de las pruebas (test_guard, test_t07)
 ```
 
 Después, en el repo de trabajo:
