@@ -147,6 +147,8 @@ respondibles. Detalle, con numerador y denominador, en [`outputs/reports/`](outp
 
 <br>
 
+<a name="para-el-jurado-probarlo-en-5-minutos"></a>
+
 ## Correrlo en tu máquina
 
 Requisitos: **Python 3.11** y `make` (en Windows, WSL o Git Bash). Para la demo no hace falta clave ni internet: las
