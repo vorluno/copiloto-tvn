@@ -49,6 +49,7 @@ def test_evidence_context_shows_country_year_and_unit():
     assert evidence_context(wb) == "PAN · 2024 · % de la fuerza laboral · Banco Mundial"
     quake = Evidence(id="us7000n9fn", kind="sismo", fields={"magnitude": "5.8", "place": "Boca Chica", "time": "2024-01-01T00:00:00Z"})
     assert evidence_context(quake).endswith("· USGS") and "M 5.8" in evidence_context(quake)
+    assert "2023-12-31 19:00 (Panamá)" in evidence_context(quake)  # rule 6: UTC midnight shown as Panama time
     news = Evidence(id="N-1", kind="noticia", fields={"titulo": "t", "medio": "TVN"}, scope="titular/metadatos")
     assert evidence_context(news) == "TVN · solo titular/metadatos"
     assert evidence_context(None) == "—"

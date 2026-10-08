@@ -1,6 +1,6 @@
 # 7 · Riesgos y ética
 
-Página 7 de Notion (C-07, Cristian). Integra el aporte de datos de Levi
+Página 7 de la documentación (C-07, Cristian). Integra el aporte de datos de Levi
 ([`riesgos-datos.md`](riesgos-datos.md), B-16): las cifras de sesgo y cobertura están allí.
 Cada riesgo lleva su control o dice que no lo tiene.
 

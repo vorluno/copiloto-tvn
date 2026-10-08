@@ -1,6 +1,6 @@
 # Precision@5 · evaluación exploratoria (C-09)
 
-Para la página **6 · Pruebas y métricas** de Notion, debajo de la matriz T01–T10.
+Para la página **6 · Pruebas y métricas**, junto a la matriz T01–T10.
 
 ## Resultado
 
