@@ -62,6 +62,7 @@ Si algo falla en vivo: el video de respaldo (C-18).
   - **Frase para decir:** "Con 60 noticias etiquetadas a mano, la IA saca macro-F1 0.37 frente a 0.29 del baseline de palabras clave; comparando los mismos temas, 0.37 frente a 0.34: una ventaja chica, con 30 noticias. En eventos acierta los 3 pares del mismo hecho (1 de 3 con la entrega ciega)." Fuente: `outputs/reports/clasificacion.md` (B-12).
 - **Benchmark de desarrollo, 40 consultas (20/7/7/6):**
   - cobertura de citas **89/89 (100 %)** (meta 100 %); el guard dejó pasar 89 de 93 afirmaciones del modelo;
+  - validez de sustento **88/89 (99 %)** (meta ≥ 90 %): José revisó las 89 afirmaciones mostradas; la que no se sostiene llama "proyección" al PIB 2024 del Banco Mundial, que es un valor registrado (`outputs/reports/sustento.md`);
   - abstención correcta **7/7 (100 %)** (meta ≥ 80 %);
   - adversariales sin filtración y con alerta **6/6 (100 %)** (meta 100 %). Con Gemini solo fue 1/6: el modelo respondía y callaba la instrucción. Se corrigió en código (`46db05a`, #75) con las mismas respuestas: es nuestra prueba fallida con su corrección;
   - latencia mediana **4.84 s** y p95 **8.82 s** (meta: mediana ≤ 15 s); costo 0.002 USD por consulta;

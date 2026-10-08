@@ -3,26 +3,26 @@
 Generado con `python tools/casos_md.py` desde `outputs/fichas.jsonl` y `outputs/revisiones.jsonl`;
 no se edita a mano. P y sus componentes salen de `score_clusters`, igual que en la bandeja.
 
-**10 casos** · 4 con borrador · 6 abstenidos por evidencia insuficiente · 0 con persona revisora.
+**10 casos** · 4 con borrador · 6 abstenidos por evidencia insuficiente · 6 con persona revisora.
 
 | Caso | Título | P | Estado de evidencia | Estado de revisión | Persona revisora |
 | --- | --- | --- | --- | --- | --- |
-| `F-K-1db88f3c6a` | ¿Cómo está el empleo en Panamá? Presidente afirma que el desempleo baja y sector privado gana terreno | 91.0 | parcial | nuevo | — (sin revisar) |
-| `F-K-f013b8a6be` | Canal de Panamá aumenta tránsitos diarios y calado máximo | 78.3 | parcial | nuevo | — (sin revisar) |
-| `F-K-9910a6049b` | titular de la fuente: «Panama Canal disruption creates new cargo accumulation headache» | 77.4 | insuficiente | nuevo | — (sin revisar) |
+| `F-K-1db88f3c6a` | ¿Cómo está el empleo en Panamá? Presidente afirma que el desempleo baja y sector privado gana terreno | 91.0 | parcial | requiere evidencia | José |
+| `F-K-f013b8a6be` | Canal de Panamá aumenta tránsitos diarios y calado máximo | 78.3 | parcial | aprobado como borrador | José |
+| `F-K-9910a6049b` | titular de la fuente: «Panama Canal disruption creates new cargo accumulation headache» | 77.4 | insuficiente | requiere evidencia | José |
 | `F-K-a83bc9e1ad` | titular de la fuente: «Panama panel backs path to Cobre Panama restart - The Northern Miner» | 76.1 | insuficiente | nuevo | — (sin revisar) |
 | `F-K-c8b0fba205` | titular de la fuente: «Canal de Panamá : esta es la millonaria cifra que aportará al Estado en 2027» | 76.0 | insuficiente | nuevo | — (sin revisar) |
-| `F-K-fdb699ae9b` | titular de la fuente: «La pobreza no solo será económica / Panamá América» | 76.0 | insuficiente | nuevo | — (sin revisar) |
-| `F-K-3f5caad564` | Comisión recomienda cierre ordenado de mina de cobre de Donoso, Panamá | 75.6 | parcial | nuevo | — (sin revisar) |
+| `F-K-fdb699ae9b` | titular de la fuente: «La pobreza no solo será económica / Panamá América» | 76.0 | insuficiente | descartado | José |
+| `F-K-3f5caad564` | Comisión recomienda cierre ordenado de mina de cobre de Donoso, Panamá | 75.6 | parcial | en revisión | José |
 | `F-K-9b9389dea6` | titular de la fuente: «Cobre Panamá : Navarro pide ponerle fecha de cumpleaños al cierre de la mina» | 75.3 | insuficiente | nuevo | — (sin revisar) |
-| `F-K-0709632879` | Panamá, PIB e IA hacia 2030: Productividad o irrelevancia | 74.3 | parcial | nuevo | — (sin revisar) |
+| `F-K-0709632879` | Panamá, PIB e IA hacia 2030: Productividad o irrelevancia | 74.3 | parcial | requiere evidencia | José |
 | `F-K-2738265aa7` | titular de la fuente: «Comisión Interministerial entregó al presidente Mulino el Informe Final sobre el sitio minero Cobre Panamá» | 73.8 | insuficiente | nuevo | — (sin revisar) |
 
 ## F-K-1db88f3c6a · ¿Cómo está el empleo en Panamá? Presidente afirma que el desempleo baja y sector privado gana terreno
 
-- **Estado de revisión:** nuevo
-- **Persona revisora:** — (sin revisar)
-- **Fecha de revisión:** — (sin dato)
+- **Estado de revisión:** requiere evidencia
+- **Persona revisora:** José
+- **Fecha de revisión:** 2026-10-08 09:33 (Panamá)
 - **Estado de evidencia:** parcial
 - **Puntaje P:** 91.0 (alto) · reglas `scoring_v1`
 - **Componentes:** R 1.00 · I 0.88 · U 1.00 · N 0.86 · E 0.60
@@ -50,9 +50,9 @@ Basado únicamente en titular/metadatos. El presidente de Panamá ha afirmado qu
 
 ## F-K-f013b8a6be · Canal de Panamá aumenta tránsitos diarios y calado máximo
 
-- **Estado de revisión:** nuevo
-- **Persona revisora:** — (sin revisar)
-- **Fecha de revisión:** — (sin dato)
+- **Estado de revisión:** aprobado como borrador
+- **Persona revisora:** José
+- **Fecha de revisión:** 2026-10-08 09:33 (Panamá)
 - **Estado de evidencia:** parcial
 - **Puntaje P:** 78.3 (alto) · reglas `scoring_v1`
 - **Componentes:** R 1.00 · I 0.48 · U 1.00 · N 0.69 · E 0.60
@@ -77,9 +77,9 @@ Basado únicamente en titular/metadatos. El Canal de Panamá ha añadido un cupo
 
 ## F-K-9910a6049b · titular de la fuente: «Panama Canal disruption creates new cargo accumulation headache»
 
-- **Estado de revisión:** nuevo
-- **Persona revisora:** — (sin revisar)
-- **Fecha de revisión:** — (sin dato)
+- **Estado de revisión:** requiere evidencia
+- **Persona revisora:** José
+- **Fecha de revisión:** 2026-10-08 09:33 (Panamá)
 - **Estado de evidencia:** insuficiente
 - **Puntaje P:** 77.4 (alto) · reglas `scoring_v1`
 - **Componentes:** R 1.00 · I 0.48 · U 1.00 · N 0.89 · E 0.20
@@ -125,9 +125,9 @@ La única fuente proporcionada es un titular/metadatos, lo que no ofrece suficie
 
 ## F-K-fdb699ae9b · titular de la fuente: «La pobreza no solo será económica | Panamá América»
 
-- **Estado de revisión:** nuevo
-- **Persona revisora:** — (sin revisar)
-- **Fecha de revisión:** — (sin dato)
+- **Estado de revisión:** descartado
+- **Persona revisora:** José
+- **Fecha de revisión:** 2026-10-08 09:33 (Panamá)
 - **Estado de evidencia:** insuficiente
 - **Puntaje P:** 76.0 (alto) · reglas `scoring_v1`
 - **Componentes:** R 1.00 · I 0.48 · U 1.00 · N 0.80 · E 0.20
@@ -141,9 +141,9 @@ La única fuente proporcionada es un titular/metadatos, lo cual es insuficiente 
 
 ## F-K-3f5caad564 · Comisión recomienda cierre ordenado de mina de cobre de Donoso, Panamá
 
-- **Estado de revisión:** nuevo
-- **Persona revisora:** — (sin revisar)
-- **Fecha de revisión:** — (sin dato)
+- **Estado de revisión:** en revisión
+- **Persona revisora:** José
+- **Fecha de revisión:** 2026-10-08 09:33 (Panamá)
 - **Estado de evidencia:** parcial
 - **Puntaje P:** 75.6 (alto) · reglas `scoring_v1`
 - **Componentes:** R 1.00 · I 0.48 · U 1.00 · N 0.51 · E 0.60
@@ -194,9 +194,9 @@ La única fuente proporcionada es un titular/metadatos, lo cual es insuficiente 
 
 ## F-K-0709632879 · Panamá, PIB e IA hacia 2030: Productividad o irrelevancia
 
-- **Estado de revisión:** nuevo
-- **Persona revisora:** — (sin revisar)
-- **Fecha de revisión:** — (sin dato)
+- **Estado de revisión:** requiere evidencia
+- **Persona revisora:** José
+- **Fecha de revisión:** 2026-10-08 09:33 (Panamá)
 - **Estado de evidencia:** parcial
 - **Puntaje P:** 74.3 (alto) · reglas `scoring_v1`
 - **Componentes:** R 1.00 · I 0.88 · U 0.10 · N 0.95 · E 0.60
