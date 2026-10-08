@@ -1,8 +1,12 @@
 # Documentación del proyecto · las 8 páginas
 
-La organización avisó el 8 oct que no habrá espacio de Notion y que no es obligatorio (ADR-047). Las 8
-páginas del reto quedan aquí, en el repositorio público: GitHub las muestra sin cuenta y cada cambio queda
-fechado en git. Si más adelante se usa Notion, cada CSV se importa tal cual como base de datos.
+La organización pidió el 8 oct un espacio del equipo en Notion (ADR-048, que reemplaza a ADR-047 en lo que toca
+a Notion). Está en el workspace del hackIAthon, con tres páginas:
+[documentación técnica](https://app.notion.com/p/3f36d0f0b114817ba1a2cf059af5b356),
+[documentación funcional](https://app.notion.com/p/3f36d0f0b11481feb68dc27af313d3f9) y
+[presentación del Pitch Day](https://app.notion.com/p/3f36d0f0b114812d93a9d2b3f2163f56). Sus imágenes están en
+[`img/`](img/) y sus piezas interactivas en [`embeds/`](embeds/). Las 8 páginas del reto siguen aquí, en el
+repositorio público, como fuente: GitHub las muestra sin cuenta y cada cambio queda fechado en git.
 
 | # | Página | Archivos |
 | --- | --- | --- |
