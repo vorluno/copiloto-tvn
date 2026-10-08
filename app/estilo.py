@@ -34,7 +34,8 @@ section[data-testid="stSidebar"] .block-container{padding-top:1.4rem}
 [data-testid="stTextInputRootElement"]{border-radius:999px;border-color:var(--ink);background:transparent;padding:0 8px}
 [data-testid="stForm"]{border:0;padding:0}
 [data-testid="stAlertContainer"]{background:transparent!important;border:1px solid var(--ink);border-radius:14px;color:var(--ink)!important}
-[data-testid="stAlertContainer"] p{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.04em}
+[data-testid="stAlertContainer"] p{font-size:14px;line-height:1.5}
+[data-testid="stExpanderIconError"],[data-testid="stExpanderIconCheck"]{color:var(--ink)!important}
 .st-key-pitch{gap:0}
 .st-key-pitch .stButton>button{justify-content:flex-start;text-align:left;border:0;border-bottom:1px solid var(--hair);border-radius:0;min-height:48px;padding:12px 14px;font-size:15px}
 .st-key-pitch .stButton>button:hover{border-radius:14px;border-bottom-color:transparent}
@@ -56,17 +57,15 @@ section[data-testid="stSidebar"] .block-container{padding-top:1.4rem}
 .st-key-sel_cluster [data-testid="stRadioOption"]{width:100%}
 .st-key-sel_cluster [data-testid="stRadioOption"] p{font-size:16px;font-weight:500;line-height:1.3;letter-spacing:-.005em}
 .st-key-sel_cluster [data-testid="stRadioCaption"]{padding:6px 0 0;margin:0}
-.st-key-sel_cluster [data-testid="stRadioCaption"] p{font-family:'IBM Plex Mono',monospace;font-size:11px;
-  letter-spacing:.06em;text-transform:uppercase;color:var(--muted);opacity:1}
+.st-key-sel_cluster [data-testid="stRadioCaption"] p{font-size:13px;line-height:1.4;color:var(--muted);opacity:1}
 /* HTML blocks. */
 .ctvn-eyebrow{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
 .ctvn-brand{font-weight:800;font-size:20px;letter-spacing:-.02em;text-transform:uppercase;line-height:1.1}
 .ctvn-brand+.ctvn-eyebrow{margin-top:6px}
 .ctvn-header{display:flex;flex-direction:column;gap:6px;padding:14px 0;border-top:1px solid var(--ink);margin-top:10px}
-.ctvn-header .ctvn-line{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.ctvn-header .ctvn-line{font-size:13px;color:var(--muted)}
 .ctvn-chips{display:flex;flex-wrap:wrap;gap:6px 8px}
-.ctvn-chip{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;font-family:'IBM Plex Mono',monospace;
-  font-size:11px;letter-spacing:.06em;text-transform:uppercase;border:1px solid var(--hair);color:var(--ink);white-space:nowrap}
+.ctvn-chip{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;font-size:12.5px;border:1px solid var(--hair);color:var(--ink);white-space:nowrap}
 .ctvn-chip.offline,.ctvn-chip.online,.ctvn-chip.alto,.ctvn-chip.suficiente{background:var(--ink);color:var(--paper);border-color:var(--ink)}
 .ctvn-chip.medio,.ctvn-chip.parcial{border-color:var(--ink)}
 .ctvn-chip.bajo{color:var(--muted)}
@@ -75,7 +74,7 @@ section[data-testid="stSidebar"] .block-container{padding-top:1.4rem}
 .ctvn-pagehead{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 32px;
   padding-bottom:18px;border-bottom:1px solid var(--ink);margin-bottom:6px}
 .ctvn-h1{margin:0;font-weight:700;font-size:clamp(40px,5.2vw,80px);line-height:.95;letter-spacing:-.035em}
-.ctvn-stats{margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:12px;line-height:1.7;color:var(--muted);text-align:right}
+.ctvn-stats{margin-left:auto;font-size:14px;line-height:1.6;color:var(--muted);text-align:right}
 .ctvn-sec{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;
   padding-bottom:10px;border-bottom:1px solid var(--ink);margin:30px 0 0}
 .ctvn-row{display:flex;flex-direction:column;gap:5px;padding:13px 0;border-bottom:1px solid var(--hair)}
@@ -84,6 +83,16 @@ section[data-testid="stSidebar"] .block-container{padding-top:1.4rem}
 .ctvn-check i{flex:none;width:14px;height:14px;margin-top:5px;border:1.5px solid var(--ink)}
 .ctvn-cite{font-family:'IBM Plex Mono',monospace;font-size:12px;text-decoration:underline dotted;text-underline-offset:3px;word-break:break-word}
 .ctvn-cite.bad{text-decoration-style:solid}
+.ctvn-cite small{font-size:11px;color:var(--muted);text-decoration:none;margin-left:8px}
+.ctvn-detail{font-size:13px;color:var(--muted)}
+.ctvn-load{padding:18vh 0 0;max-width:560px}
+.ctvn-ask{margin-top:22px;font-size:15px;color:var(--muted)}
+.ctvn-load b{display:block;font-weight:700;font-size:44px;letter-spacing:-.03em;line-height:1}
+.ctvn-load p{margin:14px 0 22px;color:var(--muted)}
+.ctvn-load i{display:block;height:2px;background:var(--hair);overflow:hidden}
+.ctvn-load i u{display:block;width:30%;height:2px;background:var(--ink);animation:ctvn-slide 1.2s cubic-bezier(.16,1,.3,1) infinite}
+@keyframes ctvn-slide{from{transform:translateX(-100%)}to{transform:translateX(340%)}}
+@media (prefers-reduced-motion: reduce){.ctvn-load i u{animation:none;width:100%}}
 .ctvn-muted{color:var(--muted)}
 .ctvn-fhead{display:flex;flex-wrap:wrap;align-items:flex-start;gap:20px 40px;margin-top:10px}
 .ctvn-fhead h2.ctvn-title{margin:0!important;padding:0!important;flex:1 1 320px;min-width:0;font-weight:600!important;font-size:clamp(24px,2.1vw,32px)!important;line-height:1.12!important;letter-spacing:-.022em}
@@ -92,9 +101,8 @@ section[data-testid="stSidebar"] .block-container{padding-top:1.4rem}
 .ctvn-p{flex:none;text-align:right}
 .ctvn-p b{display:block;font-weight:800;font-size:88px;line-height:.85;letter-spacing:-.05em}
 .ctvn-p span{display:block;padding-top:10px;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase}
-.ctvn-meta{display:flex;flex-wrap:wrap;gap:6px 22px;margin-top:16px;font-family:'IBM Plex Mono',monospace;font-size:12px;
-  letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
-.ctvn-meta span:first-child{color:var(--ink)}
+.ctvn-meta{display:flex;flex-wrap:wrap;gap:4px 22px;margin-top:14px;font-size:14px;color:var(--muted)}
+.ctvn-meta span:first-child{color:var(--ink);font-weight:500}
 .ctvn-proposed{margin-top:10px;color:var(--muted)}
 .ctvn-action{border:1px solid var(--ink);border-radius:20px;padding:20px 24px;margin:26px 0 4px;display:flex;flex-wrap:wrap;gap:6px 16px;align-items:baseline}
 .ctvn-action span{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase}
@@ -159,22 +167,25 @@ def evidence_chip(estado: str | None) -> str:
 
 def header_html(offline: bool, data_label: str, n_news: int, n_events: int, cut: str | None,
                 synthetic: bool) -> str:
-    """Sidebar state block: the mode, data cut and corpus the editor must always see."""
-    mode = ('<span class="ctvn-chip offline"><span class="ctvn-dot"></span>Sin internet (OFFLINE=1) · '
-            'respuestas desde caché</span>' if offline else
-            '<span class="ctvn-chip online"><span class="ctvn-dot"></span>En línea · caché primero</span>')
+    """Sidebar state block in product words: connection mode, corpus size, data date. No paths or flags."""
+    mode = ('<span class="ctvn-chip offline"><span class="ctvn-dot"></span>Sin internet · respuestas guardadas</span>'
+            if offline else '<span class="ctvn-chip online"><span class="ctvn-dot"></span>En línea</span>')
     lines = [f'<div class="ctvn-line">{n_news:,} noticias · {n_events:,} eventos</div>']
     if cut:
-        lines.append(f'<div class="ctvn-line">Corte {escape(cut)}</div>')
-    lines.append(f'<div class="ctvn-line">Datos: {escape(data_label)}</div>')
+        lines.append(f'<div class="ctvn-line">Datos al {escape(cut)}</div>')
     if synthetic:
-        lines.append(chip("Contiene noticias sintéticas (sintetico=true)", "synthetic"))
+        lines.append(chip("Incluye noticias sintéticas de prueba", "synthetic"))
     return f'<div class="ctvn-header"><div class="ctvn-chips">{mode}</div>{"".join(lines)}</div>'
 
 
 def brand_html() -> str:
     return ('<div class="ctvn-brand">Copiloto TVN</div>'
-            '<div class="ctvn-eyebrow">Nada se publica desde aquí</div>')
+            '<div class="ctvn-eyebrow">Borradores para tu revisión</div>')
+
+
+def loading_html(title: str, text: str) -> str:
+    """First load: a visible, branded wait (an ink bar), never the framework's own spinner text."""
+    return f'<div class="ctvn-load" role="status" aria-live="polite"><b>{escape(title)}</b><p>{escape(text)}</p><i><u></u></i></div>'
 
 
 def page_head_html(title: str, stats: list[str]) -> str:
@@ -187,15 +198,15 @@ def section_html(label: str) -> str:
     return f'<div class="ctvn-sec">{escape(label)}</div>'
 
 
-def ficha_head_html(eyebrow: str, titular: str, p: float, rango: str | None, meta: list[str],
+def ficha_head_html(eyebrow: str, titular: str, p: float, p_note: str, meta: list[str],
                     proposed: str | None = None) -> str:
-    """Case header: the real headline and P as the protagonist, then the facts in mono."""
-    head = (f'<div class="ctvn-eyebrow">// {escape(eyebrow)}</div>'
+    """Case header: the real headline and its priority as the protagonist, then the facts in plain words."""
+    head = (f'<div class="ctvn-eyebrow">{escape(eyebrow)}</div>'
             f'<div class="ctvn-fhead"><h2 class="ctvn-title">{escape(titular)}</h2>'
-            f'<div class="ctvn-p"><b>{float(p):.1f}</b><span>P · rango {escape(rango or "—")}</span></div></div>'
+            f'<div class="ctvn-p"><b>{float(p):.1f}</b><span>{escape(p_note)}</span></div></div>'
             f'<div class="ctvn-meta">{"".join(f"<span>{escape(m)}</span>" for m in meta if m)}</div>')
     if proposed:
-        head += f'<div class="ctvn-proposed"><em>Título propuesto (generado, para revisión):</em> {escape(proposed)}</div>'
+        head += f'<div class="ctvn-proposed"><em>Título sugerido por la IA, para revisar:</em> {escape(proposed)}</div>'
     return head
 
 
@@ -203,24 +214,26 @@ def action_html(text: str) -> str:
     return f'<div class="ctvn-action"><span>Acción recomendada</span><p>{escape(text)}</p></div>'
 
 
-def alert_html(text: str, tag: str = "T07 · alerta") -> str:
+def alert_html(text: str, tag: str = "Aviso de seguridad") -> str:
     """A source that tried to give instructions: outlined, never hidden."""
     return f'<div class="ctvn-action"><span>{escape(tag)}</span><p>{escape(text)}</p></div>'
 
 
-def abstention_html(title: str, text: str, tag: str = "T06 · abstención") -> str:
+def abstention_html(title: str, text: str, tag: str = "Sin respuesta") -> str:
     """Absence shown as clearly as evidence: the system did not answer, and why."""
     return f'<div class="ctvn-abst" role="status"><span>{escape(tag)}</span><b>{escape(title)}</b><p>{escape(text)}</p></div>'
 
 
 def claim_html(kind_label: str, text: str, cites: list[dict]) -> str:
-    """One claim with its type and every citation. A cite: label, found (bool or None), context."""
+    """One claim with its type and every citation: the source in words first, its ID (the challenge's
+    citation key) small beside it. A cite: label, ident, found (bool or None), context."""
     parts = [f'<span class="ctvn-type">{escape(kind_label)}</span>', f"<span>{escape(text)}</span>"]
     for c in cites:
-        mark = {True: "✓ ", False: "✗ no encontrada · "}.get(c.get("found"), "")
+        mark = {True: "✓ ", False: "✗ no aparece en la fuente · "}.get(c.get("found"), "")
         context = f' <span class="ctvn-muted">· {escape(c["context"])}</span>' if c.get("context") else ""
         bad = " bad" if c.get("found") is False else ""
-        parts.append(f'<span class="ctvn-cite{bad}">{escape(mark + c["label"])}</span>{context}')
+        ident = f'<small>{escape(c["ident"])}</small>' if c.get("ident") else ""
+        parts.append(f'<span class="ctvn-cite{bad}">{escape(mark + c["label"])}{ident}</span>{context}')
     return f'<div class="ctvn-row">{"".join(parts)}</div>'
 
 
@@ -234,16 +247,16 @@ def note_html(text: str) -> str:
 
 
 def score_html(points: list[dict]) -> str:
-    """R..E as thin bars with value × weight = points; a missing value says 'sin dato'."""
+    """Each component as a thin bar and the points it adds ('30.0 de 30'); a missing value says 'sin dato'."""
     rows = []
     for p in points:
-        label = f'{p["clave"]} · {p["nombre"]}'
+        label = p["nombre"]
         if p["valor"] is None:
             rows.append(f'<div class="ctvn-score"><span>{escape(label)}</span><i></i><em>sin dato</em></div>')
         else:
             width = max(0.0, min(1.0, p["valor"])) * 100
             rows.append(f'<div class="ctvn-score"><span>{escape(label)}</span><i><u style="width:{width:.0f}%"></u></i>'
-                        f'<em>{p["valor"]:.2f} × {p["peso"]} = {p["puntos"]:.1f}</em></div>')
+                        f'<em>{p["puntos"]:.1f} de {p["peso"]}</em></div>')
     return "".join(rows)
 
 
@@ -254,7 +267,7 @@ def contradictions_html(items: list[dict], labels) -> str:
         sides = "".join(
             f'<div><div>{escape(str(c.get(f"version_{s}") or "—"))}</div>'
             f'<div class="ctvn-cite">{escape(labels(c.get(f"cita_{s}")))}</div></div>' for s in ("a", "b"))
-        blocks.append(f'<div class="ctvn-contra"><span>T05 · contradicción · no se elige una versión</span>'
+        blocks.append(f'<div class="ctvn-contra"><span>Las fuentes no coinciden · no elijo una versión: verifica ambas</span>'
                       f'<div class="ctvn-two">{sides}</div></div>')
     return "".join(blocks)
 
