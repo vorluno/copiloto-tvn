@@ -1,10 +1,27 @@
-# Registro para Notion (mientras llega el espacio)
+# Documentación del proyecto · las 8 páginas
 
-La organización entregará el espacio Notion Business; mientras tanto el registro se lleva aquí,
-fechado en git, y se importa tal cual (Notion → Importar → CSV crea una base de datos).
+La organización avisó el 8 oct que no habrá espacio de Notion y que no es obligatorio (ADR-047). Las 8
+páginas del reto quedan aquí, en el repositorio público: GitHub las muestra sin cuenta y cada cambio queda
+fechado en git. Si más adelante se usa Notion, cada CSV se importa tal cual como base de datos.
 
-| Archivo | Base de Notion | Página |
+| # | Página | Archivos |
 | --- | --- | --- |
+| 1 | Inicio del reto | [`inicio.md`](inicio.md) |
+| 2 | Plan y decisiones | [`tareas.csv`](tareas.csv) · [`decisiones.csv`](decisiones.csv) |
+| 3 | Catálogo de datos | [`catalogo.csv`](catalogo.csv) |
+| 4 | Diseño de solución | [`diseno.md`](diseno.md) |
+| 5 | Casos y evidencias | [`casos.md`](casos.md) (generada con `python tools/casos_md.py`) |
+| 6 | Pruebas y métricas | [`pruebas.csv`](pruebas.csv) · [`precision-at-5.md`](precision-at-5.md) · [`valor-operativo.md`](valor-operativo.md) · [`../../outputs/reports/`](../../outputs/reports/) |
+| 7 | Riesgos y ética | [`riesgos-y-etica.md`](riesgos-y-etica.md) · [`riesgos-datos.md`](riesgos-datos.md) |
+| 8 | Presentación al jurado | [`presentacion.md`](presentacion.md) |
+
+## Detalle de cada archivo
+
+| Archivo | Contenido | Página |
+| --- | --- | --- |
+| `inicio.md` | — (texto) | 1 · Inicio del reto: equipo, problema, usuario, alcance, criterios de éxito y enlaces (José) |
+| `diseno.md` | — (texto) | 4 · Diseño de solución: arquitectura, datos, puntaje, modelos, prompts y límites (José) |
+| `casos.md` | Casos generados desde `outputs/fichas.jsonl` + `outputs/revisiones.jsonl`: no editar a mano | 5 · Casos y evidencias |
 | `tareas.csv` | Tareas (ID, Tarea, Dueño, Estado, Día, Fecha de cierre, Commit) | 2 · Plan y decisiones |
 | `decisiones.csv` | Decisiones (ID, Fecha, Decisión, Alternativas, Por qué, Quién) | 2 · Plan y decisiones |
 | `catalogo.csv` | Catálogo de datos (Fuente, URL, Fecha de extracción, Cobertura, Campos, Licencia / condiciones, Transformaciones, SHA-256, Archivo, Filas). Lo genera `python -m src.catalog` desde los datos y el manifest (Levi, B-15): no editar a mano | 3 · Catálogo de datos |

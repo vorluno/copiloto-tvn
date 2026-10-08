@@ -14,17 +14,19 @@ evidencia de cada afirmación y redacta **borradores para revisión humana**: br
 - Funciona sin internet (`OFFLINE=1`).
 
 Equipo: **José** (líder técnico e integración), **Levi** (B · datos e IA) y **Cristian**
-(C · producto, frontend, Notion y QA). El reto está en [`docs/reto.pdf`](docs/reto.pdf); las tareas
+(C · producto, frontend y QA). El reto está en [`docs/reto.pdf`](docs/reto.pdf); las tareas
 en [`docs/backlog.md`](docs/backlog.md); el alcance y el uso de cada fuente en
 [`docs/alcance-y-datos.md`](docs/alcance-y-datos.md); las reglas de trabajo en [`CLAUDE.md`](CLAUDE.md); cómo
 abrir un PR en [`CONTRIBUTING.md`](CONTRIBUTING.md); la entrega en [`docs/entrega.md`](docs/entrega.md).
+
+**Documentación del proyecto (las 8 páginas del reto):** [`docs/notion/`](docs/notion/README.md).
 
 > **Estado (7 oct):** corpus real y completo en `data/processed/`: 11,337 noticias del 02/10/2025
 > al 30/09/2026 (1,248 de TVN y 10,089 de GDELT), 8,421 eventos (1,264 con 2 o más registros) y
 > 17 vínculos de contexto oficial del Banco Mundial. Puntaje (menos de 1 s), búsqueda, guard,
 > caché offline y fichas funcionan sobre él.
-> Falta: correr Gemini para llenar la caché de la demo (`make demo-cache`, guía en `docs/demo/corrida-llm.md`)
-> y las métricas con las etiquetas humanas (B-12).
+> Caché de Gemini completa para la demo sin internet (10 fichas, 6 consultas del pitch, 40 del benchmark).
+> Benchmark: citas 89/89, abstención 7/7, adversariales 6/6; latencia mediana 4.84 s (`outputs/reports/`).
 
 ## Para el jurado: probarlo en 5 minutos
 
@@ -79,7 +81,7 @@ Las cuatro preguntas del jurado:
 - **¿Qué pasa sin evidencia o con una fuente que intenta cambiar instrucciones?** Se abstiene y dice
   qué falta (T06). La instrucción no se obedece y queda en `alertas` (T07).
 - **¿Dónde está una decisión, una prueba fallida y su corrección?** Las decisiones, de ADR-001 en
-  adelante, están en Notion ("Plan y decisiones") y en `docs/notion/decisiones.csv`. Ejemplo de prueba
+  adelante, están en `docs/notion/decisiones.csv` (página 2, "Plan y decisiones"). Ejemplo de prueba
   fallida: T10 fallaba en Windows (asyncio abre un socket local) y se corrigió en el PR #41.
 
 ## Instalación
@@ -136,7 +138,7 @@ make test             # pytest tests/ -v
 - `tests/test_stub_contract.py` y `tests/test_fichas_stub_contract.py`: verifican que los
   datos sintéticos cumplen los contratos y traen los casos de T02, T03, T06, T07 y T08.
 
-Los resultados de cada corrida se registran en la matriz T01–T10 de Notion (Cristian).
+Los resultados de cada corrida se registran en la matriz T01–T10, `docs/notion/pruebas.csv` (Cristian).
 
 ## Otros comandos
 
@@ -167,7 +169,7 @@ copiloto-tvn/
 ├── .env.example              # José · LLM_API_KEY=, LLM_MODEL=, OFFLINE=0
 ├── docs/                     # Todos · reto.pdf, plan maestro, backlog.md y documento de cada rol
 │   ├── demo/                 # José y Cristian · consultas del pitch y guía de la corrida con Gemini
-│   ├── notion/               # Todos · decisiones, tareas, catálogo y riesgos para Notion
+│   ├── notion/               # Todos · las 8 páginas del reto (ADR-047)
 │   └── entrega.md            # José · lista de la entrega del jueves
 ├── rules/
 │   └── scoring_v1.yaml       # José · reglas del puntaje P
@@ -210,7 +212,7 @@ Paso a paso en [`CONTRIBUTING.md`](CONTRIBUTING.md). Lo esencial:
 - Nadie trabaja en `main`: rama por tarea (`feat/J-05-puntaje`, `feat/B-07-embeddings`,
   `docs/C-04-catalogo`), PR corto y José hace merge.
 - Commits con el ID de la tarea: `B-07: clasificación por similitud con 6 temas`.
-- Cero secretos en código, Notion o capturas. Si se filtra una clave, se rota.
+- Cero secretos en código, documentos, video o capturas. Si se filtra una clave, se rota.
 - Código (variables, funciones, comentarios) en inglés; contratos de datos, interfaz y
   documentación en español. Detalle en [`CLAUDE.md`](CLAUDE.md).
 
@@ -218,4 +220,4 @@ Paso a paso en [`CONTRIBUTING.md`](CONTRIBUTING.md). Lo esencial:
 
 TVN (RSS, solo metadatos), GDELT DOC 2.0, Banco Mundial API v2 (CC BY 4.0) y USGS FDSN.
 El catálogo completo, con fecha de extracción, cobertura y SHA-256, va en
-`data/manifest.json` y en la página "Catálogo de datos" de Notion.
+`data/manifest.json` y en la página 3, `docs/notion/catalogo.csv`.
