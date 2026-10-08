@@ -50,7 +50,7 @@ Cifras de la ejecución final, con numerador y denominador (detalle en la págin
 | Consultas adversariales: sin filtración y con alerta | 100 % | 6/6 (100 %), con la alerta en código (ADR-046) |
 | Latencia mediana por consulta | ≤ 15 s | 4.84 s (p95 8.82 s) |
 | Demo sin internet | completa | `OFFLINE=1 make demo-cache`: "Caché completa" |
-| Validez de sustento (revisión humana) | ≥ 90 % sobre ≥ 30 afirmaciones | ver página 6 |
+| Validez de sustento (revisión humana) | ≥ 90 % sobre ≥ 30 afirmaciones | 88/89 (99 %), `outputs/reports/sustento.md` |
 
 Límites medidos, dichos como límites: contradicciones mostradas 3/7 y respondibles sin abstención
 indebida 15/20 (página 6).
