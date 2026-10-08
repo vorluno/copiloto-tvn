@@ -1,4 +1,6 @@
 <picture>
+  <source media="(max-width: 600px) and (prefers-color-scheme: dark)" srcset="docs/readme/hero-m-dark.png">
+  <source media="(max-width: 600px)" srcset="docs/readme/hero-m-light.png">
   <source media="(prefers-color-scheme: dark)" srcset="docs/readme/hero-dark.png">
   <img alt="Copiloto TVN. Copiloto editorial para la redacción de TVN Panamá: ordena las noticias por una prioridad explicada, muestra la evidencia de cada afirmación y redacta borradores que siempre revisa una persona. Nunca publica. Debajo, el espectro de prioridad de los 8,421 eventos reales del corpus, de 91.0 a 7.0, con los 35 de prioridad alta en negro." src="docs/readme/hero-light.png" width="100%">
 </picture>
@@ -26,7 +28,7 @@ evidencia y redacta **borradores para revisión humana**: resumen, guion de TV y
 
 ## Pruébalo
 
-| | |
+| Qué | Enlace |
 | --- | --- |
 | **Demo en línea** | <https://copiloto-tvn.apps.vorluno.dev> · usuario `jurado` · contraseña `unjq-r8ca-vt7q` |
 | **Video de la demo sin internet** | [`docs/demo/copiloto-tvn-demo-respaldo.mp4`](docs/demo/copiloto-tvn-demo-respaldo.mp4) · 1 min 45 s, interfaz v1.1 |
@@ -43,6 +45,8 @@ desplegar.
 ## Cómo funciona
 
 <picture>
+  <source media="(max-width: 600px) and (prefers-color-scheme: dark)" srcset="docs/readme/flujo-m-dark.png">
+  <source media="(max-width: 600px)" srcset="docs/readme/flujo-m-light.png">
   <source media="(prefers-color-scheme: dark)" srcset="docs/readme/flujo-dark.png">
   <img alt="Del titular al borrador, en 7 etapas: 01 Cargar (valida y reporta calidad), 02 Organizar (temas, eventos, procedencias), 03 Contextualizar (dato oficial si se sostiene), 04 Priorizar (P con reglas fijas), 05 Explicar (ficha con su evidencia), 06 Producir (resumen, guion y redes) y 07 Revisar (decide una persona)." src="docs/readme/flujo-light.png" width="100%">
 </picture>
@@ -57,6 +61,8 @@ cifras sin respaldo y datos del Banco Mundial sin país, año y unidad.
 <br>
 
 <picture>
+  <source media="(max-width: 600px) and (prefers-color-scheme: dark)" srcset="docs/readme/formula-m-dark.png">
+  <source media="(max-width: 600px)" srcset="docs/readme/formula-m-light.png">
   <source media="(prefers-color-scheme: dark)" srcset="docs/readme/formula-dark.png">
   <img alt="Prioridad con reglas fijas, en rules/scoring_v1.yaml: P = 30R + 25I + 20U + 15N + 10E. R, relación con Panamá y los 6 temas, por 30. I, impacto del tema y dato oficial, por 25. U, urgencia contra la fecha del corpus, por 20. N, novedad frente a los 7 días previos, por 15. E, evidencia: procedencias y fuente oficial, por 10. La IA no calcula la prioridad: solo redacta. Una prioridad alta no autoriza a publicar." src="docs/readme/formula-light.png" width="100%">
 </picture>
@@ -91,6 +97,8 @@ ahí mismo se piden los tres formatos de borrador: resumen, guion de TV y texto 
 ## En cifras
 
 <picture>
+  <source media="(max-width: 600px) and (prefers-color-scheme: dark)" srcset="docs/readme/cifras-m-dark.png">
+  <source media="(max-width: 600px)" srcset="docs/readme/cifras-m-light.png">
   <source media="(prefers-color-scheme: dark)" srcset="docs/readme/cifras-dark.png">
   <img alt="En cifras, ejecución final: 11,337 noticias del 02/10/2025 al 30/09/2026; 8,421 eventos; 89 de 89 afirmaciones con cita válida; 88 de 89 con sustento revisado a mano (99 %, meta 90 %); 7 de 7 abstenciones correctas; 6 de 6 ataques sin filtración; latencia mediana de 4.84 s (meta 15 s); 407 pruebas en verde y 4 omitidas en la versión v1.1." src="docs/readme/cifras-light.png" width="100%">
 </picture>
