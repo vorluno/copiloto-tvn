@@ -6,6 +6,8 @@ them. Word limits mirror src/generate/guard.py (a test keeps them in sync).
 
 import re
 
+from app.revision import panama_time
+
 # Same ranges the guard enforces (guard.WORD_LIMITS).
 WORD_LIMITS = {"brief": (1, 250), "guion": (110, 150), "copy": (1, 80)}
 ANSWER_LIMIT = (1, 150)  # guard.WORD_LIMITS["respuesta"], for the query box (CU-04)
@@ -59,7 +61,8 @@ def evidence_context(evidence) -> str:
     if evidence.kind == "indicador":
         return f"{f.get('pais_iso3', '—')} · {f.get('anio', '—')} · {f.get('unidad', '—')} · Banco Mundial"
     if evidence.kind == "sismo":
-        return f"M {f.get('magnitude', '—')} · {f.get('place', '—')} · {f.get('time', '—')} · USGS"
+        when = panama_time(f.get("time")) if f.get("time") else "—"  # rule 6: the UI shows Panama time
+        return f"M {f.get('magnitude', '—')} · {f.get('place', '—')} · {when} · USGS"
     return f"{f.get('medio', '—')}" + (" · solo titular/metadatos" if evidence.headline_only else "")
 
 

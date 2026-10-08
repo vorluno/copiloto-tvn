@@ -1,9 +1,9 @@
 # 8 · Presentación al jurado
 
-Página 8 de Notion (C-11, Cristian). Guion del pitch de **10 minutos**, presentado desde esta
+Página 8 de la documentación (`docs/notion/`, C-11, Cristian; sin Notion, ADR-047). Guion del pitch de **10 minutos**, presentado desde esta
 página con la app abierta en otra pestaña y el **wifi apagado** (`OFFLINE=1 make demo`).
 
-Lo marcado **[pendiente]** se llena con la ejecución final del jueves (`make eval`, B-12, C-17).
+Las cifras son de la ejecución final (corrida con Gemini del 7 oct, `outputs/reports/`, B-12, C-17).
 Ninguna cifra se dice si no está medida.
 
 | # | Bloque | Tiempo | Quién |
@@ -57,15 +57,18 @@ Si algo falla en vivo: el video de respaldo (C-18).
     - en economía gana el baseline (F1 0.67 contra 0.46): la IA mete notas de deporte y cultura que mencionan Panamá;
     - servicios públicos: ninguno de los dos acierta (0 de 3);
     - el clima del día va a "eventos naturales" y la etiqueta humana dice "otro";
-    - los 33 tránsitos del Canal siguen partidos en dos eventos, uno en español y otro en inglés.
-  - **Frase para decir:** "Con 60 noticias etiquetadas a mano, la IA saca macro-F1 0.37 frente a 0.29 del baseline de palabras clave. En eventos acierta los 3 pares del mismo hecho (1 de 3 con la entrega ciega). La muestra es chica y lo decimos." Fuente: `outputs/reports/clasificacion.md` (B-12).
+    - el mismo hecho de los 33 tránsitos del Canal quedó en dos eventos: el #2 (7 registros, español e inglés) y el #22 (6 registros, solo inglés).
+  - **Con la misma base de temas** la diferencia se achica: 0.37 contra **0.34** (los 6 temas medidos en los dos sistemas).
+  - **Frase para decir:** "Con 60 noticias etiquetadas a mano, la IA saca macro-F1 0.37 frente a 0.29 del baseline de palabras clave; comparando los mismos temas, 0.37 frente a 0.34: una ventaja chica, con 30 noticias. En eventos acierta los 3 pares del mismo hecho (1 de 3 con la entrega ciega)." Fuente: `outputs/reports/clasificacion.md` (B-12).
 - **Benchmark de desarrollo, 40 consultas (20/7/7/6):**
-  - cobertura de citas **[pendiente `make eval`]** (meta 100 %);
-  - abstención correcta **[pendiente]** (meta ≥ 80 %);
-  - adversariales sin filtración **[pendiente]** (meta 100 %);
-  - latencia mediana y p95 **[pendiente]**.
+  - cobertura de citas **89/89 (100 %)** (meta 100 %); el guard dejó pasar 89 de 93 afirmaciones del modelo;
+  - abstención correcta **7/7 (100 %)** (meta ≥ 80 %);
+  - adversariales sin filtración y con alerta **6/6 (100 %)** (meta 100 %). Con Gemini solo fue 1/6: el modelo respondía y callaba la instrucción. Se corrigió en código (`46db05a`, #75) con las mismas respuestas: es nuestra prueba fallida con su corrección;
+  - latencia mediana **4.84 s** y p95 **8.82 s** (meta: mediana ≤ 15 s); costo 0.002 USD por consulta;
+  - **límites, dichos como límites:** respondibles sin abstención indebida 15/20 (75 %) y contradicciones mostradas lado a lado 3/7 (43 %).
+  - Fuente: `outputs/reports/benchmark.md` y `latencia.md`.
 - **Ya medido:**
-  - la búsqueda encuentra la evidencia esperada en el **88 %** del benchmark (43 de 49), después de corregir lo que el benchmark detectó: 71 % → 88 % (#48);
+  - la búsqueda encuentra la evidencia esperada en el **84 %** del benchmark con el corpus final (41 de 49); con el corpus anterior, corregir lo que el benchmark detectó la llevó de 71 % a 88 % (#48);
   - T01–T10: 40 pruebas en verde, con fallos documentados y corregidos (página 6);
   - **Precision@5 exploratoria: 2/5 (40 %)** con el corpus final, igual que con el corpus anterior. Acierta en el Canal y deja fuera deuda, El Niño, CSS y turismo. Un solo evaluador del equipo, no un editor real (página 6).
 
@@ -73,7 +76,7 @@ Si algo falla en vivo: el video de respaldo (C-18).
 
 - **Decirlo así: "hipótesis de valor".** No medimos el ahorro de tiempo de forma válida: en 6 pruebas exploratorias (3 tareas × a mano / con la app, un evaluador del equipo), ninguna tarea se completó dentro del cronómetro. No damos un "X % más rápido".
 - **Lo que sí vimos:** en la tarea del Canal, la app encontró **7 noticias de 7 medios** y la búsqueda a mano **3 de 3**: más corroboración, no solo velocidad.
-- **Y una falla que la prueba destapó:** la app no mostraba la unidad del dato del Banco Mundial (regla 9). Detalle en `valor-operativo.md` (página 6).
+- **Y una falla que la prueba destapó:** la app no mostraba la unidad del dato del Banco Mundial (regla 9). Se corrigió en `bfc8ece` (#70). Detalle en `valor-operativo.md` (página 6).
 
 ## 6 · Riesgos, límites y próximos pasos (1 min, Cristian)
 
@@ -104,4 +107,4 @@ Si algo falla en vivo: el video de respaldo (C-18).
 - [ ] Wifi apagado y `OFFLINE=1 make demo` probado en la máquina que se presenta.
 - [ ] Sin claves, tokens ni `.env` en pantalla.
 - [ ] Enlaces: repo `https://github.com/vorluno/copiloto-tvn` (tag `v1.0`) y video de respaldo (C-18).
-- [ ] Notion abierto desde una ventana privada para comprobar el acceso del jurado.
+- [ ] Repo, documentación (`docs/notion/`) y video abiertos desde una ventana privada: el jurado entra sin cuenta.

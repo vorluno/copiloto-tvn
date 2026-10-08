@@ -1,6 +1,6 @@
 # Valor operativo · hipótesis de valor (C-17)
 
-Para la página **6 · Pruebas y métricas** de Notion y el bloque 5 del pitch.
+Para la página **6 · Pruebas y métricas** y el bloque 5 del pitch.
 
 ## Conclusión
 
@@ -45,7 +45,7 @@ cronómetro.
    las notas en inglés ("transits"), que la app agrupa en el mismo evento.
 2. **Falla de la app encontrada por la prueba (tarea C).** La evidencia del Banco Mundial en la
    consulta muestra el ID (país, indicador y año) y el valor, pero **no la unidad**. La regla 9 del
-   reto pide país, año y unidad. Queda como corrección pendiente de la app.
+   reto pide país, año y unidad. Corregida en `bfc8ece` (#70): la evidencia muestra país, año, unidad y fuente.
 3. **El cronómetro solo vale con un criterio de "terminado" explícito.** Sin una lista de lo que
    debe tener la respuesta, el evaluador cortó antes de terminar en las 6 pruebas.
 

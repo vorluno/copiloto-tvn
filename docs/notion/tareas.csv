@@ -3,16 +3,16 @@ J-01,"Repo, estructura, README, Makefile, .env.example",José,Hecha,Mar,2026-10-
 J-02,Stub de 10 noticias sintéticas,José,Hecha,Mar,2026-10-06,a457bcf
 J-03,Esqueleto Streamlit con 4 pestañas,José,Hecha,Mar,2026-10-06,a457bcf
 J-04,Proveedor LLM y ADR-005,José,Hecha,Mar,2026-10-07,ba834f8; precio en .env.example (#42)
-J-05,score.py: P y 5 componentes desde scoring_v1.yaml,José,Hecha,Mié,2026-10-06,"bfb788d (#4); corpus real 19 s → 3,6 s (#41)"
+J-05,score.py: P y 5 componentes desde scoring_v1.yaml,José,Hecha,Mié,2026-10-06,"bfb788d (#4); corpus real 19 s → 3,6 s (#41); corpus completo 22 s → 0,9 s (cea07e4, #66)"
 J-06,"Búsqueda semántica: 10 fragmentos con ID y campo, o ""sin evidencia""",José,Hecha,Mié,2026-10-06,"9a88c11 (#19); nulos (#41); tokenizador, recall 71 % → 88 % (#48)"
-J-07,"Prompt, esquema Pydantic y guard.py",José,Hecha,Mié,2026-10-06,1bd7731 (#3)
+J-07,"Prompt, esquema Pydantic y guard.py",José,Hecha,Mié,2026-10-06,"1bd7731 (#3); brief_v3, 3 preguntas (#63)"
 J-08,"Brief, guion y copy con citas",José,Hecha,Mié,2026-10-06,e50d75b (#8); T09 activa (#42)
 J-09,Exportar fichas.jsonl y leer revisiones.jsonl (solo backend; la interfaz es C-15),José,Hecha,Mié,2026-10-06,942a75b (#13); 9b0e0af (#18)
 J-10,"Abstención y contradicciones (T05, T06)",José,Hecha,Jue,2026-10-06,5761938 (#17)
-J-11,Defensa anti-inyección (T07),José,Hecha,Jue,2026-10-06,5761938 (#17)
-J-12,Caché offline y modo sin internet (T10),José,En curso,Jue,,8601aad (#6); make demo-cache (#42); falta la corrida con Gemini (Levi)
-J-13,"Latencia mediana y p95, tokens y costo",José,En curso,Jue,,53a95cc (#22); benchmark de C-06 listo (#45); falta la corrida con Gemini
-J-14,"Tag v1.0, README final, acceso del jurado",José,En curso,Jue,,README para el jurado y entrega.md (#43); QA en navegador (#44); tag v1.0 el jueves 20:00
+J-11,Defensa anti-inyección (T07),José,Hecha,Jue,2026-10-08,"5761938 (#17); inyección en la consulta, adversariales 1/6 → 6/6 (46db05a, #75)"
+J-12,Caché offline y modo sin internet (T10),José,Hecha,Jue,2026-10-07,"8601aad (#6); make demo-cache (#42); corrida con Gemini de Levi, caché completa (7e8fcf0, #74)"
+J-13,"Latencia mediana y p95, tokens y costo",José,Hecha,Jue,2026-10-07,"53a95cc (#22); corrida con Gemini: mediana 4.84 s, p95 8.82 s, 0.002 USD por consulta (#74)"
+J-14,"Tag v1.0, README final, acceso del jurado",José,En curso,Jue,,"README para el jurado y entrega.md (#43); sin Notion: 8 páginas en docs/notion (45cc20d, #76); tag v1.0 al congelar"
 J-15,fichas_stub.jsonl para que el frontend avance sin backend,José,Hecha,Mar,2026-10-06,ad52899
 J-16,"docs/alcance-y-datos.md: modalidad, recorrido y para qué sirve cada fuente",José,Hecha,Mar,2026-10-06,71f15cd (#5)
 B-01,"Ingesta TVN RSS (≥20 noticias, con descripcion)",Levi,Hecha,Mar,2026-10-06,e2b1ef1 (#15)
@@ -26,7 +26,7 @@ B-08,Agrupación y conteo de procedencias (T02),Levi,Hecha,Mié,2026-10-07,f46cd
 B-09,Baseline: palabras clave + TF-IDF,Levi,Hecha,Mié,2026-10-07,8eac409 (#32)
 B-10,manifest.json con SHA-256 y diccionario.md,Levi,Hecha,Mié,2026-10-07,94be1c3; e35684d (#33)
 B-11,Recirculadas: conservar fecha original (T03),Levi,Hecha,Jue,2026-10-07,2824757 (#38)
-B-12,Macro-F1 IA vs baseline sobre etiquetas humanas,Levi,En curso,Jue,,"b7c3134 (#40), espera las etiquetas de C-05"
+B-12,Macro-F1 IA vs baseline sobre etiquetas humanas,Levi,Hecha,Jue,2026-10-07,"1aacd4c (#40); misma base de temas (bd0c319, #73)"
 B-13,"noticias.csv + fuentes.json con los nombres del reto, desde el parquet",Levi,Hecha,Mié,2026-10-07,404b08c (#34)
 B-14,"Contexto oficial (contexto.parquet): relacionar clusters con indicadores del Banco Mundial y sismos del USGS con una regla escrita; sin relación sustentada, sin fila. Alimenta el I y la E del puntaje y T04",Levi,Hecha,Mié,2026-10-07,7a9d2bb (#35)
 B-15,Catálogo de datos en Notion (antes C-04): una fila por fuente con los 8 campos del reto,Levi,Hecha,Mié,2026-10-07,cbbe7e6 (#36)
