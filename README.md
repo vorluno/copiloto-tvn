@@ -20,13 +20,13 @@ en [`docs/backlog.md`](docs/backlog.md); el alcance y el uso de cada fuente en
 abrir un PR en [`CONTRIBUTING.md`](CONTRIBUTING.md); la entrega en [`docs/entrega.md`](docs/entrega.md).
 
 **Documentación del proyecto (las 8 páginas del reto):** [`docs/notion/`](docs/notion/README.md).
-**Video de la demo sin internet (3 min):** [`docs/demo/copiloto-tvn-demo-respaldo.mp4`](docs/demo/copiloto-tvn-demo-respaldo.mp4).
+**Video de la demo sin internet (1 min 45 s, interfaz v1.1):** [`docs/demo/copiloto-tvn-demo-respaldo.mp4`](docs/demo/copiloto-tvn-demo-respaldo.mp4).
 
 **Demo en línea, sin instalar nada:** <https://copiloto-tvn.apps.vorluno.dev> · usuario `jurado` · contraseña `unjq-r8ca-vt7q`.
-Las credenciales son públicas a propósito: solo evitan que buscadores y bots la indexen. La demo es
-`OFFLINE=1 make demo` sobre el tag `v1.0`, sin clave del modelo: responde las consultas del pitch
+Las credenciales son públicas a propósito: solo evitan que buscadores y bots la indexen. La demo corre
+el tag `v1.1` sin clave del modelo (`OFFLINE=1`): responde las preguntas sugeridas
 ([`docs/demo/consultas_demo.txt`](docs/demo/consultas_demo.txt), escritas igual) desde `outputs/cache/` y
-cualquier otra se abstiene. La primera carga tarda unos segundos; las revisiones que se marquen ahí se
+ante cualquier otra dice que no tiene esa respuesta guardada. La primera carga tarda unos segundos; las revisiones que se marquen ahí se
 borran al volver a desplegar.
 
 > **Estado (7 oct):** corpus real y completo en `data/processed/`: 11,337 noticias del 02/10/2025
