@@ -22,6 +22,13 @@ abrir un PR en [`CONTRIBUTING.md`](CONTRIBUTING.md); la entrega en [`docs/entreg
 **Documentación del proyecto (las 8 páginas del reto):** [`docs/notion/`](docs/notion/README.md).
 **Video de la demo sin internet (3 min):** [`docs/demo/copiloto-tvn-demo-respaldo.mp4`](docs/demo/copiloto-tvn-demo-respaldo.mp4).
 
+**Demo en línea, sin instalar nada:** <https://copiloto-tvn.apps.vorluno.dev> · usuario `jurado` · contraseña `unjq-r8ca-vt7q`.
+Las credenciales son públicas a propósito: solo evitan que buscadores y bots la indexen. La demo es
+`OFFLINE=1 make demo` sobre el tag `v1.0`, sin clave del modelo: responde las consultas del pitch
+([`docs/demo/consultas_demo.txt`](docs/demo/consultas_demo.txt), escritas igual) desde `outputs/cache/` y
+cualquier otra se abstiene. La primera carga tarda unos segundos; las revisiones que se marquen ahí se
+borran al volver a desplegar.
+
 > **Estado (7 oct):** corpus real y completo en `data/processed/`: 11,337 noticias del 02/10/2025
 > al 30/09/2026 (1,248 de TVN y 10,089 de GDELT), 8,421 eventos (1,264 con 2 o más registros) y
 > 17 vínculos de contexto oficial del Banco Mundial. Puntaje (menos de 1 s), búsqueda, guard,
@@ -30,6 +37,8 @@ abrir un PR en [`CONTRIBUTING.md`](CONTRIBUTING.md); la entrega en [`docs/entreg
 > Benchmark: citas 89/89, abstención 7/7, adversariales 6/6; latencia mediana 4.84 s (`outputs/reports/`).
 
 ## Para el jurado: probarlo en 5 minutos
+
+Sin instalar nada: la **demo en línea** de arriba (usuario y contraseña públicos). Para correrlo en tu máquina:
 
 Requisitos: **Python 3.11** y `make` (en Windows, WSL o Git Bash). No hace falta clave ni internet
 para la demo: las respuestas del modelo vienen guardadas en `outputs/cache/` (ADR-033).
