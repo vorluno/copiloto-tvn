@@ -26,7 +26,8 @@ def test_missing_component_says_sin_dato_never_zero():
 def test_header_always_states_the_mode():
     offline = header_html(True, "data/processed/noticias.parquet", 2462, 2015, "2026-10-06 17:50 (Panamá)", False)
     online = header_html(False, "data/stub/noticias_stub.parquet", 10, 8, None, True)
-    assert "Sin internet (OFFLINE=1)" in offline and "2,462 noticias · 2,015 eventos" in offline
+    assert "Sin internet" in offline and "2,462 noticias · 2,015 eventos" in offline
+    assert "OFFLINE" not in offline and "data/" not in offline  # product words only: no flags or paths
     assert "En línea" in online and "sintéticas" in online
 
 
