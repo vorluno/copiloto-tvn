@@ -33,7 +33,8 @@ NEWS_FIELDS = ("id_noticia, titulo, descripcion, url, medio, dominio, idioma, fe
 NEWS_STEPS = (f"URL normalizada e id_noticia = N- + SHA-1; HTML quitado; fechas a UTC; período 02/10/2025–30/09/2026 "
               f"(sin fecha = fuera); repetidas entre fuentes: se conserva TVN; validación B-05; tema con "
               f"{embed.MODEL_NAME.split('/')[-1]} (umbral {classify.THRESHOLD}); procedencia (agencia, casi copia "
-              f"TF-IDF ≥ {provenance.NEAR_DUPLICATE} en 48 h, medio); clusters (distancia ≤ {cluster.DISTANCE_THRESHOLD}, 72 h)")
+              f"TF-IDF ≥ {provenance.NEAR_DUPLICATE} en 48 h, medio); clusters (distancia ≤ {cluster.DISTANCE_THRESHOLD}, "
+              f"≥ {cluster.MIN_SHARED_WORDS} raíces en común, 72 h)")
 
 
 def _range(dates: pd.Series) -> str:
