@@ -285,7 +285,7 @@ copiloto-tvn/
 | --- | --- |
 | José Luis González Montenegro | Líder técnico e integración |
 | Jampier González («Levi» en el repositorio) | Datos e IA |
-| Cristian Valdes | Producto, frontend y QA |
+| Cristian Valdés | Producto, frontend y QA |
 
 Nadie trabajó en `main`: una rama por tarea (`feat/J-05-puntaje`, `feat/B-07-embeddings`, `docs/C-04-catalogo`),
 PR corto y commits con el ID de la tarea. Cero secretos en código, documentos, video o capturas. Código en inglés;
