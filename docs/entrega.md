@@ -21,7 +21,7 @@ que volver a correrla. Por eso el orden importa.
 | 14:00 | Métricas: macro-F1 IA vs baseline (B-12) y `make eval` | Levi y José | `outputs/reports/` con numerador y denominador |
 | 18:00 | T01–T10 ejecutadas y registradas en `pruebas.csv`; 5+ casos revisados en la app (una persona, en el repo real) y `python tools/casos_md.py` | Cristian | matriz completa; `casos.md` con persona revisora en 5+ casos, uno abstenido |
 | 18:00 | QA de la interfaz en el navegador con las fichas de Gemini: `tools/qa_app.js` (escenarios `real` y `stub`, en una copia del repo) | Cristian | todo PASS |
-| 18:00 | Validez de sustento: `OFFLINE=1 make eval` en una copia y columna `valida` de `outputs/reports/sustento_revision.csv` (≥ 30 afirmaciones; meta ≥ 90 %) | Cristian | CSV en el repo y el resultado en `pruebas.csv` y el pitch |
+| 18:00 | Validez de sustento: una persona llena `valida` (sí/no) y `revisor` en `outputs/reports/sustento_revision.csv` (ya está en el repo; 89 afirmaciones, 158 citas) y corre `python tools/sustento.py` (≥ 30 afirmaciones; meta ≥ 90 %) | Cristian | CSV y `outputs/reports/sustento.md` en el repo; resultado en `pruebas.csv` y el pitch |
 | 19:00 | Grabación de la demo con wifi apagado (C-18) | Cristian | video con enlace público (YouTube no listado o Drive "cualquiera con el enlace"), sin secretos en pantalla |
 | 20:00 | **Congelamiento**: último merge, verificación final y tag `v1.0` | José | tag publicado |
 | 20:00–23:00 | Documentación (8 páginas en `docs/notion/`) completa, 2 ensayos cronometrados del pitch | Todos | pitch de 10 min desde `presentacion.md` |
