@@ -19,6 +19,9 @@ query boosts passages with that year ("PIB de Panamá en 2023" -> 2023). Words a
 any non-letter ("Minsa–CSS" -> minsa, css; GDELT's "S & P" and "S&P" -> sp), and how a question
 is phrased ("qué decidió", "cuánto", "dijo") is not content. Fully offline;
 the B-07 embeddings can replace the ranking through `vectorizer`, the gates stay.
+Acronyms (J-16): when nothing passes the gates, the search retries once with Panamanian acronyms
+expanded both ways ("CSS" <-> "Caja de Seguro Social"); for coverage the acronym and the words of
+its full name are one concept. Only as a retry, so queries that already find evidence keep it.
 Known limit: lexical matching, so a stray shared word can still pass the gates
 ("resultado del Super Bowl" finds a local football result); the guard and the model
 then decline to answer from it.
@@ -97,6 +100,48 @@ def stems(text: str) -> list[str]:
     return out
 
 
+# Panamanian acronyms and their full names (J-16). Kept to the ones the corpus uses (checked 8 oct on
+# noticias.parquet): INEC and SBP never appear, so they are left out. Used only as a second attempt.
+ACRONYMS = {
+    "CSS": "Caja de Seguro Social",
+    "ACP": "Autoridad del Canal de Panamá",
+    "MEF": "Ministerio de Economía y Finanzas",
+    "MINSA": "Ministerio de Salud",
+    "IDAAN": "Instituto de Acueductos y Alcantarillados Nacionales",
+    "ATTT": "Autoridad de Tránsito y Transporte Terrestre",
+    "MIDA": "Ministerio de Desarrollo Agropecuario",
+    "MOP": "Ministerio de Obras Públicas",
+    "MEDUCA": "Ministerio de Educación",
+    "SINAPROC": "Sistema Nacional de Protección Civil",
+    "BID": "Banco Interamericano de Desarrollo",
+    "FMI": "Fondo Monetario Internacional",
+}
+
+
+Concept = tuple[frozenset[str], ...]  # alternative stem sets; a passage covers it with any one of them
+
+
+def expand_acronyms(query: str) -> tuple[str, list[Concept], list[Concept]] | None:
+    """The query with each acronym's other form appended, its entity concepts (the acronym and the
+    words of its full name are one concept, matched by either form) and its other words. None if the
+    query names no acronym or full name."""
+    query_stems = set(stems(query))
+    rest, concepts, extra = set(query_stems), [], []
+    for short, full in ACRONYMS.items():
+        short_form, full_form = frozenset(stems(short)), frozenset(stems(full))
+        if short_form <= query_stems:
+            extra.append(full)
+        elif full_form <= query_stems:
+            extra.append(short)
+        else:
+            continue
+        concepts.append((short_form, full_form))
+        rest -= short_form | full_form
+    if not concepts:
+        return None
+    return f"{query} {' '.join(extra)}", concepts, [(frozenset({s}),) for s in sorted(rest)]
+
+
 @dataclass
 class Passage:
     evidence: Evidence
@@ -119,6 +164,7 @@ class SearchResult:
     query: str
     hits: list[Hit] = field(default_factory=list)
     best_score: float = 0.0
+    ampliada: str | None = None  # query text of the acronym retry, when that is what found the hits (J-16)
 
     @property
     def sin_evidencia(self) -> bool:
@@ -177,11 +223,29 @@ class SearchIndex:
 
     def search(self, query: str, k: int = DEFAULT_K, threshold: float = THRESHOLD,
                min_coverage: float = MIN_COVERAGE) -> SearchResult:
-        result = SearchResult(query=query)
+        """Search as asked; only if nothing is found, retry with acronyms expanded (J-16), so the
+        evidence of every query that already finds something (and its cached answer) never changes."""
         query_stems = set(stems(query))
-        if self.matrix is None or not query_stems:
+        result = self._search(query, query, [(frozenset({s}),) for s in query_stems], k, threshold, min_coverage)
+        if result.hits or (expanded := expand_acronyms(query)) is None:
             return result
-        scores = cosine_similarity(self.vectorizer.transform([query]), self.matrix)[0]
+        text, entities, words = expanded
+        # A retry hit must name the entity in one of its forms: the retry exists to find "CSS" for
+        # "Caja de Seguro Social", not to let other passages through on a looser coverage.
+        retry = self._search(query, text, entities + words, k, threshold, min_coverage, required=entities)
+        if not retry.hits:
+            return result
+        retry.ampliada = text
+        return retry
+
+    def _search(self, query: str, text: str, concepts: list[Concept], k: int, threshold: float,
+                min_coverage: float, required: list[Concept] = ()) -> SearchResult:
+        """Rank passages for `text`; a passage covers a concept when it has all the stems of one of
+        its forms (a plain word has one form; "CSS" also has "Caja de Seguro Social")."""
+        result = SearchResult(query=query)
+        if self.matrix is None or not concepts:
+            return result
+        scores = cosine_similarity(self.vectorizer.transform([text]), self.matrix)[0]
         if asked := years(query):
             scores = scores + [YEAR_BOOST if asked & self.passage_years[i] else 0.0 for i in range(len(scores))]
         order = sorted(range(len(scores)), key=lambda i: (-round(float(scores[i]), 6), -self.passages[i].recency, i))
@@ -189,7 +253,10 @@ class SearchIndex:
         for i in order:
             if len(result.hits) == k or scores[i] < threshold:
                 break
-            if len(query_stems & self.passage_stems[i]) / len(query_stems) < min_coverage:
+            covers = [any(form <= self.passage_stems[i] for form in forms) for forms in concepts]
+            if sum(covers) / len(concepts) < min_coverage:
+                continue
+            if not all(any(form <= self.passage_stems[i] for form in forms) for forms in required):
                 continue
             p = self.passages[i]
             result.hits.append(Hit(p.evidence.id, p.field, p.evidence.fields.get(p.field, p.text),

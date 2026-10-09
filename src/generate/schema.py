@@ -82,7 +82,14 @@ def evidence_from_news(row: pd.Series) -> Evidence:
     fields = {name: row[name] for name in ("titulo", "medio", "descripcion") if name in row and pd.notna(row[name])}
     if (published := _iso(row.get("fecha_publicacion"))) is not None:
         fields["fecha_publicacion"] = published
-    return Evidence(id=row["id_noticia"], kind="noticia", fields=fields, scope=row["alcance_texto"])
+    # GDELT's seendate stays out of `fields` (never sent, never citable); the guard only uses it to tell
+    # whether two figures are from the same week (J-16).
+    try:
+        detected = _iso(row.get("fecha_deteccion"))
+    except (TypeError, ValueError):  # a naive or malformed date is simply unknown here
+        detected = None
+    return Evidence(id=row["id_noticia"], kind="noticia", fields=fields, scope=row["alcance_texto"],
+                    meta={"fecha_deteccion": detected} if detected else {})
 
 
 def evidence_from_indicator(row: pd.Series) -> Evidence | None:

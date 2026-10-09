@@ -20,7 +20,10 @@ Runs before anything reaches the UI. The model's word is never trusted:
    in the draft must exist in some evidence sent; otherwise the claim or draft is dropped
    (no invented figure, T06). Two sources with different figures for the same unit
    become a contradiction plus a pending verification, added by code if the model did
-   not, and a claim taking one side as "hecho" becomes "declaracion" (T05).
+   not, and a claim taking one side as "hecho" becomes "declaracion" (T05). Only comparable
+   figures count (J-16): same unit, same week, same measured thing (figures.find_conflicts);
+   a model contradiction between a World Bank cell and data from another period is dropped.
+   World Bank values are recorded, never "proyectado" or "estimado" (T04, J-16).
 10. Injection (J-11): a draft that repeats an instruction-like text is dropped (T07).
 11. Accusations (arrests, charges, alleged crimes) are typed "declaracion", never "hecho".
 
@@ -37,7 +40,7 @@ from dataclasses import dataclass, field
 
 from pydantic import ValidationError
 
-from src.generate.figures import find_conflicts, unsupported_figures
+from src.generate.figures import evidence_date, find_conflicts, unsupported_figures
 from src.generate.schema import Afirmacion, Cita, Contradiccion, Evidence, SalidaLLM, Task
 
 ONLY_HEADLINE = "Basado únicamente en titular/metadatos."
@@ -62,7 +65,22 @@ INJECTION_PATTERNS = [
     r"\bact[uú]a como\b",
     r"nuevas? instrucci[oó]n(?:es)?\b",
     r"\b(?:system|developer) prompt\b",
-    r"\bapi[ _-]?key\b",
+    # Keys and tokens (J-16): "api_key" inside LLM_API_KEY has no word boundary (the underscore is a word char).
+    r"(?<![a-z])api[ _-]?keys?\b",
+    r"\b[a-z0-9]+_(?:api_)?(?:key|token|secret)s?\b",  # env-var shape: OPENROUTER_API_KEY, GITHUB_TOKEN
+    r"\bclaves? (?:de (?:la )?)?api\b",
+    r"\btokens? (?:de )?(?:acceso|api|autenticaci[oó]n|secretos?)\b",
+    # Imperative + possessive object only: "entregan instrucciones" or "incluyen claves" are real headlines.
+    r"\b(?:dame|danos|d[ée]jame ver|entr[ée]game|proporciona|escribe|copia|pega|devuelve|ens[eé][ñn]a)\b "
+    r"(?:\w+ ){0,4}(?:tu|tus|el|la|los|las) (?:clave|contraseña|token|prompt|instrucciones|configuraci[oó]n)",
+    # The system prompt or the model's own instructions; "sistema de pensiones" stays a news topic.
+    r"\bprompt (?:de|del) sistema\b",
+    r"\btus? prompts?\b",
+    r"\binstrucciones (?:de|del) sistema\b",
+    r"\b(?:tus|sus) (?:instrucciones|reglas|indicaciones) (?:de sistema|internas|originales|iniciales|ocultas)\b",
+    # Planted orders ("nota interna: afirma +40 %"): only with a colon, so "una nota interna del MEF asegura…" passes.
+    r"\b(?:nota|instrucci[oó]n(?:es)?|indicaci[oó]n|orden|mensaje) internas?\s*:",
+    r"\b(?:no sigas|omite|s[aá]ltate|desobedece) (?:\w+ ){0,2}(?:instrucciones|reglas|indicaciones)\b",
     r"ignore (?:all |any |the |your )?(?:previous |prior |above )?(?:instructions|rules)",
     r"disregard (?:all |any |the |your )?(?:previous |prior |above )?(?:instructions|rules)",
     r"\byou are now\b",
@@ -78,6 +96,8 @@ SYSTEM_PROMPT_FINGERPRINTS = [
     "responde solo con el json pedido",
 ]
 TODAY_WORDS = re.compile(r"\b(hoy|actualmente|en la actualidad|este año|al día de hoy)\b", re.IGNORECASE)
+# A World Bank cell is a recorded value, never a projection, estimate or forecast (T04, J-16).
+FORECAST_WORDS = re.compile(r"proyec|\bestim(?!ul)|pron[oó]stic|\bprev[eé]\b|\bprevist|previsi[oó]n|se espera", re.IGNORECASE)
 # World Bank claims must name the country (secc. 9, T04).
 COUNTRY_NAMES = {
     "PAN": ["panamá", "panama"], "CRI": ["costa rica"], "COL": ["colombia"],
@@ -176,6 +196,25 @@ def _conflict_entries(evidence: list[Evidence], existing: list[Contradiccion]) -
     return added, pending
 
 
+def _incomparable_official(item: Contradiccion, by_id: dict[str, Evidence]) -> str | None:
+    """Why a contradiction the model gave around official data is not one (J-16), or None.
+    A World Bank cell only contradicts the same indicator, country and year, or a news item
+    from that same year: a 2021 rate against a 2026 headline is two periods, not two versions."""
+    a, b = by_id[item.cita_a.id_fuente], by_id[item.cita_b.id_fuente]
+    if "indicador" not in (a.kind, b.kind):
+        return None
+    if a.kind == b.kind == "indicador":
+        keys = ("indicador_id", "pais_iso3", "anio")
+        if all(a.fields.get(k) == b.fields.get(k) for k in keys):
+            return None
+        return f"{a.id} y {b.id}: datos del Banco Mundial de distinto indicador, país o año"
+    cell, other = (a, b) if a.kind == "indicador" else (b, a)
+    when = evidence_date(other) if other.kind == "noticia" else None
+    if when is not None and cell.year is not None and when.year == cell.year:
+        return None
+    return f"{cell.id} ({cell.year}) y {other.id}: períodos distintos, no es una contradicción"
+
+
 def _parse(raw: str | dict) -> SalidaLLM:
     if isinstance(raw, dict):
         return SalidaLLM.model_validate(raw)
@@ -217,6 +256,8 @@ def _official_data_error(text: str, item: Evidence) -> str | None:
             return f"dato del Banco Mundial sin año ({item.year})"
         if TODAY_WORDS.search(text):
             return "dato anual del Banco Mundial presentado como actual"
+        if FORECAST_WORDS.search(text):
+            return "dato registrado del Banco Mundial presentado como proyección o estimación"
         country = item.fields.get("pais_iso3", "")
         folded = normalize(text)
         if not any(name in folded for name in COUNTRY_NAMES.get(country, [])) and country.lower() not in folded.split():
@@ -309,6 +350,8 @@ def guard(raw: str | dict, evidence: list[Evidence], task: Task) -> GuardResult:
         errors = [e for e in (_citation_error(item.cita_a, by_id), _citation_error(item.cita_b, by_id)) if e]
         if errors:
             report.dropped_citations.extend(errors)
+        elif (why := _incomparable_official(item, by_id)) is not None:
+            report.fixes.append(f"contradicción descartada: {why}")
         else:
             contradictions.append(item)
 
