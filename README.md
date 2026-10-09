@@ -33,7 +33,7 @@ evidencia y redacta **borradores para revisión humana**: resumen, guion de TV y
 | **Demo en línea** | <https://copiloto-tvn.apps.vorluno.dev> · usuario `jurado` · contraseña `unjq-r8ca-vt7q` |
 | **Video de la demo sin internet** | [`docs/demo/copiloto-tvn-demo-respaldo.mp4`](docs/demo/copiloto-tvn-demo-respaldo.mp4) · 1 min 45 s, interfaz v1.1 |
 | **Versión final** | tag [`v1.2`](https://github.com/vorluno/copiloto-tvn/releases/tag/v1.2) · mismos datos que `v1.0`; interfaz de `v1.1` y las correcciones de una auditoría de jurado (ADR-050) |
-| **Notion del equipo** | [Documentación técnica](https://app.notion.com/p/3f36d0f0b114817ba1a2cf059af5b356) · [Documentación funcional](https://app.notion.com/p/3f36d0f0b11481feb68dc27af313d3f9) · [Presentación del Pitch Day](https://app.notion.com/p/3f36d0f0b114812d93a9d2b3f2163f56) (espacio del hackIAthon) |
+| **Notion del equipo** | [Documentación técnica](https://app.notion.com/p/3f36d0f0b114817ba1a2cf059af5b356) · [Documentación funcional](https://app.notion.com/p/3f36d0f0b11481feb68dc27af313d3f9) · [Presentación del Pitch Day](https://app.notion.com/p/3f36d0f0b114812d93a9d2b3f2163f56) · [Registro del evento](https://app.notion.com/p/3f46d0f0b11481cd880bda2b5bef07d2) (espacio del hackIAthon) |
 
 Las credenciales son públicas a propósito: solo evitan que buscadores y bots indexen la demo. La demo corre `v1.2`
 en línea: las preguntas sugeridas salen de la caché en segundos y las nuevas las redacta Gemini 2.5 Flash; si el
