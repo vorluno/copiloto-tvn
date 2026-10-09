@@ -147,7 +147,7 @@ que llamaba «proyección» a un dato registrado del Banco Mundial ahora se abst
   (ADR-007, T02). La bandeja muestra notas y fuentes independientes por separado.
 - **¿Qué pasa sin evidencia o con una fuente que intenta cambiar instrucciones?** Se abstiene y dice qué falta
   (T06). La instrucción no se obedece y queda como alerta (T07).
-- **¿Dónde está una decisión, una prueba fallida y su corrección?** Las decisiones, de ADR-001 a ADR-049, están en
+- **¿Dónde está una decisión, una prueba fallida y su corrección?** Las decisiones, de ADR-001 a ADR-055, están en
   [`docs/notion/decisiones.csv`](docs/notion/decisiones.csv). Ejemplo de prueba fallida: T10 fallaba en Windows
   (asyncio abre un socket local) y se corrigió en el PR #41.
 
