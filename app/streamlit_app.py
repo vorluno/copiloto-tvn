@@ -17,6 +17,7 @@ outputs/cache/ and the UI says so on every view (T10).
 
 import json
 import os
+import time
 from html import escape
 from pathlib import Path
 
@@ -52,6 +53,9 @@ from app.estilo import (
     CAPTION_CLICK_JS, scroll_js, section_html, tiles_html,
 )
 from src.score import score_clusters
+from app.cercanos import closest, closest_html, scroll_script
+from app.jurado import EXTRA_CSS, render_jury, render_rules, render_simulator
+from app.simulador import official_rules
 
 ROOT = Path(__file__).resolve().parents[1]
 PROCESSED_PATH = ROOT / "data" / "processed" / "noticias.parquet"
@@ -201,8 +205,10 @@ def claims_html(card: dict | None, check: bool) -> str:
     return "".join(html)
 
 
-def show_answer(result) -> None:
-    """A question's answer (DraftResult) exactly as the guard left it, explained in product words."""
+def show_answer(result, hits: list | None = None) -> None:
+    """A question's answer (DraftResult) exactly as the guard left it, explained in product words.
+    `hits` are the passages the search found: when the answer abstains they are shown as the closest
+    findings, never as an answer (J-16)."""
     if result.source == "error":
         st.markdown(abstention_html("No pude responder ahora.", tx.motivo(result.output.motivo_abstencion),
                                     "Algo falló"), unsafe_allow_html=True)
@@ -213,6 +219,12 @@ def show_answer(result) -> None:
     if result.source == "offline_miss":
         st.markdown(abstention_html("No tengo esta respuesta guardada.", tx.motivo(out["motivo_abstencion"]) +
                                     " Prueba con una de las preguntas sugeridas.", "Sin conexión"), unsafe_allow_html=True)
+        if hits:  # what the search did find, never as an answer (J-16)
+            st.markdown(closest_html(closest(hits, news)), unsafe_allow_html=True)
+    elif out["abstencion"] and hits:
+        st.markdown(abstention_html(tx.SIN_RESPUESTA_DIRECTA, tx.motivo(out["motivo_abstencion"]),
+                                    "Sin respuesta directa"), unsafe_allow_html=True)
+        st.markdown(closest_html(closest(hits, news)), unsafe_allow_html=True)
     elif out["abstencion"]:
         st.markdown(abstention_html("No encontré información sobre esto.", tx.motivo(out["motivo_abstencion"])),
                     unsafe_allow_html=True)
@@ -229,7 +241,9 @@ def show_answer(result) -> None:
         st.markdown(section_html("Datos con su fuente") + html, unsafe_allow_html=True)
     if out["contradicciones"]:
         st.markdown(contradictions_html(out["contradicciones"], cite_text), unsafe_allow_html=True)
-    if out["verificaciones_pendientes"]:
+    if result.source == "sin_evidencia":  # nothing on the topic: there is no figure to look up (J-16)
+        st.markdown(section_html(tx.SIGUIENTE_PASO) + check_html(tx.TEMA_AUSENTE), unsafe_allow_html=True)
+    elif out["verificaciones_pendientes"]:
         st.markdown(section_html("Qué falta comprobar")
                     + "".join(check_html(p) for p in out["verificaciones_pendientes"]), unsafe_allow_html=True)
 
@@ -272,7 +286,7 @@ def request_redo(cluster_id: str) -> None:
 
 
 st.set_page_config(page_title="Copiloto TVN", page_icon="📰", layout="wide", initial_sidebar_state="auto")
-st.markdown(CSS, unsafe_allow_html=True)
+st.markdown(CSS + EXTRA_CSS, unsafe_allow_html=True)
 
 boot = st.empty()
 if "booted" not in st.session_state:  # a branded wait on the first load, not the framework's spinner
@@ -644,6 +658,11 @@ def view_consulta() -> None:
             st.markdown(note_html("Escribe una pregunta primero."), unsafe_allow_html=True)
         pending = question.strip() if sent and question.strip() else st.session_state.pop("run_q", None)
         if pending:
+            st.markdown('<div id="ctvn-progreso"></div>', unsafe_allow_html=True)
+            # On a phone the progress and the answer render below the suggested questions: bring them
+            # into view (J-16).
+            st.html(scroll_script("ctvn-progreso", f"run-{time.time_ns()}"), unsafe_allow_javascript=True)
+            started = time.perf_counter()  # what the editor waited now, not what the cached call took then
             # A real stage per step (search, writing, checking), never a clock-driven bar.
             with st.status(f"Buscando en {len(news):,} noticias y datos oficiales…", expanded=True) as status:
                 bar = st.progress(0.1)
@@ -662,7 +681,7 @@ def view_consulta() -> None:
                              f"{report.claims_received} pasaron.")
                 bar.progress(1.0)
                 origin = tx.ORIGEN_RESPUESTA.get(answer.source, "respuesta")
-                timing = f" · {answer.latency_s:.1f} s" if answer.latency_s else ""
+                timing = f" · {time.perf_counter() - started:.1f} s"
                 if answer.source in ("offline_miss", "error"):  # say what happened; a failure is never "Listo ✓"
                     status.update(label="Sin conexión: esta pregunta no está guardada" if answer.source == "offline_miss"
                                   else "El servicio de IA no respondió", state="error", expanded=False)
@@ -674,8 +693,11 @@ def view_consulta() -> None:
             st.markdown(note_html("Escribe tu pregunta o elige una de la lista. Cada dato sale con su fuente; "
                                   "si no hay información, te lo digo en vez de inventar."), unsafe_allow_html=True)
         else:
-            st.markdown(f'<div class="ctvn-ask">Respuesta a «{escape(last["q"])}»</div>', unsafe_allow_html=True)
-            show_answer(last["answer"])
+            st.markdown(f'<div class="ctvn-ask" id="ctvn-respuesta">Respuesta a «{escape(last["q"])}»</div>',
+                        unsafe_allow_html=True)
+            show_answer(last["answer"], last["hits"])
+            if pending:
+                st.html(scroll_script("ctvn-respuesta", f"ans-{time.time_ns()}"), unsafe_allow_javascript=True)
             if last["hits"]:
                 with st.expander(f"Ver los {len(last['hits'])} fragmentos que encontré"):
                     st.dataframe(pd.DataFrame([{
@@ -774,6 +796,7 @@ def view_datos() -> None:
     cached = cache_count(CACHE_DIR)
     st.markdown(page_head_html("Fuentes y datos", [
         "De dónde sale cada noticia", "Con qué licencia se usa", "Cómo comprobar que nada cambió",
+        "Con qué reglas se ordena",
     ]), unsafe_allow_html=True)
     manifest = load_manifest()
     if manifest is None:
@@ -813,6 +836,11 @@ def view_datos() -> None:
             st.markdown("\n".join(f"1. `{step}`" for step in manifest.get("reproducir", [])))
             st.caption(f"Modelo: {model_name()} · temperatura 0 · " +
                        ("sin internet: solo respuestas guardadas" if OFFLINE else "en línea: guardadas primero, luego el modelo"))
+
+    rules = official_rules()
+    render_rules(rules)
+    render_simulator(scored, dict(zip(inbox["cluster_id"], inbox["titular"])) if not inbox.empty else {}, rules)
+    render_jury()
 
     quality = load_quality()
     st.markdown(section_html("Calidad de los datos"), unsafe_allow_html=True)

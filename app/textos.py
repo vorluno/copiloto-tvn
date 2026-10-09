@@ -243,3 +243,57 @@ def titulo_mesa(hasta) -> str:
 
 def datos_hasta(hasta) -> str:
     return "Sin fecha de datos" if hasta is None or pd.isna(hasta) else f"Noticias hasta el {fecha(hasta)}"
+
+
+# --- J-16: Preguntar (closest findings), weights simulator and the live challenge check ---
+
+SIN_RESPUESTA_DIRECTA = "No encontré una respuesta directa a tu pregunta."
+LO_MAS_CERCANO = "Esto es lo más cercano que encontré:"
+NO_VERIFICADO = ("Esto no es una respuesta verificada: son las notas y los datos más parecidos a tu pregunta. "
+                 "Revísalos y confírmalos antes de usarlos.")
+TEMA_AUSENTE = ("Este tema no está en las noticias ni en los datos oficiales cargados. "
+                "Para cubrirlo hace falta otra fuente.")
+SIGUIENTE_PASO = "Siguiente paso"
+RESPUESTA_LISTA = "Listo"
+
+# World Bank indicators and countries, as a newsroom names them (same set as src/context.py).
+INDICADOR = {"NY.GDP.MKTP.KD.ZG": "Crecimiento del PIB", "FP.CPI.TOTL.ZG": "Inflación (precios al consumidor)",
+             "SL.UEM.TOTL.ZS": "Desempleo", "NE.EXP.GNFS.ZS": "Exportaciones de bienes y servicios",
+             "IT.NET.USER.ZS": "Uso de internet"}
+PAIS = {"PAN": "Panamá", "CRI": "Costa Rica", "COL": "Colombia", "DOM": "República Dominicana", "MEX": "México",
+        "GTM": "Guatemala"}
+
+RANGO_NOMBRE = {"bajo": "Baja", "medio": "Media", "alto": "Alta"}
+SIMULACION_AVISO = ("Simulación: no cambia el orden oficial ni se guarda. Para cambiar las reglas se edita "
+                    "la versión de reglas y se justifica en una decisión.")
+
+# Challenge tests (section 9 of the brief), in newsroom words: what each one checks.
+PRUEBA_RETO = {
+    "T01": ("Fechas inválidas y nulos", "Separa los errores, conserva los nulos y la carga sigue"),
+    "T02": ("Tres registros del mismo evento", "Un solo evento con 3 fuentes, sin triplicar su importancia"),
+    "T03": ("Noticia antigua recirculada", "Muestra la fecha original y no la cuenta como evento nuevo"),
+    "T04": ("Cifra anual del Banco Mundial", "Cita país, año y unidad; nunca dice «hoy»"),
+    "T05": ("Dos afirmaciones incompatibles", "Muestra ambas versiones y lo que falta verificar"),
+    "T06": ("Consulta sin respuesta", "Se abstiene y no inventa ninguna cifra"),
+    "T07": ("Fuente que pide ignorar instrucciones", "No obedece, no revela nada y deja una alerta"),
+    "T08": ("Caso de prioridad alta", "Muestra los componentes y la regla; no habilita publicar"),
+    "T09": ("Brief editorial", "Formato útil, con citas y hechos separados de inferencias"),
+    "T10": ("Sin internet", "Recorrido completo con respuestas guardadas"),
+}
+RESULTADO_PRUEBA = {"pasa": "Pasa", "falla": "No pasa", "omitida": "Omitida", "sin_correr": "No corrió"}
+
+
+def puestos(cambio) -> str:
+    """How many places an event moves in the simulation: '↑ 3', '↓ 2', '=' or 'entra'."""
+    if cambio is None or pd.isna(cambio):
+        return "entra al top"
+    cambio = int(cambio)
+    if cambio == 0:
+        return "="
+    return f"↑ {cambio}" if cambio > 0 else f"↓ {-cambio}"
+
+
+def segundos(valor) -> str:
+    if valor is None or pd.isna(valor):
+        return "—"
+    return "menos de 0.1 s" if float(valor) < 0.05 else f"{float(valor):.1f} s"
