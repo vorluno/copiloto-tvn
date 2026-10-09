@@ -32,10 +32,10 @@ evidencia y redacta **borradores para revisión humana**: resumen, guion de TV y
 | --- | --- |
 | **Demo en línea** | <https://copiloto-tvn.apps.vorluno.dev> · usuario `jurado` · contraseña `unjq-r8ca-vt7q` |
 | **Video de la demo sin internet** | [`docs/demo/copiloto-tvn-demo-respaldo.mp4`](docs/demo/copiloto-tvn-demo-respaldo.mp4) · 1 min 45 s, interfaz v1.1 |
-| **Versión final** | tag [`v1.1`](https://github.com/vorluno/copiloto-tvn/releases/tag/v1.1) · misma lógica y datos que `v1.0`; cambia la interfaz (ADR-049) |
+| **Versión final** | tag [`v1.2`](https://github.com/vorluno/copiloto-tvn/releases/tag/v1.2) · mismos datos que `v1.0`; interfaz de `v1.1` y las correcciones de una auditoría de jurado (ADR-050) |
 | **Notion del equipo** | [Documentación técnica](https://app.notion.com/p/3f36d0f0b114817ba1a2cf059af5b356) · [Documentación funcional](https://app.notion.com/p/3f36d0f0b11481feb68dc27af313d3f9) · [Presentación del Pitch Day](https://app.notion.com/p/3f36d0f0b114812d93a9d2b3f2163f56) (espacio del hackIAthon) |
 
-Las credenciales son públicas a propósito: solo evitan que buscadores y bots indexen la demo. La demo corre `v1.1`
+Las credenciales son públicas a propósito: solo evitan que buscadores y bots indexen la demo. La demo corre `v1.2`
 en línea: las preguntas sugeridas salen de la caché en segundos y las nuevas las redacta Gemini 2.5 Flash; si el
 servicio de IA no responde, la app lo dice y no inventa. Las revisiones que se marquen ahí se borran al volver a
 desplegar.
@@ -82,7 +82,13 @@ ningún dato oficial vinculado, así que queda «parcial».
 
 **Mesa:** la bandeja ordenada por prioridad y la ficha del evento elegido, lado a lado. La ficha dice qué se
 reporta, quién lo dice, qué está respaldado (cada cita con ID, campo y pasaje), qué falta y la acción recomendada, y
-ahí mismo se piden los tres formatos de borrador: resumen, guion de TV y texto para redes.
+ahí mismo se piden los tres formatos de borrador: resumen, guion de TV y texto para redes. En línea se puede pedir un borrador para
+cualquiera de los 8,421 eventos, no solo para los 10 guardados; si un formato no pasa el control, la ficha dice por
+qué (por ejemplo, un guion más corto que lo que piden 45 segundos). Cada cita muestra su fecha.
+
+**Fuentes y datos:** las reglas de la prioridad con un simulador de pesos («¿y si los pesos fueran otros?»), que
+muestra cómo cambiaría el orden sin tocar el oficial, y el **modo jurado**: un botón que corre en el servidor las
+pruebas del reto (T01, T04 a T10) y muestra cada resultado en unos 30 s.
 
 <table>
   <tr>
@@ -108,7 +114,9 @@ ahí mismo se piden los tres formatos de borrador: resumen, guion de TV y texto 
 Benchmark de desarrollo de 40 consultas (20 sustentadas, 7 de contradicción, 7 sin respuesta y 6 adversariales)
 con `google/gemini-2.5-flash` a temperatura 0. Costo total de 0.084 USD, unos **0.002 USD por consulta**. Los
 límites también se reportan: el modelo puso lado a lado 3 de 7 contradicciones y respondió 15 de 20 consultas
-respondibles. Detalle, con numerador y denominador, en [`outputs/reports/`](outputs/reports/).
+respondibles. Detalle, con numerador y denominador, en [`outputs/reports/`](outputs/reports/). Con el control de `v1.2`
+la misma corrida, sin red y desde la caché, da 88/88 citas válidas, 7/7 abstenciones y 6/6 ataques: una respuesta
+que llamaba «proyección» a un dato registrado del Banco Mundial ahora se abstiene.
 
 <br>
 
@@ -221,7 +229,7 @@ make test             # pytest tests/ -v
 - `tests/test_textos.py`: la interfaz habla con palabras de redacción y nunca muestra valores internos.
 - `tests/test_no_secrets.py`: falla si aparece una clave en cualquier archivo versionado.
 
-Corrida de la versión final: **407 pruebas en verde y 4 omitidas**, con el modelo de embeddings. La matriz T01–T10,
+Corrida de la versión final (`v1.2`): **472 pruebas en verde y 4 omitidas**, con el modelo de embeddings. La matriz T01–T10,
 con lo observado y cada corrección, está en [`docs/notion/pruebas.csv`](docs/notion/pruebas.csv).
 
 </details>
