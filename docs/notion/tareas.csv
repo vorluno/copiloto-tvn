@@ -12,7 +12,7 @@ J-10,"Abstención y contradicciones (T05, T06)",José,Hecha,Jue,2026-10-06,57619
 J-11,Defensa anti-inyección (T07),José,Hecha,Jue,2026-10-08,"5761938 (#17); inyección en la consulta, adversariales 1/6 → 6/6 (46db05a, #75)"
 J-12,Caché offline y modo sin internet (T10),José,Hecha,Jue,2026-10-07,"8601aad (#6); make demo-cache (#42); corrida con Gemini de Levi, caché completa (7e8fcf0, #74)"
 J-13,"Latencia mediana y p95, tokens y costo",José,Hecha,Jue,2026-10-07,"53a95cc (#22); corrida con Gemini: mediana 4.84 s, p95 8.82 s, 0.002 USD por consulta (#74)"
-J-14,"Tag v1.0, README final, acceso del jurado",José,En curso,Jue,,"README para el jurado y entrega.md (#43); sin Notion: 8 páginas en docs/notion (45cc20d, #76); tag v1.0 al congelar"
+J-14,"Tag v1.0, README final, acceso del jurado",José,Hecha,Jue,2026-10-08,"README para el jurado y entrega.md (#43); sin Notion: 8 páginas en docs/notion (45cc20d, #76); tag v1.0 al congelar; tag v1.0 (2b2b68b) y tag v1.1 (f8f840b)"
 J-15,fichas_stub.jsonl para que el frontend avance sin backend,José,Hecha,Mar,2026-10-06,ad52899
 J-16,"docs/alcance-y-datos.md: modalidad, recorrido y para qué sirve cada fuente",José,Hecha,Mar,2026-10-06,71f15cd (#5)
 B-01,"Ingesta TVN RSS (≥20 noticias, con descripcion)",Levi,Hecha,Mar,2026-10-06,e2b1ef1 (#15)
@@ -34,19 +34,22 @@ B-16,"Riesgos de los datos para la página ""Riesgos y ética"": derechos por fu
 B-17,make verify: recalcula los SHA-256 y los compara con manifest.json (reproducibilidad para el jurado),Levi,Hecha,Jue,2026-10-07,1aad896 (#39)
 B-18,"Pitch, bloque 4 (2 min: IA, baseline y métricas): sección en la página 8 de Notion con la tabla IA vs baseline y una frase honesta sobre cuándo no ayuda; 2 ensayos",Levi,Por hacer,Jue,,
 C-01,Armar las 8 páginas en el espacio Notion Business provisto; José y Levi como editores; acceso del jurado verificado,Cristian,Bloqueada,Al recibirlo,,
-C-02,Llevar Tareas y Decisiones en docs/notion/*.csv desde hoy e importarlas a Plan y decisiones cuando llegue Notion,Cristian,En curso,Mar,,
+C-02,Llevar Tareas y Decisiones en docs/notion/*.csv desde hoy e importarlas a Plan y decisiones cuando llegue Notion,Cristian,Hecha,Mar,2026-10-08,Importadas a Notion el 08/10/2026 (página «Registro del evento»: bases Plan · tareas y Decisiones)
 C-03,Post diario en LinkedIn (3 marcas + hashtags),Cristian,Por hacer,"Mar, Mié, Jue",,
 C-05,Etiquetar 60 noticias: tema y evento,Cristian,Hecha,Mié,2026-10-07,"c2a098e (#59, entrega ciega); 8790e13 (#62, 2 pares corregidos y declarados)"
 C-06,Benchmark de desarrollo: 40 consultas,Cristian,Hecha,Mié,2026-10-07,2c9b355 (#45)
 C-07,"Página ""Riesgos y ética"" (con el aporte de Levi en B-16)",Cristian,Hecha,Mié,2026-10-07,66e965f (#53)
-C-08,Ejecutar T01–T10 y registrar resultados,Cristian,En curso,Jue,,"122e005 (#52, primera corrida); falta la corrida final con la caché de Gemini"
+C-08,Ejecutar T01–T10 y registrar resultados,Cristian,Hecha,Jue,2026-10-08,"122e005 (#52, primera corrida); corrida final con la caché de Gemini en pruebas.csv (fa8407d, #77)"
 C-09,Precision@5 contra selección independiente,Cristian,Hecha,Jue,2026-10-07,"d733600 (#61, exploratoria, corpus del 7 oct); fechada en #71"
-C-10,"5+ fichas en Notion, una con evidencia insuficiente",Cristian,Por hacer,Jue,,
+C-10,"5+ fichas en Notion, una con evidencia insuficiente",Cristian,Hecha,Jue,2026-10-08,"Base «Casos y evidencias» en Notion (Registro del evento), 10 casos, 6 con evidencia insuficiente"
 C-11,Pitch en Notion y 2 ensayos cronometrados,Cristian,En curso,Jue,,c2d8c9e (#55); #71 cifras finales en revisión; faltan los 2 ensayos
 C-12,"Bandeja priorizada (CU-01): top 5 por P con rango, estado de evidencia, tema, ""N registros · M procedencias"", filtros; hora de Panamá. Lee fichas_stub.jsonl y luego fichas.jsonl",Cristian,Hecha,Mié,2026-10-06,ab98513 (#7); 1dd3205 (#44); #46 filtro de idioma en revisión
 C-13,"Ficha (etapa 5): qué se reporta, quién, qué está respaldado, qué falta y acción recomendada; 5 componentes en barras + versión de reglas; cada cita muestra ID, campo y pasaje",Cristian,Hecha,Mié,2026-10-06,1342a29 (#16)
 C-14,"Borrador y consulta: brief, guion y copy con contador de palabras; afirmaciones con su tipo (hecho / declaración / inferencia / hipótesis) diferenciado; contradicciones lado a lado (T05); abstención visible (T06); alertas (T07); aviso ""basado únicamente en titular/metadatos""; caja de consulta en español (CU-04)",Cristian,Hecha,Mié,2026-10-06,137e8ee (#20)
 C-15,"Revisión: 5 estados + persona revisora + nota → outputs/revisiones.jsonl; botón ""copiar para Notion"" con la ficha en Markdown (ADR-008)",Cristian,Hecha,Mié,2026-10-06,b51e918 (#24); f52b3a9 (#28); 1dd3205 (#44)
 C-16,"Pantalla ""Datos y calidad"": reporte de calidad, manifest y licencias; aviso de modo sin internet (T10)",Cristian,Hecha,Jue,2026-10-07,5928151 (#51)
-C-17,"Valor operativo: tiempo manual vs asistido en la misma tarea, ≥3 pruebas, para el bloque 5 del pitch. Si no se mide, se dice ""hipótesis de valor""",Cristian,En curso,Jue,,#69 en revisión (hipótesis de valor)
-C-18,Respaldo de la demo: grabación del recorrido con wifi apagado y capturas sin secretos en Notion (evidencia de T10),Cristian,Por hacer,Jue,,
+C-17,"Valor operativo: tiempo manual vs asistido en la misma tarea, ≥3 pruebas, para el bloque 5 del pitch. Si no se mide, se dice ""hipótesis de valor""",Cristian,Hecha,Jue,2026-10-07,"c98164e (#69): docs/notion/valor-operativo.md, presentado como hipótesis de valor"
+C-18,Respaldo de la demo: grabación del recorrido con wifi apagado y capturas sin secretos en Notion (evidencia de T10),Cristian,Hecha,Jue,2026-10-08,bdc35c2 (#80); regrabado con la interfaz v1.1 en 7836c6c (#87)
+J-17,"Interfaz v1.1: barra lateral, mesa con bandeja y ficha, textos humanos y video regrabado",José,Hecha,Jue,2026-10-08,"#85, #86, #87; tag v1.1 (f8f840b). Sus commits llevan el prefijo J-15 por error"
+J-18,"Notion: espacio del equipo con documentación técnica, funcional y presentación; registro del evento importado; README con el sistema visual de la app",José,Hecha,Jue,2026-10-08,#88 a #93. Sus commits llevan el prefijo J-15 por error
+J-19,v1.2: correcciones de la auditoría de jurado del 08/10 (ADR-050),José,En curso,Jue,,

@@ -4,7 +4,9 @@ La organización pidió el 8 oct un espacio del equipo en Notion (ADR-048, que r
 a Notion). Está en el workspace del hackIAthon, con tres páginas:
 [documentación técnica](https://app.notion.com/p/3f36d0f0b114817ba1a2cf059af5b356),
 [documentación funcional](https://app.notion.com/p/3f36d0f0b11481feb68dc27af313d3f9) y
-[presentación del Pitch Day](https://app.notion.com/p/3f36d0f0b114812d93a9d2b3f2163f56). Sus imágenes están en
+[presentación del Pitch Day](https://app.notion.com/p/3f36d0f0b114812d93a9d2b3f2163f56), más un
+[registro del evento](https://app.notion.com/p/3f46d0f0b11481cd880bda2b5bef07d2) con el plan, las decisiones, el catálogo,
+los casos, las pruebas y la bitácora de PRs, importados el 08/10/2026 desde este repositorio. Sus imágenes están en
 [`img/`](img/) y sus piezas interactivas en [`embeds/`](embeds/). Las 8 páginas del reto siguen aquí, en el
 repositorio público, como fuente: GitHub las muestra sin cuenta y cada cambio queda fechado en git.
 
