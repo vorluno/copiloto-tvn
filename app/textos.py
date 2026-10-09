@@ -18,7 +18,9 @@ TEMA = {"economía": "Economía", "logística/Canal": "Logística y Canal", "tur
         "servicios públicos": "Servicios públicos", "eventos naturales": "Eventos naturales",
         "regulación": "Regulación", "otro": "Otros temas"}
 CAMPO = {"titulo": "titular", "descripcion": "resumen", "valor": "valor", "place": "lugar",
-         "magnitude": "magnitud", "time": "fecha"}
+         "magnitude": "magnitud", "time": "fecha", "unidad": "unidad", "pais_iso3": "país", "anio": "año",
+         "indicador_id": "indicador", "depth_km": "profundidad", "medio": "medio",
+         "fecha_publicacion": "fecha de publicación"}
 ALCANCE = {"titular/metadatos": "Solo el titular", "descripcion_rss": "Titular y resumen (RSS de TVN)",
            "descripcion_web": "Titular y resumen (web de TVN)"}
 ORIGEN_NOTICIA = {"tvn_rss": "TVN (RSS)", "tvn_web": "TVN (web)", "gdelt": "GDELT"}
@@ -124,3 +126,120 @@ def motivo(texto: str | None) -> str:
 
 def cita_fuente(campo: str | None) -> str:
     return CAMPO.get(campo or "", campo or "campo sin nombre")
+
+
+# --- Case card (J-16): citation dates, figures, missing formats, live drafting ---------------
+
+FORMATO_SUJETO = {"brief": "El resumen", "guion": "El guion", "copy": "El texto para redes"}
+PASO_REDACCION = {"inicio": "Buscando la evidencia del tema…", "brief": "Redactando el resumen…",
+                  "guion": "Redactando el guion de TV…", "copy": "Redactando el texto para redes…",
+                  "citas": "Revisando que cada dato tenga su fuente…", "listo": "Listo · borrador nuevo para revisar",
+                  "sin_conexion": "Sin conexión: no se puede redactar ahora",
+                  "fallo": "El servicio de IA no respondió", "fallo_guion": "El guion no pasó el control otra vez"}
+REDACTAR = "Redactar borrador"
+VOLVER_GUION = "Volver a redactar el guion"
+SIN_BORRADOR = ("Este tema todavía no tiene borrador. Puedes pedir uno ahora: se escribe con las mismas fuentes y "
+                "reglas que los temas guardados y pasa por el mismo control de citas.")
+SIN_BORRADOR_NUEVO = "Sin borrador nuevo"
+SIN_CONEXION_REDACCION = ("Redactar un borrador nuevo necesita conexión con el servicio de IA. Ahora solo están "
+                          "los borradores guardados de los temas más prioritarios.")
+FALLO_REDACCION = "El servicio de IA no respondió. Intenta de nuevo en un momento."
+
+_LONG_DECIMAL = re.compile(r"(\d+)([.,])(\d{4,})(?!\d)")
+_WORDS_OUT = re.compile(r"(\w+): (\d+) palabras, fuera de \[(\d+), (\d+)\]")
+
+
+def cifras(texto: str | None) -> str:
+    """Numbers with more than 3 decimals rounded to 2 for reading ('0.69322555100446 %' -> '0.69 %').
+
+    Display only: the cited passage is evidence and is always shown as it is.
+    """
+    if not texto:
+        return texto or ""
+
+    def short(m: re.Match) -> str:
+        whole, sep, frac = m.groups()
+        value = round(float(f"{whole}.{frac}"), 2)
+        return f"{value:.2f}".replace(".", sep)
+
+    return _LONG_DECIMAL.sub(short, texto)
+
+
+def fecha_cita(publicada, detectada=None) -> str | None:
+    """When a news item came out: the outlet's date, else GDELT's detection said as such."""
+    if publicada is not None and not (not isinstance(publicada, str) and pd.isna(publicada)):
+        return f"publicada el {fecha(publicada, con_hora=False)}"
+    if detectada is not None and not (not isinstance(detectada, str) and pd.isna(detectada)):
+        return f"detectada el {fecha(detectada, con_hora=False)}"
+    return None
+
+
+def ver_notas(n: int) -> str:
+    """Expander label for the news behind an event, with number agreement."""
+    return "Ver la nota que lo reporta" if n == 1 else f"Ver las {n} notas que lo reportan"
+
+
+def ver_fuentes(n: int) -> str:
+    return f"Ver las {n} fuentes"
+
+
+def formato_ausente(task: str, gap: dict | None) -> str:
+    """Why a draft format is missing, in newsroom words, from what the quality check recorded.
+
+    `gap`: {"source", "violations", "abstencion", "motivo", "skipped"} for that format, or None
+    when nothing was recorded (then an honest generic text).
+    """
+    sujeto = FORMATO_SUJETO.get(task, "Este formato")
+    if not gap:
+        return f"{sujeto} no quedó guardado para este tema y no tenemos registrado el motivo."
+    if gap.get("skipped"):
+        return f"{sujeto} no se redactó: el resumen no encontró evidencia suficiente, y sin ella no se escribe nada más."
+    if gap.get("source") == "offline_miss":
+        return f"{sujeto} no está guardado y sin conexión no se puede redactar ahora."
+    if gap.get("source") == "error":
+        return f"{sujeto} no se redactó porque el servicio de IA no respondió."
+    for v in gap.get("violations") or []:
+        if m := _WORDS_OUT.search(v):
+            n, low, high = int(m.group(2)), int(m.group(3)), int(m.group(4))
+            if task == "guion":
+                return (f"El guion salió con {n} palabras y para 45–60 segundos hacen falta entre {low} y {high}; "
+                        "no lo mostramos para no rellenar.")
+            rango = f"hasta {high}" if low <= 1 else f"entre {low} y {high}"
+            return f"{sujeto} salió con {n} palabras y debe tener {rango}; no lo mostramos."
+    for v in gap.get("violations") or []:
+        if reason := retiro(v):
+            return reason.replace("el texto corrido", sujeto.lower())
+    if gap.get("abstencion"):
+        return f"{sujeto} no se redactó: {motivo(gap.get('motivo'))}"
+    return f"{sujeto} no pasó el control de calidad, así que no lo mostramos."
+
+
+def palabras_guion(gap: dict | None) -> int | None:
+    """Word count of a rejected script, when the quality check recorded it."""
+    for v in (gap or {}).get("violations") or []:
+        if (m := _WORDS_OUT.search(v)) and m.group(1) == "guion":
+            return int(m.group(2))
+    return None
+
+
+def evidencia_encontrada(n_noticias: int, n_oficiales: int) -> str:
+    notas = f"{n_noticias} nota" + ("" if n_noticias == 1 else "s")
+    if not n_oficiales:
+        return f"Encontré {notas} sobre este tema y ningún dato oficial vinculado."
+    return f"Encontré {notas} y {n_oficiales} dato" + ("" if n_oficiales == 1 else "s") + " oficial" + (
+        "" if n_oficiales == 1 else "es") + " vinculados a este tema."
+
+
+def citas_revisadas(kept: int, received: int) -> str:
+    if not received:
+        return "No quedó ninguna afirmación con fuente: el sistema prefirió no afirmar nada."
+    return f"Revisé las citas: {kept} de {received} afirmaciones tienen su fuente y se muestran."
+
+
+def titulo_mesa(hasta) -> str:
+    """Mesa title: the date of the data, never a promise of 'today' (the corpus ends 30/09/2026)."""
+    return "Prioridad" if hasta is None or pd.isna(hasta) else f"Prioridad al {fecha(hasta, con_hora=False)}"
+
+
+def datos_hasta(hasta) -> str:
+    return "Sin fecha de datos" if hasta is None or pd.isna(hasta) else f"Noticias hasta el {fecha(hasta)}"
