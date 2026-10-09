@@ -37,19 +37,21 @@ def _cite(c: dict) -> str:
     return f"`{c.get('id_fuente')} · {c.get('campo')}` · “{c.get('pasaje')}”"
 
 
-def card_markdown(card: dict, score: dict | None = None, action: str | None = None) -> str:
+def card_markdown(card: dict, score: dict | None = None, action: str | None = None,
+                  headline: str | None = None) -> str:
     """The case card as Markdown for Notion: ID, sources, P and its components, evidence
     state, claims with citations, what is missing, drafts and the review.
 
     `score` (P, rango, version_reglas and R..E) comes from score_clusters when the cluster
     exists, so Notion shows the same numbers as the inbox; otherwise the card's own.
+    `headline` (the event's real headline) titles a card the AI left without a title (J-16).
     """
     puntaje = card.get("puntaje") or {}
     comps = card.get("componentes") or {}
     if score:
         puntaje = {k: score.get(k) for k in ("P", "rango", "version_reglas")}
         comps = {k: score.get(k) for k in COMPONENT_ORDER}
-    lines = [f"## {card['id_caso']} · {card.get('titulo') or card.get('consulta') or '—'}", ""]
+    lines = [f"## {card['id_caso']} · {card.get('titulo') or card.get('consulta') or headline or '—'}", ""]
     if card.get("sintetico"):
         lines += ["> 🧪 Datos sintéticos (sintetico=true): no es un caso real.", ""]
     p = puntaje.get("P")

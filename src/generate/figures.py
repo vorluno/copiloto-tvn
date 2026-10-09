@@ -7,6 +7,10 @@ Two checks the guard runs in code, whatever the model says:
   "mil" / "millones" scales). An invented figure is never shown (T06).
 - `find_conflicts(evidence)`: two news items giving different figures with the same
   unit (e.g. "45 pies" vs "47 pies") are a contradiction to show, not to resolve (T05).
+  Only comparable figures count (J-16): same unit, news dates within a week when both are
+  known, and the same measured thing (the words around both figures share a content word).
+  "2.2 metros" of waves and a "mirador a 300 metros" are not a contradiction, and neither are
+  two earthquakes months apart.
 
 Numbers are read in Spanish and English notation: "7,2" and "7.2" are the same value;
 "4.515.577" and "4,515,577" are thousands. When a token is ambiguous ("1.350"), every
@@ -15,7 +19,9 @@ reading is tried, so the check never rejects a figure that is really in the sour
 
 import math
 import re
-from dataclasses import dataclass
+import unicodedata
+from dataclasses import dataclass, field
+from datetime import datetime
 from itertools import combinations
 
 from src.generate.schema import Evidence
@@ -44,6 +50,8 @@ class Figure:
     values: frozenset[tuple[float, int]]  # (value, decimals) readings
     scale: float
     unit: str | None
+    start: int = field(default=-1, compare=False)  # span in the text it came from
+    end: int = field(default=-1, compare=False)
 
 
 def _readings(token: str) -> set[tuple[float, int]]:
@@ -75,7 +83,7 @@ def extract(text: str, pattern: re.Pattern = NUMBER) -> list[Figure]:
         elif (u := UNIT_AFTER.match(rest)) and u.group(1).lower() in UNITS:
             unit = UNITS[u.group(1).lower()]
         if (readings := _readings(match.group())):
-            figures.append(Figure(match.group(), frozenset(readings), scale, unit))
+            figures.append(Figure(match.group(), frozenset(readings), scale, unit, match.start(), match.end()))
     return figures
 
 
@@ -121,22 +129,76 @@ class Conflict:
         return {a, b} == {self.id_a, self.id_b}
 
 
+# Comparability of two figures (J-16).
+DATE_WINDOW_DAYS = 7  # two news items further apart than this describe different moments
+CONTEXT_BEFORE, CONTEXT_AFTER = 4, 3  # content words read around a figure to know what it measures
+WORD = re.compile(r"[^\W\d_]+")
+# Words that quantify or frame a figure without saying what is measured ("más de 120 mil", "hasta").
+NOT_SUBJECT = {
+    "del", "las", "los", "una", "unos", "unas", "por", "para", "con", "que", "sus", "desde", "hasta", "entre",
+    "mas", "menos", "casi", "cerca", "alred", "apena", "solo", "segun", "sobre", "tras", "este", "esta",
+    "mil", "millo", "milla", "magni", "magnitud", "the", "and", "for", "with",
+    "pies", "metro", "kilom", "dolar", "balbo", "grado", "cient",  # unit words: shared by any two figures
+}
+
+
+def _stem(word: str) -> str:
+    plain = "".join(c for c in unicodedata.normalize("NFKD", word.casefold()) if not unicodedata.combining(c))
+    return plain[:5]
+
+
+def _content_stems(text: str) -> list[str]:
+    stems = [_stem(w) for w in WORD.findall(text) if len(w) >= 3]
+    return [s for s in stems if s not in NOT_SUBJECT]
+
+
+def _subject(text: str, figure: Figure) -> set[str]:
+    """Content words right before and after a figure: what the number measures."""
+    after = text[figure.end:]
+    if (unit := UNIT_AFTER.match(after)) and unit.group(1).lower() in UNITS:
+        after = after[unit.end():]
+    return set(_content_stems(text[:figure.start])[-CONTEXT_BEFORE:] + _content_stems(after)[:CONTEXT_AFTER])
+
+
+def evidence_date(item: Evidence) -> datetime | None:
+    """When a news item is from: fecha_publicacion, else GDELT's fecha_deteccion (meta, never sent to the
+    model). Used only to tell whether two items describe the same moment; neither field is rewritten."""
+    raw = item.fields.get("fecha_publicacion") or item.meta.get("fecha_deteccion")
+    if not raw:
+        return None
+    try:
+        return datetime.fromisoformat(str(raw).replace("Z", "+00:00"))
+    except ValueError:
+        return None
+
+
+def same_period(a: Evidence, b: Evidence) -> bool:
+    """False only when both news dates are known and further apart than DATE_WINDOW_DAYS."""
+    date_a, date_b = evidence_date(a), evidence_date(b)
+    if date_a is None or date_b is None:
+        return True
+    return abs((date_a - date_b).total_seconds()) <= DATE_WINDOW_DAYS * 86400
+
+
 def find_conflicts(evidence: list[Evidence]) -> list[Conflict]:
-    """Pairs of news items that give different figures for the same unit."""
+    """Pairs of news items that give different, comparable figures: same unit, same period
+    and the same measured thing. When comparability is unclear, no conflict is reported."""
     by_item = []
     for item in evidence:
         if item.kind != "noticia":
             continue
         text = " ".join(item.fields.get(f, "") for f in ("titulo", "descripcion"))
-        by_item.append((item.id, [f for f in extract(text) if f.unit]))
+        by_item.append((item, [(f, _subject(text, f)) for f in extract(text) if f.unit]))
     conflicts = []
-    for (id_a, figs_a), (id_b, figs_b) in combinations(by_item, 2):
-        for fa in figs_a:
-            for fb in figs_b:
-                if fa.unit != fb.unit:
+    for (item_a, figs_a), (item_b, figs_b) in combinations(by_item, 2):
+        if not same_period(item_a, item_b):
+            continue
+        for fa, subject_a in figs_a:
+            for fb, subject_b in figs_b:
+                if fa.unit != fb.unit or not subject_a & subject_b:
                     continue
                 values_a = {round(v * fa.scale, 6) for v, _ in fa.values}
                 values_b = {round(v * fb.scale, 6) for v, _ in fb.values}
                 if not values_a & values_b:
-                    conflicts.append(Conflict(id_a, fa.raw, id_b, fb.raw, fa.unit))
+                    conflicts.append(Conflict(item_a.id, fa.raw, item_b.id, fb.raw, fa.unit))
     return conflicts

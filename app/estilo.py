@@ -85,6 +85,12 @@ section[data-testid="stSidebar"] .block-container{padding-top:1.4rem}
 .ctvn-cite.bad{text-decoration-style:solid}
 .ctvn-cite small{font-size:11px;color:var(--muted);text-decoration:none;margin-left:8px}
 .ctvn-detail{font-size:13px;color:var(--muted)}
+.ctvn-more summary{cursor:pointer;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:4px 0;list-style-position:inside}
+.ctvn-more summary:hover{color:var(--ink)}
+.ctvn-more[open] summary{color:var(--ink)}
+.ctvn-more>div{padding:5px 0 0}
+.st-key-ficha{scroll-margin-top:56px}
+.st-key-sel_cluster [data-testid="stRadioCaption"]{cursor:pointer}
 .ctvn-load{padding:18vh 0 0;max-width:560px}
 .ctvn-ask{margin-top:22px;font-size:15px;color:var(--muted)}
 .ctvn-load b{display:block;font-weight:700;font-size:44px;letter-spacing:-.03em;line-height:1}
@@ -224,16 +230,27 @@ def abstention_html(title: str, text: str, tag: str = "Sin respuesta") -> str:
     return f'<div class="ctvn-abst" role="status"><span>{escape(tag)}</span><b>{escape(title)}</b><p>{escape(text)}</p></div>'
 
 
-def claim_html(kind_label: str, text: str, cites: list[dict]) -> str:
+def _cite_html(c: dict) -> str:
+    mark = {True: "✓ ", False: "✗ no aparece en la fuente · "}.get(c.get("found"), "")
+    context = f' <span class="ctvn-muted">· {escape(c["context"])}</span>' if c.get("context") else ""
+    bad = " bad" if c.get("found") is False else ""
+    ident = f'<small>{escape(c["ident"])}</small>' if c.get("ident") else ""
+    return f'<span class="ctvn-cite{bad}">{escape(mark + c["label"])}{ident}</span>{context}'
+
+
+def claim_html(kind_label: str, text: str, cites: list[dict], more_label: str | None = None) -> str:
     """One claim with its type and every citation: the source in words first, its ID (the challenge's
-    citation key) small beside it. A cite: label, ident, found (bool or None), context."""
+    citation key) small beside it. A cite: label, ident, found (bool or None), context.
+
+    With `more_label`, only the first citation stays visible and the rest fold under a native
+    <details> ('Ver las N fuentes'), so a well-sourced claim does not bury the case card.
+    """
     parts = [f'<span class="ctvn-type">{escape(kind_label)}</span>', f"<span>{escape(text)}</span>"]
-    for c in cites:
-        mark = {True: "✓ ", False: "✗ no aparece en la fuente · "}.get(c.get("found"), "")
-        context = f' <span class="ctvn-muted">· {escape(c["context"])}</span>' if c.get("context") else ""
-        bad = " bad" if c.get("found") is False else ""
-        ident = f'<small>{escape(c["ident"])}</small>' if c.get("ident") else ""
-        parts.append(f'<span class="ctvn-cite{bad}">{escape(mark + c["label"])}{ident}</span>{context}')
+    shown = cites[:1] if more_label and len(cites) > 1 else cites
+    parts += [_cite_html(c) for c in shown]
+    if len(shown) < len(cites):
+        rest = "".join(f'<div>{_cite_html(c)}</div>' for c in cites[1:])
+        parts.append(f'<details class="ctvn-more"><summary>{escape(more_label)}</summary>{rest}</details>')
     return f'<div class="ctvn-row">{"".join(parts)}</div>'
 
 
@@ -311,3 +328,29 @@ def event_card_html(pos, p, rango, tema, estado, titular, meta, id_titular, comp
 
 def claim_type_chip(kind: str, label: str) -> str:
     return f'<span class="ctvn-type {escape(kind)}">{escape(label)}</span>'
+
+
+def busy_css(container_key: str, keep_key: str) -> str:
+    """While a draft is being written, dim the rest of the case card; the running steps stay sharp."""
+    return (f"<style>.st-key-{container_key}>*:not(.st-key-{keep_key}):not(:has(.st-key-{keep_key}))"
+            "{opacity:.35;pointer-events:none;transition:opacity .2s}</style>")
+
+
+def scroll_js(selector: str, max_width: int = 640) -> str:
+    """Brings the case card into view on a phone after an event is picked (columns stack under
+    640 px, so the card sits below the list). Wider screens show both side by side: no jump."""
+    return (f"<script>(function(){{if(window.innerWidth>{max_width})return;"
+            f"var n=0,t=setInterval(function(){{var el=document.querySelector({selector!r});"
+            f"if(el){{el.scrollIntoView({{behavior:'smooth',block:'start'}});clearInterval(t);}}"
+            f"if(++n>40)clearInterval(t);}},50);}})();</script>")
+
+
+# The list's grey caption sits outside the radio's label, so a tap on it selected nothing (half
+# of each row on a phone). One document-level listener forwards it to its own row's label.
+CAPTION_CLICK_JS = (
+    "<script>(function(){if(window.__ctvnCaptionClick)return;window.__ctvnCaptionClick=true;"
+    "document.addEventListener('click',function(e){var cap=e.target.closest"
+    "('.st-key-sel_cluster [data-testid=\"stRadioCaption\"]');if(!cap)return;"
+    "var row=cap.closest('[role=\"radiogroup\"] > *');"
+    "var label=row&&(row.tagName==='LABEL'?null:row.querySelector('label'));"
+    "if(label)label.click();});})();</script>")

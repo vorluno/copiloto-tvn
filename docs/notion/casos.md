@@ -213,12 +213,6 @@ La única fuente proporcionada es un titular/metadatos, lo cual es insuficiente 
 ### Brief (borrador para revisión humana)
 Basado únicamente en titular/metadatos. Un titular de noticia plantea la disyuntiva de "Panamá, PIB e IA hacia 2030: Productividad o irrelevancia", sugiriendo un análisis sobre el impacto de la inteligencia artificial en la economía panameña. En 2024, el Producto Interno Bruto (PIB) de Panamá registró un crecimiento del 2.74784148771307% anual, según datos del Banco Mundial. La noticia, cuyo contenido completo no está disponible, probablemente explora cómo la adopción o la falta de adopción de la IA podría influir en la trayectoria económica del país en los próximos años, determinando si se logra un aumento significativo de la productividad o si se enfrenta un riesgo de estancamiento o irrelevancia en el panorama global.
 
-### Guion (borrador para revisión humana)
-Basado únicamente en titular/metadatos. Panamá se encuentra en una encrucijada económica de cara al 2030, con la Inteligencia Artificial (IA) como un factor determinante. La pregunta clave es si el país logrará impulsar su productividad o si enfrentará la irrelevancia en el panorama global. El crecimiento del Producto Interno Bruto (PIB) de Panamá se proyecta en un 2.75% anual para 2024, según el Banco Mundial. Este dato es crucial al considerar el impacto potencial de la IA. La integración efectiva de la IA podría ser un motor para superar este crecimiento y asegurar la competitividad. Es fundamental analizar cómo Panamá planea aprovechar esta tecnología para transformar su economía y garantizar un futuro próspero.
-
-### Copy digital (borrador para revisión humana)
-Basado únicamente en titular/metadatos. Panamá enfrenta un debate crucial sobre su futuro económico hacia 2030, centrado en la productividad y la relevancia frente a la Inteligencia Artificial (IA). El crecimiento del PIB de Panamá para 2024 se estima en 2.74784148771307 % anual, según datos del Banco Mundial. Este contexto plantea interrogantes sobre cómo la IA moldeará la trayectoria económica del país en los próximos años.
-
 ---
 
 ## F-K-2738265aa7 · titular de la fuente: «Comisión Interministerial entregó al presidente Mulino el Informe Final sobre el sitio minero Cobre Panamá»
