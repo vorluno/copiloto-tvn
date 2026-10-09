@@ -52,4 +52,4 @@ C-17,"Valor operativo: tiempo manual vs asistido en la misma tarea, ≥3 pruebas
 C-18,Respaldo de la demo: grabación del recorrido con wifi apagado y capturas sin secretos en Notion (evidencia de T10),Cristian,Hecha,Jue,2026-10-08,bdc35c2 (#80); regrabado con la interfaz v1.1 en 7836c6c (#87)
 J-17,"Interfaz v1.1: barra lateral, mesa con bandeja y ficha, textos humanos y video regrabado",José,Hecha,Jue,2026-10-08,"#85, #86, #87; tag v1.1 (f8f840b). Sus commits llevan el prefijo J-15 por error"
 J-18,"Notion: espacio del equipo con documentación técnica, funcional y presentación; registro del evento importado; README con el sistema visual de la app",José,Hecha,Jue,2026-10-08,#88 a #93. Sus commits llevan el prefijo J-15 por error
-J-19,v1.2: correcciones de la auditoría de jurado del 08/10 (ADR-050),José,En curso,Jue,,
+J-19,v1.2: correcciones de la auditoría de jurado del 08/10 (ADR-050),José,Hecha,Jue,2026-10-08,Rama feat/J-19-v12; tag v1.2 (ADR-050 a ADR-055)
